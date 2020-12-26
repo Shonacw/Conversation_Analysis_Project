@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="SYNC" />
+  </component>
+  <component name="JupyterTrust" id="fa31b4a8-03ee-47f0-aa63-edbe233e8e1e" />
+  <component name="ProjectId" id="1l6mZ1isAPRb6V69LRGQmKLyFmi" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="TERMINAL_CUSTOM_COMMANDS_GOT_IT" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
+  </component>
+  <component name="RunManager" selected="Python.Collocation">
+    <configuration name="Collocation" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Collocation.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Conversation_Analysis_Project" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/envs/opencv4/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Top2Vec" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Top2Vec.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.Conversation_Analysis_Project" />
+      <item itemvalue="Python.Top2Vec" />
+      <item itemvalue="Python.Collocation" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.Collocation" />
+        <item itemvalue="Python.Top2Vec" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="" />
+      <created>1606925966814</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1606925966814</updated>
+      <workItem from="1606925968164" duration="104000" />
+      <workItem from="1608925324807" duration="40000" />
+      <workItem from="1608925371319" duration="18835000" />
+      <workItem from="1609019558656" duration="39000" />
+      <workItem from="1609019654916" duration="700000" />
+    </task>
+    <task id="LOCAL-00001" summary="Added SliceCast work to Msci project folder">
+      <created>1609020355513</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1609020355513</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/RAKE-tutorial" />
+    </ignored-roots>
+    <MESSAGE value="Added SliceCast work to Msci project folder" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added SliceCast work to Msci project folder" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.820@0.23.1440.820" timestamp="1608925643457" />
+    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1609020347544">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1609020347544" />
+    <state width="1395" height="263" key="GridCell.Tab.0.bottom" timestamp="1609019553426">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609019553426" />
+    <state width="1395" height="263" key="GridCell.Tab.0.center" timestamp="1609019553425">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1609019553425" />
+    <state width="1395" height="263" key="GridCell.Tab.0.left" timestamp="1609019553424">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1609019553424" />
+    <state width="1395" height="263" key="GridCell.Tab.0.right" timestamp="1609019553426">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1609019553426" />
+    <state width="1395" height="263" key="GridCell.Tab.1.bottom" timestamp="1609019553428">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.1.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609019553428" />
+    <state width="1395" height="263" key="GridCell.Tab.1.center" timestamp="1609019553427">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.1.center/0.23.1440.820@0.23.1440.820" timestamp="1609019553427" />
+    <state width="1395" height="263" key="GridCell.Tab.1.left" timestamp="1609019553427">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.1.left/0.23.1440.820@0.23.1440.820" timestamp="1609019553427" />
+    <state width="1395" height="263" key="GridCell.Tab.1.right" timestamp="1609019553428">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1395" height="263" key="GridCell.Tab.1.right/0.23.1440.820@0.23.1440.820" timestamp="1609019553428" />
+    <state x="233" y="72" key="SettingsEditor" timestamp="1609019589638">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="233" y="72" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1609019589638" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1609020006423">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1609020006423" />
+    <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog/0.23.1440.820@0.23.1440.820" timestamp="1609020322077" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Top2Vec.coverage" NAME="Top2Vec Coverage Results" MODIFIED="1608985713763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Collocation.coverage" NAME="Collocation Coverage Results" MODIFIED="1609017353951" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Conversation_Analysis_Project.coverage" NAME="Conversation_Analysis_Project Coverage Results" MODIFIED="1608925685182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
+  </component>
+</project>
