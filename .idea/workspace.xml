@@ -25,10 +25,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Saved Images/Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved Images/Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/Word2Vec_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -180,7 +183,7 @@
       <workItem from="1608925324807" duration="40000" />
       <workItem from="1608925371319" duration="18835000" />
       <workItem from="1609019558656" duration="39000" />
-      <workItem from="1609019654916" duration="10904000" />
+      <workItem from="1609019654916" duration="12137000" />
     </task>
     <task id="LOCAL-00001" summary="Added SliceCast work to Msci project folder">
       <created>1609020355513</created>
@@ -245,7 +248,14 @@
       <option name="project" value="LOCAL" />
       <updated>1609072152165</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Model now only using nouns.. much better">
+      <created>1609090722080</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1609090722080</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -272,33 +282,34 @@
     <MESSAGE value="Renamed file" />
     <MESSAGE value="-" />
     <MESSAGE value="Added notes on tasks" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added notes on tasks" />
+    <MESSAGE value="Model now only using nouns.. much better" />
+    <option name="LAST_COMMIT_MESSAGE" value="Model now only using nouns.. much better" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.820@0.23.1440.820" timestamp="1608925643457" />
-    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1609072152063">
+    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1609090721966">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1609072152063" />
-    <state width="1386" height="473" key="GridCell.Tab.0.bottom" timestamp="1609090170730">
+    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1609090721966" />
+    <state width="1386" height="310" key="GridCell.Tab.0.bottom" timestamp="1609091732663">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="473" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609090170730" />
-    <state width="1386" height="473" key="GridCell.Tab.0.center" timestamp="1609090170729">
+    <state width="1386" height="310" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609091732663" />
+    <state width="1386" height="310" key="GridCell.Tab.0.center" timestamp="1609091732662">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="473" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1609090170729" />
-    <state width="1386" height="473" key="GridCell.Tab.0.left" timestamp="1609090170728">
+    <state width="1386" height="310" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1609091732662" />
+    <state width="1386" height="310" key="GridCell.Tab.0.left" timestamp="1609091732661">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="473" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1609090170728" />
-    <state width="1386" height="473" key="GridCell.Tab.0.right" timestamp="1609090170729">
+    <state width="1386" height="310" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1609091732661" />
+    <state width="1386" height="310" key="GridCell.Tab.0.right" timestamp="1609091732663">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="473" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1609090170729" />
+    <state width="1386" height="310" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1609091732663" />
     <state width="1395" height="263" key="GridCell.Tab.1.bottom" timestamp="1609019553428">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -319,10 +330,10 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="443" y="121" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1609068636005" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1609072156426">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1609090724232">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1609072156426" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1609090724232" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -334,7 +345,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Top2Vec.coverage" NAME="Top2Vec Coverage Results" MODIFIED="1608985713763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Collocation.coverage" NAME="__main__ Coverage Results" MODIFIED="1609090170719" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Collocation.coverage" NAME="__main__ Coverage Results" MODIFIED="1609091732653" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Keywords_sgcw.coverage" NAME="Keywords_sgcw Coverage Results" MODIFIED="1609026578184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SliceCast" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Conversation_Analysis_Project.coverage" NAME="Conversation_Analysis_Project Coverage Results" MODIFIED="1608925685182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
   </component>

@@ -21,7 +21,14 @@ NOTE C:
     # rubbish... 'dope' 'table''zaps' 'though' 'person' 'money',
 
     However when I only input the words from 'sentences_preprocessed' which are NOUNS... much better! And it produces
-    an interesting pattern to look into. Words similar to 'Neural_Net' now are...   [workers=8, window=10, min=1, sg=0]
+    an interesting pattern to look into.  ->
+    !!!!!!!
+    NOTE ^HERE^ I MADE A MISTAKE. I accidentally input a list of the 539 nouns in the whole transcript (in sequential
+    order but ALL in one list, rather than split by sentence) 543 times...     it meanst (as you'll read below) that
+    the Word2Vec model seemed to learn word meaning very well, the layout was strange like a flower... need to think this through
+    OK. It's just giving me back the words that occurred before and after 'Neural_Nets' in the list i input :-) :-(
+    !!!!!
+    -> Words similar to 'Neural_Net' now are...   [workers=8, window=10, min=1, sg=0]
     similar to Neural net [('simulate', 0.9886050224304199), ('brain', 0.9882206916809082), ('word', 0.96191692352294),
     ('nets', 0.9608338475227356), ('neurons', 0.9187374114990234), ('lot', 0.9116002321243286), ('babies', 0.853849649),
     ('humans', 0.8418133854866028), ('title', 0.787124752998352), ('way', 0.7816523313522339)] :-)
@@ -175,17 +182,23 @@ print('Pke Keywords: ', top_keywords, '\n')
 words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
                  if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh']]
 words_to_plot = list(dict.fromkeys(words_to_plot))                      # Remove duplicate words
-print('\nWords_to_plot: ', words_to_plot, '\n')
+#print('\nWords_to_plot: ', words_to_plot, '\n')
 
 # Extract nouns in sentences
 nouns_sentences = []
 for sentence in sents_preprocessed:
     words_to_plot_2 = [word for (word, pos) in nltk.pos_tag(sentence)
-                     if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh']]
-    words_to_plot_2 = list(dict.fromkeys(words_to_plot))  # Remove duplicate words
+                     if pos[0] in ['N', 'V', 'J'] and word not in ['yeah', 'yes', 'oh']]
+    # Don't want to remove duplicate words as using their locations to infer semantics in the Word2Vec model
+    words_to_plot_2 = list(dict.fromkeys(words_to_plot)) #when put words_to_plot makes pretty
     nouns_sentences.append(words_to_plot_2)
 
-print(nouns_sentences)
+# print(sents_preprocessed)
+# print(nouns_sentences)
+print('nouns_sentences[20]: ', nouns_sentences[20], '\n')
+print(len(nouns_sentences))
+print(len(sents_preprocessed[20]), len(sents_preprocessed[40]))
+print(len(nouns_sentences[20]), len(nouns_sentences[40]))
 
 ## Step 3
 # Define Word2Vec Model...
@@ -203,7 +216,7 @@ ys = results[:, 1]
 # print('Words in Model: ', words)
 
 
-# Evaluation
+# Evaluation... (NOTE C)
 similar = model.wv.most_similar('Neural_Net')
 print('similar to Neural net', similar)
 
@@ -214,6 +227,8 @@ plt.scatter(xs, ys)
 for i, word in enumerate(words):
     if word in list_of_condensed_grams or word in words_to_plot:
         plt.annotate(word, xy=(results[i, 0], results[i, 1]))
+
+    #NOW Want to plot a line between the words, so can see if the pattern is just due to their sequential nature?
 plt.show()
 
 
