@@ -6,14 +6,22 @@ Step 3: Extract Keywords (Ones we'll be interested in plotting)
 
 #Notes mentioned in code...
 NOTE A
-Example of why I detect trigrams first: ['brain', 'simulation'] was a detected bigram, and
-['deep', 'brain', 'simulation'] was a detected trigram. If I condensed all the words 'brain' and 'simulation' into
-'brain_simulation' then once I searched for the trigrams there would be none left, as it would instead have
-'deep', 'brain_simulation'.
+    Example of why I detect trigrams first: ['brain', 'simulation'] was a detected bigram, and
+    ['deep', 'brain', 'simulation'] was a detected trigram. If I condensed all the words 'brain' and 'simulation' into
+    'brain_simulation' then once I searched for the trigrams there would be none left, as it would instead have
+    'deep', 'brain_simulation'.
+
+NOTE B-
+    I'm using the CBOW version of Word2Vec due to this paper
+    https://www.cs.cornell.edu/~schnabts/downloads/schnabel2015embeddings.pdf
 
 #Other stuff (for me)...
 pip uninstall numpy
 pip install -U numpy
+
+# Tasks...
+TODO: How does one evaluate the success of a Word Embedding? Then play around with params to optimise.. evaluation metrics
+TODO: Maybe explore different methods of dimensionality reduction for plotting wordvecs (might improve layout?)
 """
 from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
@@ -144,7 +152,6 @@ top_keywords = []
 for i in range(len(keywords)):
   top_keywords.append(keywords[i][0])
 print('Pke Keywords: ', top_keywords, '\n')
-
 
 # Extract nouns (for plotting)...
 words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
