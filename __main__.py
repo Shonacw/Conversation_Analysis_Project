@@ -20,8 +20,14 @@ pip uninstall numpy
 pip install -U numpy
 
 # Tasks...
-TODO: How does one evaluate the success of a Word Embedding? Then play around with params to optimise.. evaluation metrics
+TODO: How does one evaluate the success of a Word Embedding? Then play around with params to optimise..
+Notes from paper https://arxiv.org/pdf/1901.09785.pdf
+    evaluation metrics, absolute intrinsic evaluation
+    the method of extracting n-grams is a word embedding task in itself (II E.)
+    Maybe use Word Similarity (cosine dist) as a evaluation metric
+    use QVEC: https://github.com/ytsvetko/qvec
 TODO: Maybe explore different methods of dimensionality reduction for plotting wordvecs (might improve layout?)
+
 """
 from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
@@ -181,6 +187,9 @@ for i, word in enumerate(words):
     if word in list_of_condensed_grams or word in words_to_plot:
         plt.annotate(word, xy=(results[i, 0], results[i, 1]))
 plt.show()
+
+# Evaluation
+model.wv['Neural_Networ']
 
 ## Extras... (below)
 
