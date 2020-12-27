@@ -6,12 +6,12 @@ Step 3: Extract Keywords (Ones we'll be interested in plotting)
 
 #Notes mentioned in code...
 NOTE A
-Had to detect trigrams first... example: ['brain', 'simulation'] was a detected bigram, and
+Example of why I detect trigrams first: ['brain', 'simulation'] was a detected bigram, and
 ['deep', 'brain', 'simulation'] was a detected trigram. If I condensed all the words 'brain' and 'simulation' into
 'brain_simulation' then once I searched for the trigrams there would be none left, as it would instead have
-'deep', 'brain_simulation'. Hence why I combine the trigrams first.
+'deep', 'brain_simulation'.
 
-#Other useful notes...
+#Other stuff (for me)...
 pip uninstall numpy
 pip install -U numpy
 """
@@ -91,7 +91,6 @@ for bigram in bigram_list:
 
 
 ## Step 2
-
 # Group individual words into sentences...
 sents = [list(g) for k, g in groupby(content_tokenized, lambda x:x == '.') if not k]
 print('\nSents before Preprocessing: ', sents)
@@ -153,7 +152,8 @@ words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_prepro
 words_to_plot = list(dict.fromkeys(words_to_plot))                      # Remove duplicate words
 print('\nWords_to_plot: ', words_to_plot, '\n')
 
-## Step 3...
+## Step 3
+# Define Word2Vec Model...
 model = Word2Vec(sents_preprocessed, window=20, min_count=1, workers=4, sg=0) #sg=0 for CBOW, =1 for Skig-gram
 words = list(model.wv.vocab)
 X = model[model.wv.vocab]
@@ -162,7 +162,7 @@ results = pca.fit_transform(X)
 xs = results[:, 0]
 ys = results[:, 1]
 
-# Print information../.
+# Print information...
 # print('Model Info: ', model)
 # print('Words in Model: ', words)
 
@@ -175,8 +175,7 @@ for i, word in enumerate(words):
         plt.annotate(word, xy=(results[i, 0], results[i, 1]))
 plt.show()
 
-# Extras... (below)
-## Extras
+## Extras... (below)
 
 # def Plot_Wordcloud(sents_preprocessed_flat, save=False):
 #     wordcloud = WordCloud(
