@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Conversation_Analysis_Project.iml" filepath="$PROJECT_DIR$/.idea/Conversation_Analysis_Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/InferSent/.idea/InferSent.iml" filepath="$PROJECT_DIR$/InferSent/.idea/InferSent.iml" />
     </modules>
   </component>
 </project>
