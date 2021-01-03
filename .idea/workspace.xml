@@ -25,13 +25,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Saved Images/Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Saved Images/Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/InferSent_sgcw.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Conversation_Analysis_Project.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Conversation_Analysis_Project.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SliceCast/inference.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/SliceCast/inference.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -64,9 +63,9 @@
     <property name="TERMINAL_CUSTOM_COMMANDS_GOT_IT" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.notebooks.jupyter.connections.configuration.JupyterServerConfigurable" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.__main__">
+  <component name="RunManager" selected="Python.InferSent_sgcw">
     <configuration name="Conversation_Analysis_Project" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Conversation_Analysis_Project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -89,29 +88,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Keywords_sgcw" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Conversation_Analysis_Project" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SliceCast" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SliceCast/Keywords_sgcw.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Top2Vec" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="InferSent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Conversation_Analysis_Project" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -124,7 +101,51 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Top2Vec.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/InferSent.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="InferSent_sgcw" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/InferSent_sgcw.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="__init__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/__init__.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -155,17 +176,43 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="covert_glove_to_word2vec" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Conversation_Analysis_Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/covert_glove_to_word2vec.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <list>
       <item itemvalue="Python.Conversation_Analysis_Project" />
-      <item itemvalue="Python.Top2Vec" />
-      <item itemvalue="Python.Keywords_sgcw" />
       <item itemvalue="Python.__main__" />
+      <item itemvalue="Python.covert_glove_to_word2vec" />
+      <item itemvalue="Python.InferSent" />
+      <item itemvalue="Python.__init__" />
+      <item itemvalue="Python.InferSent_sgcw" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.InferSent_sgcw" />
+        <item itemvalue="Python.__init__" />
+        <item itemvalue="Python.InferSent" />
         <item itemvalue="Python.__main__" />
-        <item itemvalue="Python.Keywords_sgcw" />
-        <item itemvalue="Python.Top2Vec" />
+        <item itemvalue="Python.covert_glove_to_word2vec" />
       </list>
     </recent_temporary>
   </component>
@@ -183,7 +230,8 @@
       <workItem from="1608925324807" duration="40000" />
       <workItem from="1608925371319" duration="18835000" />
       <workItem from="1609019558656" duration="39000" />
-      <workItem from="1609019654916" duration="12137000" />
+      <workItem from="1609019654916" duration="19071000" />
+      <workItem from="1609675898597" duration="777000" />
     </task>
     <task id="LOCAL-00001" summary="Added SliceCast work to Msci project folder">
       <created>1609020355513</created>
@@ -255,7 +303,14 @@
       <option name="project" value="LOCAL" />
       <updated>1609090722080</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Realised where I'd made a mistake, added note">
+      <created>1609092087000</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1609092087000</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -271,6 +326,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <ignored-roots>
@@ -283,33 +339,38 @@
     <MESSAGE value="-" />
     <MESSAGE value="Added notes on tasks" />
     <MESSAGE value="Model now only using nouns.. much better" />
-    <option name="LAST_COMMIT_MESSAGE" value="Model now only using nouns.. much better" />
+    <MESSAGE value="Realised where I'd made a mistake, added note" />
+    <option name="LAST_COMMIT_MESSAGE" value="Realised where I'd made a mistake, added note" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.820@0.23.1440.820" timestamp="1608925643457" />
-    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1609090721966">
+    <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1609676865172">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1609090721966" />
-    <state width="1386" height="310" key="GridCell.Tab.0.bottom" timestamp="1609091732663">
+    <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
+    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1609092086882">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="310" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609091732663" />
-    <state width="1386" height="310" key="GridCell.Tab.0.center" timestamp="1609091732662">
+    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1609092086882" />
+    <state width="1386" height="159" key="GridCell.Tab.0.bottom" timestamp="1609676918654">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="310" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1609091732662" />
-    <state width="1386" height="310" key="GridCell.Tab.0.left" timestamp="1609091732661">
+    <state width="1386" height="159" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1609676918654" />
+    <state width="1386" height="159" key="GridCell.Tab.0.center" timestamp="1609676918653">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="310" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1609091732661" />
-    <state width="1386" height="310" key="GridCell.Tab.0.right" timestamp="1609091732663">
+    <state width="1386" height="159" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1609676918653" />
+    <state width="1386" height="159" key="GridCell.Tab.0.left" timestamp="1609676918653">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state width="1386" height="310" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1609091732663" />
+    <state width="1386" height="159" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1609676918653" />
+    <state width="1386" height="159" key="GridCell.Tab.0.right" timestamp="1609676918654">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state width="1386" height="159" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1609676918654" />
     <state width="1395" height="263" key="GridCell.Tab.1.bottom" timestamp="1609019553428">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -326,14 +387,14 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1395" height="263" key="GridCell.Tab.1.right/0.23.1440.820@0.23.1440.820" timestamp="1609019553428" />
-    <state x="443" y="121" key="SettingsEditor" timestamp="1609068636005">
+    <state x="133" y="120" key="SettingsEditor" timestamp="1609675958620">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="443" y="121" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1609068636005" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1609090724232">
+    <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1609675958620" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1609092089885">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1609090724232" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1609092089885" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -345,8 +406,12 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Top2Vec.coverage" NAME="Top2Vec Coverage Results" MODIFIED="1608985713763" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Collocation.coverage" NAME="__main__ Coverage Results" MODIFIED="1609091732653" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1609676910006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Collocation.coverage" NAME="__main__ Coverage Results" MODIFIED="1609672621695" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Keywords_sgcw.coverage" NAME="Keywords_sgcw Coverage Results" MODIFIED="1609026578184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SliceCast" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$covert_glove_to_word2vec.coverage" NAME="covert_glove_to_word2vec Coverage Results" MODIFIED="1609409151608" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent.coverage" NAME="InferSent Coverage Results" MODIFIED="1609676572164" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent_sgcw.coverage" NAME="InferSent_sgcw Coverage Results" MODIFIED="1609676918648" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Conversation_Analysis_Project.coverage" NAME="Conversation_Analysis_Project Coverage Results" MODIFIED="1608925685182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
   </component>
 </project>

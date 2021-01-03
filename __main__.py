@@ -75,6 +75,8 @@ path = Path('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_An
 with open(path) as f:
     content = f.read()
 content_tokenized = word_tokenize(content)
+
+content_tokenized_31st = content_tokenized
 print('content tokenized: ', content_tokenized)
 
 ## Step 1
@@ -125,7 +127,9 @@ for bigram in bigram_list:
 
 ## Step 2
 # Group individual words into sentences...
-sents = [list(g) for k, g in groupby(content_tokenized, lambda x:x == '.') if not k]
+
+
+sents = [list(g) for k, g in groupby(content_tokenized_31st, lambda x:x == '.') if not k] # changed to content_tokenized_31st
 print('\nSents before Preprocessing: ', sents)
 sents_preprocessed = []
 
@@ -157,16 +161,16 @@ sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed_flat)
 print('---> sents_preprocessed_flat_onestring: ', sents_preprocessed_flat_onestring, '\n')
 
 
-## Step 3
-# RAKE...
-rake_object = rake.Rake("SmartStoplist.txt") #, 2, 3, 2 #min characters in word, max number of words in phrase, min number of times it's in text
-keywords = rake_object.run(content)
-print("\nRAKE Keywords:", keywords)
-
-# Counter (rubbish)...
-keywords_from_counter = Counter(sents_preprocessed_flat).most_common(10)
-print('Counter Keywords: ', keywords_from_counter)
-
+# ## Step 3
+# # RAKE...
+# rake_object = rake.Rake("SmartStoplist.txt") #, 2, 3, 2 #min characters in word, max number of words in phrase, min number of times it's in text
+# keywords = rake_object.run(content)
+# print("\nRAKE Keywords:", keywords)
+#
+# # Counter (rubbish)...
+# keywords_from_counter = Counter(sents_preprocessed_flat).most_common(10)
+# print('Counter Keywords: ', keywords_from_counter)
+#
 # PKE...
 extractor = pke.unsupervised.TopicRank()
 extractor.load_document(input=sents_preprocessed_flat_onestring)
@@ -182,7 +186,7 @@ print('Pke Keywords: ', top_keywords, '\n')
 words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
                  if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh']]
 words_to_plot = list(dict.fromkeys(words_to_plot))                      # Remove duplicate words
-#print('\nWords_to_plot: ', words_to_plot, '\n')
+print('\nWords_to_plot: ', words_to_plot, '\n')
 
 # Extract nouns in sentences
 nouns_sentences = []
@@ -194,42 +198,39 @@ for sentence in sents_preprocessed:
     nouns_sentences.append(words_to_plot_2)
 
 # print(sents_preprocessed)
-# print(nouns_sentences)
-print('nouns_sentences[20]: ', nouns_sentences[20], '\n')
-print(len(nouns_sentences))
-print(len(sents_preprocessed[20]), len(sents_preprocessed[40]))
-print(len(nouns_sentences[20]), len(nouns_sentences[40]))
+print('nouns_sentences', nouns_sentences)
+
 
 ## Step 3
-# Define Word2Vec Model...
-input = nouns_sentences #for only nouns from the sentences #sents_preprocessed for all sentences
-model = Word2Vec(input, window=10, min_count=1, workers=8, sg=0) #sg=0 for CBOW, =1 for Skig-gram
-words = list(model.wv.vocab)
-X = model[model.wv.vocab]
-pca = PCA(n_components=2)
-results = pca.fit_transform(X)
-xs = results[:, 0]
-ys = results[:, 1]
-
-# Print information...
-# print('Model Info: ', model)
-# print('Words in Model: ', words)
-
-
-# Evaluation... (NOTE C)
-similar = model.wv.most_similar('Neural_Net')
-print('similar to Neural net', similar)
-
-# Plot Embedding...
-plt.figure()
-plt.title('Word2Vec Word Embedding Plots')
-plt.scatter(xs, ys)
-for i, word in enumerate(words):
-    if word in list_of_condensed_grams or word in words_to_plot:
-        plt.annotate(word, xy=(results[i, 0], results[i, 1]))
-
-    #NOW Want to plot a line between the words, so can see if the pattern is just due to their sequential nature?
-plt.show()
+# # Define Word2Vec Model...
+# input = nouns_sentences #for only nouns from the sentences #sents_preprocessed for all sentences
+# model = Word2Vec(input, window=10, min_count=1, workers=8, sg=0) #sg=0 for CBOW, =1 for Skig-gram
+# words = list(model.wv.vocab)
+# X = model[model.wv.vocab]
+# pca = PCA(n_components=2)
+# results = pca.fit_transform(X)
+# xs = results[:, 0]
+# ys = results[:, 1]
+#
+# # Print information...
+# # print('Model Info: ', model)
+# # print('Words in Model: ', words)
+#
+#
+# # Evaluation... (NOTE C)
+# similar = model.wv.most_similar('Neural_Net')
+# print('similar to Neural net', similar)
+#
+# # Plot Embedding...
+# plt.figure()
+# plt.title('Word2Vec Word Embedding Plots')
+# plt.scatter(xs, ys)
+# for i, word in enumerate(words):
+#     if word in list_of_condensed_grams or word in words_to_plot:
+#         plt.annotate(word, xy=(results[i, 0], results[i, 1]))
+#
+#     #NOW Want to plot a line between the words, so can see if the pattern is just due to their sequential nature?
+# plt.show()
 
 
 
@@ -255,3 +256,50 @@ plt.show()
 #     return
 
 # Plot_Wordcloud(sents_preprocessed_flat_onestring)
+from gensim.models import KeyedVectors
+
+sentences = sents_preprocessed
+
+# model_1 = Word2Vec(sentences, size=300, min_count=1)
+
+model_2 = Word2Vec(size=300, min_count=1)
+model_2.build_vocab(sentences)
+total_examples = model_2.corpus_count
+model = KeyedVectors.load_word2vec_format("glove_model2.txt", binary=False)
+model_2.build_vocab([list(model.vocab.keys())], update=True)
+model_2.intersect_word2vec_format("glove_model2.txt", binary=False, lockf=1.0)
+model_2.save("word2vec.model")
+
+model_2 = Word2Vec.load("word2vec.model")
+model_2.train(sentences, total_examples=total_examples, epochs=model_2.iter)
+
+# Store just the words + their trained embeddings.
+word_vectors = model_2.wv
+model_2.init_sims(replace=True)
+model_2.save("model_2.model")
+word_vectors.save("word2vec.wordvectors")
+
+# Load back with memory-mapping = read-only, shared across processes.
+wv = KeyedVectors.load("word2vec.wordvectors", mmap='r')
+model_2 = KeyedVectors.load_word2vec_format("model_2.model")
+# fit a 2d PCA model to the vectors
+X = model_2[model_2.wv.vocab]
+pca = PCA(n_components=2)
+result = pca.fit_transform(X)
+# create a scatter plot of the projection
+plt.figure()
+plt.title('Word2Vec Word Embedding Plots')
+plt.scatter(result[:, 0], result[:, 1])
+words = list(model_2.wv.vocab)
+for i, word in enumerate(words):
+    if word in words_to_plot:
+        plt.annotate(word, xy=(result[i, 0], result[i, 1]))
+plt.show()
+
+model = Word2Vec.load("word2vec.model")
+similar_1 = model.wv.most_similar('neural')
+print('similar to neural', similar_1)
+similar_2 = model.wv.most_similar('tesla')
+print('similar to tesla', similar_2)
+similar_3 = model.wv.most_similar('child')
+print('similar to child', similar_3)
