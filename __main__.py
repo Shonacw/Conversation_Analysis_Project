@@ -128,7 +128,7 @@ def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
 
 def Preprocess_Sentences(content_sentences):
     """
-    Function to preprocess sentences such that they are ready for
+    Function to preprocess sentences such that they are ready for keyword extraction etc.
     """
     sents_preprocessed = []
     stop_words = set(stopwords.words('english'))
