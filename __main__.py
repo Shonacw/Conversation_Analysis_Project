@@ -5,6 +5,10 @@ Step 2: Now we create a word embedding on the new set of words (containg bi and 
 Step 3: Extract Keywords (Ones we'll be interested in plotting)
 
 #Notes mentioned in code...
+NOTE G:
+    The google pre-trained model already contains some phrases (bigrams)
+
+
 NOTE A
     Example of why I detect trigrams first: ['brain', 'simulation'] was a detected bigram, and
     ['deep', 'brain', 'simulation'] was a detected trigram. If I condensed all the words 'brain' and 'simulation' into
@@ -71,295 +75,318 @@ import pke
 import operator
 from functools import reduce
 
-# Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
-path = Path('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
-with open(path, 'r') as f:
-    content = f.read()
-    content_sentences = nltk.sent_tokenize(content)
-content_tokenized = word_tokenize(content)
-
-# content_tokenized_31st = content_tokenized
-# print('content tokenized: ', content_tokenized)
-
-## Step 1
-# words = [w.lower() for w in content_tokenized]
-# stopset = set(stopwords.words('english'))
-# filter_stops = lambda w: len(w) < 3 or w in stopset
-#
-# # Extract bigrams...
-# bcf = BigramCollocationFinder.from_words(words)
-# bcf.apply_word_filter(filter_stops)                 # Ignore bigrams whose words contain < 3 chars / are stopwords
-# bcf.apply_freq_filter(3)                            # Ignore trigrams which occur fewer than 3 times in the transcript
-# bigram_list = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, 20)) # Considering the top 20
-# print('Bigrams: ', bigram_list)
-#
-# # Extract trigrams...
-# tcf = TrigramCollocationFinder.from_words(words)
-# tcf.apply_word_filter(filter_stops)                 # Ignore trigrams whose words contain < 3 chars / are stopwords
-# tcf.apply_freq_filter(3)                            # Ignore trigrams which occur fewer than 3 times in the transcript
-# trigram_list =  list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, 20)) # Considering the top 20
-# print('Trigrams: ', trigram_list)
-#
-# list_of_condensed_grams = []
-#
-# # Replace Trigrams... (NOTE A)
-# for trigram in trigram_list:
-#     trigram_0, trigram_1, trigram_2 = trigram
-#     trigram_condensed = str(trigram_0.capitalize() + '_' + trigram_1.capitalize() + '_' + trigram_2.capitalize())
-#     list_of_condensed_grams.append(trigram_condensed)
-#     indices = [i for i, x in enumerate(content_tokenized) if x.lower() == trigram_0
-#                and content_tokenized[i+1].lower() == trigram_1
-#                and content_tokenized[i+2].lower() == trigram_2]
-#     for i in indices:
-#         content_tokenized[i] = trigram_condensed
-#         content_tokenized[i+1] = '-'                # Placeholders to maintain index numbering - are removed later on
-#         content_tokenized[i+2] = '-'
-#
-# # Replace Bigrams...
-# for bigram in bigram_list:
-#     bigram_0, bigram_1 = bigram
-#     bigram_condensed = str( bigram_0.capitalize() + '_' + bigram_1.capitalize())
-#     list_of_condensed_grams.append(bigram_condensed)
-#     indices = [i for i, x in enumerate(content_tokenized) if x.lower() == bigram_0
-#                and content_tokenized[i+1].lower() == bigram_1]
-#     for i in indices:
-#         content_tokenized[i] = bigram_condensed
-#         content_tokenized[i+1] = '-'                # Placeholders to maintain index numbering - are removed later on
-#
-
-## Step 2
-# Group individual words into sentences...
-#
-#
-# sents = [list(g) for k, g in groupby(content_tokenized_31st, lambda x:x == '.') if not k] # changed to content_tokenized_31st
-# print('\nSents before Preprocessing: ', sents)
-
-sents_preprocessed = []
-# print('content_sentences', content_sentences)
-for sent in content_sentences:
-    # Remove numbers
-    sent = re.sub(r'\d+', '', sent)
-    # Remove Punctuation
-    sent = re.sub(r'[^\w\s]', '', sent)
-    # Make all words -except the detected bi/trigrams- lowercase
-    #sent_lower = [w if w in list_of_condensed_grams else w.lower() for w in sent]
-
-    # make lowercase and remove stopwords
-    stop_words = set(stopwords.words('english'))
-    sent_lower = [w.lower() for w in word_tokenize(sent) if w not in stop_words]
-    # Join into one string so can use reg expressions
-    result = ' '.join(map(str, sent_lower))
-
-    # Stemming?
-    # Lemmatization ?
-    sents_preprocessed.append(result)
-#
-# print('Sents after Preprocessing: ', sents_preprocessed, '\n')
-#
-#
-# # Useful forms of the transcript for keyword extraction...
-# sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
-# print('\n---> sents_preprocessed_flat: ', sents_preprocessed_flat)
-# sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed_flat)
-# print('---> sents_preprocessed_flat_onestring: ', sents_preprocessed_flat_onestring, '\n')
-
-
-# ## Step 3
-# # RAKE...
-# rake_object = rake.Rake("SmartStoplist.txt") #, 2, 3, 2 #min characters in word, max number of words in phrase, min number of times it's in text
-# keywords = rake_object.run(content)
-# print("\nRAKE Keywords:", keywords)
-#
-# # Counter (rubbish)...
-# keywords_from_counter = Counter(sents_preprocessed_flat).most_common(10)
-# print('Counter Keywords: ', keywords_from_counter)
-#
-# PKE...
-extractor = pke.unsupervised.TopicRank()
-extractor.load_document(input=content) #sents_preprocessed_flat_onestring
-extractor.candidate_selection()
-extractor.candidate_weighting()
-keywords = extractor.get_n_best(30)
-top_keywords = []
-for i in range(len(keywords)):
-  top_keywords.append(keywords[i][0])
-
-# Now make sure bigram keywords are joined with an underscore
-top_keywords_final = []
-for keyword in top_keywords:
-    # see if it is formed of >1 word
-    try:
-        words = word_tokenize(keyword)
-        keyword = '_'.join(words)
-        top_keywords_final.append(keyword)
-    except:
-        top_keywords_final.append(keyword)
-
-print('Pke top_keywords_final: ', top_keywords_final, '\n')
-#
-
-
-# Extract nouns (for plotting)...
-print('sents_preprocessed', sents_preprocessed)
-sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
-print('sents_preprocessed_flat_onestring', sents_preprocessed_flat_onestring)
-words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
-                 if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
-                                                   'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos', 
-                                                   'shouldnt']
-                 and len(word) != 1]
-nouns_to_plot = list(dict.fromkeys(words_to_plot))                      # Remove duplicate words
-print('\nnouns_to_plot: ', nouns_to_plot, '\n')
-#
-# Extract nouns in sentences
-# print('sents_preprocessed', sents_preprocessed)
-# nouns_sentences = []
-# for sentence in sents_preprocessed:
-#     words_to_plot_2 = [word for (word, pos) in nltk.pos_tag(word_tokenize(sentence))
-#                      if pos[0] in ['N', 'V', 'J'] and word not in ['yeah', 'yes', 'oh']]
-#     # Don't want to remove duplicate words as using their locations to infer semantics in the Word2Vec model
-#     words_to_plot_2 = list(dict.fromkeys(words_to_plot_2)) #when put words_to_plot makes pretty
-#     nouns_sentences.append(words_to_plot_2)
-#
-# # print(sents_preprocessed)
-# print('nouns_sentences', nouns_sentences)
-
-
-## Step 3
-# # Define Word2Vec Model...
-# input = nouns_sentences #for only nouns from the sentences #sents_preprocessed for all sentences
-# model = Word2Vec(input, window=10, min_count=1, workers=8, sg=0) #sg=0 for CBOW, =1 for Skig-gram
-# words = list(model.wv.vocab)
-# X = model[model.wv.vocab]
-# pca = PCA(n_components=2)
-# results = pca.fit_transform(X)
-# xs = results[:, 0]
-# ys = results[:, 1]
-#
-# # Print information...
-# # print('Model Info: ', model)
-# # print('Words in Model: ', words)
-#
-#
-# # Evaluation... (NOTE C)
-# similar = model.wv.most_similar('Neural_Net')
-# print('similar to Neural net', similar)
-#
-# # Plot Embedding...
-# plt.figure()
-# plt.title('Word2Vec Word Embedding Plots')
-# plt.scatter(xs, ys)
-# for i, word in enumerate(words):
-#     if word in list_of_condensed_grams or word in words_to_plot:
-#         plt.annotate(word, xy=(results[i, 0], results[i, 1]))
-#
-#     #NOW Want to plot a line between the words, so can see if the pattern is just due to their sequential nature?
-# plt.show()
-
-
-
-
-
-## Extras... (below)
-
-# def Plot_Wordcloud(sents_preprocessed_flat, save=False):
-#     wordcloud = WordCloud(
-#                               background_color='white',
-#                               stopwords=stop_words,
-#                               max_words=100,
-#                               max_font_size=50,
-#                               random_state=42
-#                              ).generate(str(sents_preprocessed_flat))
-#     fig = plt.figure(1)
-#     plt.imshow(wordcloud)
-#     plt.axis('off')
-#     plt.show()
-#
-#     if save:
-#         fig.savefig("WordCloud.png", dpi=900)
-#     return
-
-# Plot_Wordcloud(sents_preprocessed_flat_onestring)
-# """https://datascience.stackexchange.com/questions/10695/how-to-initialize-a-new-word2vec-model-with-pre-trained-model-weights
-# note using "glove_model2.txt which is the Word2Vec version of glove.840B.. etc. otherwise get an error about base 10."""
-# from gensim.models import KeyedVectors
-#
-# sentences = sents_preprocessed
-#
-# model_2 = Word2Vec(size=300, min_count=1)
-# model_2.build_vocab(sentences)
-# total_examples = model_2.corpus_count
-# #model = KeyedVectors.load_word2vec_format(r"glove_model2.txt", binary=False, unicode_errors='unicode_escape')
-# model = Word2Vec.load("GloVe/glove.840B.300d.txt")
-# model.init_sims(replace=True)
-# model.build_vocab([list(model.vocab.keys())], update=True)
-# model_2.intersect_word2vec_format(r"GloVe/glove.840B.300d.txt", binary=False, lockf=1.0)
-# model_2.save("Word2Vec_Models/word2vec.model")
-#
-# model_2 = Word2Vec.load("Word2Vec_Models/word2vec.model")
-# model_2.train(sentences, total_examples=total_examples, epochs=model_2.iter)
-#
-# # Store just the words + their trained embeddings.
-# word_vectors = model_2.wv
-# model_2.init_sims(replace=True)
-# model_2.save("Word2Vec_Models/trained_model2.model")
-# word_vectors.save("Word2Vec_Models/trained_model2.wordvectors")
-#
-# # Load back with memory-mapping = read-only, shared across processes.
-# wv = KeyedVectors.load("Word2Vec_Models/trained_model2.wordvectors", mmap='r')
-# model_2 = KeyedVectors.load_word2vec_format("Word2Vec_Models/trained_model2.model")
-#
-# # fit a 2d PCA model to the vectors
-# X = model_2[model_2.wv.vocab]
-# pca = PCA(n_components=2)
-# result = pca.fit_transform(X)
-# # create a scatter plot of the projection
-# plt.figure()
-# plt.title('Word2Vec Word Embedding Plots')
-# plt.scatter(result[:, 0], result[:, 1])
-# words = list(model_2.wv.vocab)
-# for i, word in enumerate(words):
-#     if word in words_to_plot:
-#         plt.annotate(word, xy=(result[i, 0], result[i, 1]))
-# plt.show()
-#
-# model = Word2Vec.load("Word2Vec_Models/trained_model2.model")
-# similar_1 = model.wv.most_similar('neural')
-# print('similar to neural', similar_1)
-# similar_2 = model.wv.most_similar('tesla')
-# print('similar to tesla', similar_2)
-# similar_3 = model.wv.most_similar('child')
-# print('similar to child', similar_3)
-
-##
 import numpy as np
 from scipy import spatial
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
+import pandas as pd
+
+## Pre-processing Functions...
+def Prep_Content_for_Ngram_Extraction(content):
+    """
+    Given raw 'content' read in from .txt transcript, process into a list of lower case words
+    from which useful bigrams and trigrams can be extracted.
+    """
+    content_tokenized = word_tokenize(content)
+    words = [w.lower() for w in content_tokenized]
+    return words
+
+def Extract_bigrams(words):
+    """
+    Function to extract interesting bigrams used in the vocabulary of a podcast. Input is a list of words
+    from the podcast transcript.
+    """
+    stopset = set(stopwords.words('english'))
+    filter_stops = lambda w: len(w) < 3 or w in stopset
+
+    bcf = BigramCollocationFinder.from_words(words)
+    bcf.apply_word_filter(filter_stops)               # Ignore bigrams whose words contain < 3 chars / are stopwords
+    bcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
+    bigrams_extracted = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, 20)) # Considering top 20
+    final_bigrams = []
+    for bigram_list in bigrams_extracted:
+        bigram_0, bigram_1 = bigram_list
+        bigram_condensed = str(bigram_0 + '_' + bigram_1)
+        final_bigrams.append(bigram_condensed)
+    print('Bigrams: ', final_bigrams)
+    return final_bigrams
+
+def Extract_trigrams(words):
+    """
+    Function to extract interesting trigrams used in the vocabulary of a podcast. Input is a list of words
+    from the podcast transcript.
+    """
+    stopset = set(stopwords.words('english'))
+    filter_stops = lambda w: len(w) < 3 or w in stopset
+
+    tcf = TrigramCollocationFinder.from_words(words)
+    tcf.apply_word_filter(filter_stops)               # Ignore trigrams whose words contain < 3 chars / are stopwords
+    tcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
+    trigrams_extracted = list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, 20)) # Considering top 20
+    final_trigrams = []
+    for trigram_list in trigrams_extracted:
+        trigram_0, trigram_1, trigram_2 = trigram_list
+        trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
+        final_trigrams.append(trigram_condensed)
+    print('Trigrams: ', final_trigrams)
+    return final_trigrams
+
+def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
+    """
+    Function to replace all cases of individual words from detected n-grams with their respective bi/trigram.
+    Returns the document content as a list of words.
+
+    Note why trigrams were replaced first:
+    ['brain', 'simulation'] was a detected bigram, and ['deep', 'brain', 'simulation'] was a detected trigram. If
+    I condensed all the words 'brain' and 'simulation' into 'brain_simulation' then once I searched for the trigrams
+    there would be none left, as it would instead have 'deep', 'brain_simulation'.
+    """
+    list_of_condensed_grams = []
+    content_tokenized = word_tokenize(content)
+
+    # Replace Trigrams...
+    for trigram in trigrams_list:
+        trigram_0, trigram_1, trigram_2 = trigram
+        trigram_condensed = str(trigram_0.capitalize() + '_' + trigram_1.capitalize() + '_' + trigram_2.capitalize())
+        list_of_condensed_grams.append(trigram_condensed)
+        indices = [i for i, x in enumerate(content_tokenized) if x.lower() == trigram_0
+                   and content_tokenized[i+1].lower() == trigram_1
+                   and content_tokenized[i+2].lower() == trigram_2]
+        for i in indices:
+            content_tokenized[i] = trigram_condensed
+            content_tokenized[i+1] = '-'              # Placeholders to maintain index numbering - are removed later on
+            content_tokenized[i+2] = '-'
+
+    # Replace Bigrams...
+    for bigram in bigrams_list:
+        bigram_0, bigram_1 = bigram
+        bigram_condensed = str( bigram_0.capitalize() + '_' + bigram_1.capitalize())
+        list_of_condensed_grams.append(bigram_condensed)
+        indices = [i for i, x in enumerate(content_tokenized) if x.lower() == bigram_0
+                   and content_tokenized[i+1].lower() == bigram_1]
+        for i in indices:
+            content_tokenized[i] = bigram_condensed
+            content_tokenized[i+1] = '-'                # Placeholders to maintain index numbering - are removed later on
+
+    return content_tokenized
+
+def Preprocess_Sentences(content_sentences):
+    """
+    Function to preprocess sentences such that they are ready for
+    """
+    sents_preprocessed = []
+    stop_words = set(stopwords.words('english'))
+    for sent in content_sentences:
+        # Remove numbers
+        sent = re.sub(r'\d+', '', sent)
+        # Remove punctuation
+        sent = re.sub(r'[^\w\s]', '', sent)
+        # Make lowercase and remove stopwords
+        sent_lower = [w.lower() for w in word_tokenize(sent) if w not in stop_words]
+        # Join into one string so can use reg expressions
+        result = ' '.join(map(str, sent_lower))
+        # Stemming? Lemmatization ?
+
+        sents_preprocessed.append(result)
+
+    return sents_preprocessed
+
+## Keyword Functions...
+def Rake_Keywords(content, Info=False):
+    """
+    Function to extract keywords from document using RAKE
+    """
+    rake_object = rake.Rake("SmartStoplist.txt") #, 2, 3, 2 #min characters in word, max number of words in phrase, min number of times it's in text
+    keywords = rake_object.run(content)
+    if Info:
+        print("\nRAKE Keywords:", keywords)
+
+    return keywords
+
+def Counter_Keywords(content_sentences, Info=False):
+    """
+    Function to extract the top words used in a document using a counter.
+    Note these are not 'keywords', just most popular words.
+    """
+    sents_preprocessed = Preprocess_Sentences(content_sentences)
+    sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
+    keywords = Counter(sents_preprocessed_flat).most_common(10)
+    if Info:
+        print('\nCounter Keywords: ', keywords)
+
+    return keywords
+
+def PKE_keywords(content, number=30, Info=False):
+    """
+    Function to extract key words and phrases from a document ('content') using the PKE implementation of TopicRank.
+    """
+    extractor = pke.unsupervised.TopicRank()
+    extractor.load_document(input=content)
+    extractor.candidate_selection()
+    extractor.candidate_weighting()
+    keywords = extractor.get_n_best(number)
+    top_keywords = []
+    for i in range(len(keywords)):
+        top_keywords.append(keywords[i][0])
+
+    # Now join ngram keywords with an underscore
+    top_keywords_final = []
+    for keyword in top_keywords:
+        # see if it is formed of >1 word
+        try:
+            words = word_tokenize(keyword)
+            keyword = '_'.join(words)
+            top_keywords_final.append(keyword)
+        except:
+            top_keywords_final.append(keyword)
+    if Info:
+        print('Pke Keywords: ', top_keywords_final, '\n')
+
+    return top_keywords_final
+
+def Extract_Nouns(content_sentences, Info=False):
+    """
+    Function to extract all potentially-interesting nouns from a given document. Used when plotting word embedding.
+    """
+    sents_preprocessed = Preprocess_Sentences(content_sentences)
+    sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
+    words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
+                     if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+                                                       'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
+                                                       'shouldnt']
+                     and len(word) != 1]
+    nouns_to_plot = list(dict.fromkeys(words_to_plot))            # Remove duplicate words
+    if Info:
+        print('\nExtracted Nouns: ', nouns_to_plot)
+
+    return nouns_to_plot
+
+def Plot_Wordcloud(content_sentences, save=False):
+    """
+    Function to plot a 2D Wordcloud from the top words in a given document.
+    """
+    sents_preprocessed = Preprocess_Sentences(content_sentences)
+    sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
+    stop_words = set(stopwords.words('english'))
+
+    wordcloud = WordCloud(background_color='white',
+                            stopwords=stop_words,
+                            max_words=100,
+                            max_font_size=50,
+                            random_state=42).generate(str(sents_preprocessed_flat))
+    fig = plt.figure()
+    plt.imshow(wordcloud)
+    plt.axis('off')
+    plt.show()
+    if save:
+        fig.savefig("Saved_Images/WordCloud.png", dpi=900)
+    return
+
+## Word Embedding Functions...
+def Convert_bin_to_txt(look_at_vocab=False):
+    """
+    Function to convert pre-trained word vector files from .bin to .txt format so that can explore vocabulary.
+    Only used this function once but keeping in case.
+    """
+    path_in = 'Google_WordVectors/GoogleNews-vectors-negative300.bin'
+    path_out = 'Google_WordVectors/GoogleNews-vectors-negative300.txt'
+    model = KeyedVectors.load_word2vec_format(path_in, binary=True)
+    model.save_word2vec_format(path_out, binary=False)
+
+    if look_at_vocab:
+        model_google = KeyedVectors.load_word2vec_format(path_out, binary=True)
+        words = list(model_google.wv.vocab)[:100000]     # Only looking at first hundred thousand
+        phrases = [word for word in words if '_' in word]
+        print('\nVocab containing an underscore from Google model:', phrases)
+    return
+
+def find_closest_embeddings(embeddings_dict):
+    return sorted(embeddings_dict.keys(), key=lambda word: spatial.distance.euclidean(embeddings_dict[word], embedding))
+
+def Check_Embedding(embeddings_dict):
+    print(find_closest_embeddings(embeddings_dict["king"])[1:6])
+    print(find_closest_embeddings(embeddings_dict["twig"] - embeddings_dict["branch"] + embeddings_dict["hand"])[:5])
+    #model.most_similar("woman")   model.similarity("girl", "woman")
+    return
+
+
+## Functions for extracting/ plotting pre-trained word embeddings for specific vocabulary from given document
+
+def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=False):
+    """
+    Function for extracting the embedding vectors for certain keywords I would like to plot on a word embedding graph.
+    By default will extract the embeddings for the top 30 PKE keywords and all potentially-interesting nouns.
+
+    Note A:
+        Must check all possible versions of given word (all-capitals, non-capitals, etc) as Google Embeddings
+        are inconsistent in form.
+    Note B:
+        Maybe add a checker of whether the STEM / LEMMA of a word exists
+    Note C:
+        If multiple possible versions of a given word exists in the embedding vocab, take only the first instance
+    """
+    # # Extract words to plot
+    # if not keywords_only and not nouns_only:
+    #     keywords_and_nouns = itertools.chain(PKE_keywords(content, Info=True),
+    #                                          Extract_Nouns(content_sentences, Info=True))
+    #     words_to_plot = keywords_and_nouns
+    # elif keywords_only:
+    #     words_to_plot = PKE_keywords(content, Info=True)
+    # elif nouns_only:
+    #     words_to_plot = Extract_Nouns(content_sentences, Info=True)
+
+    words, vectors, words_unplotted = [], [], []
+    for word in words_to_extract:
+        if "_" in word:                                                      # Note A
+            new_word = []
+            for i in word.split("_"):
+                new_word.append(i.title())
+            capitalised_phrase = "_".join(new_word)
+            possible_versions_of_word = [word, capitalised_phrase, word.upper()]
+        else:
+            possible_versions_of_word = [word, word.title(), word.upper()]  # Note B
+        print('possible_versions_of_word: ', possible_versions_of_word)
+        boolean = [x in embeddings_dict for x in possible_versions_of_word]
+        if any(boolean):
+            idx = int(list(np.where(boolean)[0])[0])                        # Note C
+            true_word = possible_versions_of_word[idx]
+            words.append(true_word)
+            vectors.append(embeddings_dict[true_word])
+        else:
+            words_unplotted.append(word)
+    if Info:
+        print('\nNumber of Words from Document without an embedding: ', len(words_unplotted))
+        print('List of Words lacking an embedding:', words_unplotted)
+    return words, vectors, words_unplotted
+
+# def Plot_Word_Embedding(path_to_transcript, path_to_pretrained_vecs):
+#     """
+#     Function for plotting word embeddings.
+#     """
+
+## Code...
+
+# Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
+path_to_transcript = Path(
+    '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
+
+Glove_path = r'GloVe/glove.840B.300d.txt'
+Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'  # NOTE G
+
+path_to_vecs = Google_path
+
+# Get content from given transcript
+with open(path_to_transcript, 'r') as f:
+    content = f.read()
+    content_sentences = nltk.sent_tokenize(content)
+
+words = Prep_Content_for_Ngram_Extraction(content)
+print("extracted content/sentences/words")
+print("getting embeddings...")
+# Get embeddings dictionary of word vectors  from pre-trained word embedding
 embeddings_dict = {}
-
-
-"""The google pre-trained model already contains some phrases (bigrams) from gensim.models.keyedvectors import KeyedVectors
-"""
-
-## Convert .bin to .txt format (only needs run once)
-# model = KeyedVectors.load_word2vec_format('Google_WordVectors/GoogleNews-vectors-negative300.bin', binary=True)
-# model.save_word2vec_format('Google_WordVectors/GoogleNews-vectors-negative300.txt', binary=False)
-
-## Go
-from gensim.models import KeyedVectors
-Glove_dir = r'GloVe/glove.840B.300d.txt'
-Google_dir = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'
-
-# # looking at the vocab
-# model_google = KeyedVectors.load_word2vec_format('Google_WordVectors/GoogleNews-vectors-negative300.bin', binary=True)
-# words = list(model_google.wv.vocab)[:100000]
-# phrases = [word for word in words if '_' in word]
-# print('\n', phrases, '\n')
-
-
-with open(Google_dir, 'r', errors='ignore', encoding='utf8') as f:
+with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
     try:
         for line in f:
             values = line.split()
@@ -368,59 +395,59 @@ with open(Google_dir, 'r', errors='ignore', encoding='utf8') as f:
             embeddings_dict[word] = vector
     except:
         f.__next__()
-
-def find_closest_embeddings(embedding):
-    return sorted(embeddings_dict.keys(), key=lambda word: spatial.distance.euclidean(embeddings_dict[word], embedding))
-
-# print(find_closest_embeddings(embeddings_dict["king"])[1:6])
+print("got embeddings")
+# # save embeddings dict
+# df = pd.DataFrame([embeddings_dict])
+# df.to_hdf('embeddings_dict.h5', key='df', mode='w')
 #
-# print(find_closest_embeddings(
-#     embeddings_dict["twig"] - embeddings_dict["branch"] + embeddings_dict["hand"]
-# )[:5])
+# #load embeddings dict
+# df = pd.read_hdf('embeddings_dict.h5', key='df')
+# embeddings_dict = df.to_dict()
+# Extract words to plot
+nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict, Info=True)
+print('done nouns')
+pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content, Info=True), embeddings_dict, Info=True)
+print('done pke')
+bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict, Info=True)
+print('done bigrams')
+trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict, Info=True)
+print('done trigrams')
 
+
+# Plot
 tsne = TSNE(n_components=2, random_state=0)
-words = [] #list(embeddings_dict.keys())
-words_unplotted = []
-vectors = []
-print('nouns_to_plot', nouns_to_plot)
-print('keywords to plot', top_keywords_final)
-#or both
-both = itertools.chain(nouns_to_plot, top_keywords_final)
+sets_to_plot = [nouns_set, pke_set, bigram_set, trigram_set]
+colours = ['blue', 'green', 'orange', 'pink']
+labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
 
-for word in both:          #top_keywords: #nouns_to_plot:
-    # check all cases... capitals, non capitals, etc
-    #if double word, capitalise and put back together
-    print('\nword:', word)
-    if "_" in word:
-        split_phrase = word.split("_")
-        new_word = []
-        for i in word.split("_"):
-            new_word.append(i.title())
-        capitalised_phrase = "_".join(new_word)
-        possible_versions_of_word = [word, capitalised_phrase, word.upper()]
-    else:
-        possible_versions_of_word = [word, word.title(), word.upper()] # maybe add a check if the stem of a word is there?
-    # print('boolean', boolean)
-    boolean = [x in embeddings_dict for x in possible_versions_of_word]
-    if any(boolean):
-        # print('list(np.where(boolean)[0])[0]: ', list(np.where(boolean)[0])[0])
-        idx = int(list(np.where(boolean)[0])[0]) #might have issue when multiple possible_versions are in vocab
-        # print('idx', idx)
-        true_word = possible_versions_of_word[idx]
-        # print('true_word', true_word)
-        words.append(true_word)
-        vectors.append(embeddings_dict[true_word])
-    else:
-        words_unplotted.append(word)
-##
-Y = tsne.fit_transform(vectors[:250])
+last_noun_vector = len(nouns_set[0])
+print('last_noun_vector', last_noun_vector)
+last_pke_vector = last_noun_vector + len(pke_set[0])
+print('last_pke_vector', last_pke_vector)
+last_bigram_vector = last_pke_vector + len(bigram_set[0])
+print('last_bigram_vector', last_bigram_vector)
+last_trigram_vector = last_bigram_vector + len(trigram_set[0])
+print('last_trigram_vector', last_trigram_vector)
 
-plt.scatter(Y[:, 0], Y[:, 1])
+all_vectors = itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1])
+print('number of vectors', len(all_vectors))
+Y = tsne.fit_transform(all_vectors)
+plt.figure()
 
-for label, x, y in zip(words, Y[:, 0], Y[:, 1]):
-    plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+n = [0, last_noun_vector, last_pke_vector, last_bigram_vector, last_trigram_vector]
+cnt = 0
+for idx, set in enumerate(sets_to_plot):
+    words, vectors, words_unplotted = set
+
+    plt.scatter(Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1], c=colours[idx], label=labels[idx])
+
+    for label, x, y in zip(words, Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1]):
+        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+    print('\nPlotted', labels[idx])
+    print('words unplotted from', labels[idx],': ', words_unplotted)
+    cnt +=1
+
+plt.legend()
 plt.show()
 
-print(len(words_unplotted), words_unplotted)
 
-"""model.most_similar("woman")   model.similarity("girl", "woman")"""
