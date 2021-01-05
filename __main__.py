@@ -1,55 +1,10 @@
 """
 #Breakdown of Code...
-Step 1:
-Step 2: Now we create a word embedding on the new set of words (containg bi and trigrams)
-Step 3: Extract Keywords (Ones we'll be interested in plotting)
+
 
 #Notes mentioned in code...
 NOTE G:
     The google pre-trained model already contains some phrases (bigrams)
-
-
-NOTE A
-    Example of why I detect trigrams first: ['brain', 'simulation'] was a detected bigram, and
-    ['deep', 'brain', 'simulation'] was a detected trigram. If I condensed all the words 'brain' and 'simulation' into
-    'brain_simulation' then once I searched for the trigrams there would be none left, as it would instead have
-    'deep', 'brain_simulation'.
-
-NOTE B-
-    I'm using the CBOW version of Word2Vec due to this paper
-    https://www.cs.cornell.edu/~schnabts/downloads/schnabel2015embeddings.pdf
-
-NOTE C:
-    When I was inputting the preprocessed-but-lengthy sentences in 'sentences_preprocessed' the Word2Vec model wasn't
-    working well very clearly. When I tested it by looking for similar words to 'Neural_Nets' it was rubbish: gave me
-    # rubbish... 'dope' 'table''zaps' 'though' 'person' 'money',
-
-    However when I only input the words from 'sentences_preprocessed' which are NOUNS... much better! And it produces
-    an interesting pattern to look into.  ->
-    !!!!!!!
-    NOTE ^HERE^ I MADE A MISTAKE. I accidentally input a list of the 539 nouns in the whole transcript (in sequential
-    order but ALL in one list, rather than split by sentence) 543 times...     it meanst (as you'll read below) that
-    the Word2Vec model seemed to learn word meaning very well, the layout was strange like a flower... need to think this through
-    OK. It's just giving me back the words that occurred before and after 'Neural_Nets' in the list i input :-) :-(
-    !!!!!
-    -> Words similar to 'Neural_Net' now are...   [workers=8, window=10, min=1, sg=0]
-    similar to Neural net [('simulate', 0.9886050224304199), ('brain', 0.9882206916809082), ('word', 0.96191692352294),
-    ('nets', 0.9608338475227356), ('neurons', 0.9187374114990234), ('lot', 0.9116002321243286), ('babies', 0.853849649),
-    ('humans', 0.8418133854866028), ('title', 0.787124752998352), ('way', 0.7816523313522339)] :-)
-
-
-#Other stuff (for me)...
-pip uninstall numpy
-pip install -U numpy
-
-# Tasks...
-TODO: How does one evaluate the success of a Word Embedding? Then play around with params to optimise..
-Notes from paper https://arxiv.org/pdf/1901.09785.pdf
-    evaluation metrics, absolute intrinsic evaluation
-    the method of extracting n-grams is a word embedding task in itself (II E.)
-    Maybe use Word Similarity (cosine dist) as a evaluation metric
-    use QVEC: https://github.com/ytsvetko/qvec  https://arxiv.org/pdf/1809.02094.pdf
-TODO: Maybe explore different methods of dimensionality reduction for plotting wordvecs (might improve layout?)
 
 """
 from nltk.collocations import BigramCollocationFinder
