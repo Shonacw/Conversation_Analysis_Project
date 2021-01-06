@@ -332,7 +332,8 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
             possible_versions_of_word = [word, capitalised_phrase, word.upper()]
         else:
             possible_versions_of_word = [word, word.title(), word.upper()]  # Note B
-        print('possible_versions_of_word: ', possible_versions_of_word)
+        if Info:
+            print('possible_versions_of_word: ', possible_versions_of_word)
         boolean = [x in embeddings_dict for x in possible_versions_of_word]
         if any(boolean):
             idx = int(list(np.where(boolean)[0])[0])                        # Note C
@@ -342,7 +343,7 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
         else:
             words_unplotted.append(word)
     if Info:
-        print('\nNumber of Words from Document without an embedding: ', len(words_unplotted))
+        print('Number of Words from Document without an embedding: ', len(words_unplotted))
         print('List of Words lacking an embedding:', words_unplotted)
     return words, vectors, words_unplotted
 
@@ -361,7 +362,11 @@ def Extract_Keyword_Vectors():
 
     Note A:
         Currently using GoogleNews pretrained word vectors, but could also use Glove. The benefit of the Google model is
-         that it contains vectors for some 'phrases' (bigrams/ trigrams) which is helpful for the plot being meaningful!
+        that it contains vectors for some 'phrases' (bigrams/ trigrams) which is helpful for the plot being meaningful!
+    Note B:
+        The tsne vector dimensionality must be done all together, but in a way that I can then split the vectors back
+        into groups based on keyword type. Hence a little more fiddly.
+
     """
     # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
     path_to_transcript = Path(
@@ -392,39 +397,66 @@ def Extract_Keyword_Vectors():
                 embeddings_dict[word] = vector
         except:
             f.__next__()
-    print("-Obtained embeddings.")
+    print("-Obtained all GoogleNews embeddings.")
 
     # Extract words to plot
-    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict, Info=True)
-    print('-Extracted embeddings for nouns.')
-    pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content, Info=True), embeddings_dict, Info=True)
-    print('-Extracted embeddings for pke keywords.')
-    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict, Info=True)
-    print('-Extracted embeddings for bigrams.')
-    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict, Info=True)
-    print('-Extracted embeddings for trigrams.')
+    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences), embeddings_dict)
+    pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content), embeddings_dict)
+    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict)
+    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict)
+    print('-Extracted embeddings for all keywords.')
+
+    # Reduce dimensionality of word vectors such that we can store X and Y positions.
+    tsne = TSNE(n_components=2, random_state=0)
+    sets_to_plot = [nouns_set, pke_set, bigram_set, trigram_set]
+
+    last_noun_vector = len(nouns_set[0])
+    last_pke_vector = last_noun_vector + len(pke_set[0])
+    last_bigram_vector = last_pke_vector + len(bigram_set[0])
+    last_trigram_vector = last_bigram_vector + len(trigram_set[0])
+    all_vectors = list(itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1]))
 
     # Store keywords + embeddings in a pandas data-frame
-    keyword_vectors_df = pd.Dataframe(columns = ['noun_keyw',   'noun_X',    'noun_Y',
-                                                 'pke_keyw',     'pke_X',    'pke_Y',
-                                                 'bigram_keyw',  'bigram_X', 'bigram_Y',
-                                                 'trigram_keyw', 'trigram_X','trigram_Y'])
-    keyword_vectors_df['noun_keyw'] = nouns_set[0]
-    keyword_vectors_df['noun_X'], keyword_vectors_df['noun_Y'] = nouns_set[1], nouns_set[2]
-    keyword_vectors_df['pke_keyw'] = pke_set[0]
-    keyword_vectors_df['pke_X'], keyword_vectors_df['pke_Y'] = pke_set[1], pke_set[2]
-    keyword_vectors_df['bigram_keyw'] = bigram_set[0]
-    keyword_vectors_df['bigram_X'], keyword_vectors_df['bigram_Y'] = bigram_set[1], bigram_set[2]
-    keyword_vectors_df['trigram_keyw'] = trigram_set[0]
-    keyword_vectors_df['trigram_X'], keyword_vectors_df['trigram_Y'] = trigram_set[1], trigram_set[2]
+    keyword_vectors_df = pd.DataFrame(columns = ['noun_keyw',   'noun_X',    'noun_Y', 'unfamiliar_noun',
+                                                 'pke_keyw',     'pke_X',    'pke_Y', ' unfamiliar_pke',
+                                                 'bigram_keyw',  'bigram_X', 'bigram_Y', 'unfamiliar_bigram',
+                                                 'trigram_keyw', 'trigram_X','trigram_Y', 'unfamiliar_trigram'
+                                                 ])
+
+    keyword_vectors_df.loc[:, 'noun_keyw'] = pd.Series(nouns_set[0])
+    keyword_vectors_df.loc[:, 'unfamiliar_noun'] = pd.Series(nouns_set[2])
+
+    keyword_vectors_df.loc[:, 'pke_keyw'] = pd.Series(pke_set[0])
+    keyword_vectors_df.loc[:, 'unfamiliar_pke'] = pd.Series(pke_set[2])
+
+    keyword_vectors_df.loc[:, 'bigram_keyw'] = pd.Series(bigram_set[0])
+    keyword_vectors_df.loc[:, 'unfamiliar_bigram'] = pd.Series(bigram_set[2])
+
+    keyword_vectors_df.loc[:, 'trigram_keyw'] = pd.Series(trigram_set[0])
+    keyword_vectors_df.loc[:, 'unfamiliar_trigram'] = pd.Series(trigram_set[2])
+
+    reduced_vectors = tsne.fit_transform(all_vectors)                           #Note B
+
+    n = [0, last_noun_vector, last_pke_vector, last_bigram_vector, last_trigram_vector, -1]
+    col_names_X, col_names_Y = ['noun_X', 'pke_X', 'bigram_X', 'trigram_X'], ['noun_Y', 'pke_Y', 'bigram_Y', 'trigram_Y']
+    for i in range(len(sets_to_plot)):
+        Xs = reduced_vectors[n[i]:n[i + 1], 0]
+        Ys = reduced_vectors[n[i]:n[i + 1], 1]
+        keyword_vectors_df.loc[:, col_names_X[i]] = pd.Series(Xs)
+        keyword_vectors_df.loc[:, col_names_Y[i]] = pd.Series(Ys)
 
     # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
     keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_df.h5', key='df', mode='w')
-
-    # Print segment of data-frame to ensure it was formatted correctly
-    print(keyword_vectors_df.head())
+    print('-keyword_vectors_df dataframe created and saved.')
 
     return nouns_set, pke_set, bigram_set, trigram_set
+
+def Find_Keyword_Use_Cases(content_sent_tokenized, ):
+    """coomment
+    should use regular expressions to make faster
+     go segment by segment and look for all the keywords/phrases in it, make it into a list """
+    #create flat list of all keywords
+    # search for bigrams/trigrams separately
 
 def Sentence_Wise_Keyword_Averaging():
     """
@@ -581,49 +613,37 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
 
 # Plot Word Embeddings (done 5th Jan. Works nicely but takes a while!)
-def PlotWord_Embeddings(nouns_set, pke_set, bigram_set, trigram_set):
+def PlotWord_Embeddings(keyword_vectors_df, save_fig=False):
     """
-    (done 5th Jan. Works nicely but takes a while!)
-
     Plots the Word2Vec layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
     all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
     to the type of keywords.
     """
-    tsne = TSNE(n_components=2, random_state=0)
-    sets_to_plot = [nouns_set, pke_set, bigram_set, trigram_set]
+    keyword_types = ['noun', 'pke', 'bigram', 'trigram']
     colours = ['blue', 'green', 'orange', 'pink']
     labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
 
-    last_noun_vector = len(nouns_set[0])
-    print('last_noun_vector', last_noun_vector)
-    last_pke_vector = last_noun_vector + len(pke_set[0])
-    print('last_pke_vector', last_pke_vector)
-    last_bigram_vector = last_pke_vector + len(bigram_set[0])
-    print('last_bigram_vector', last_bigram_vector)
-    last_trigram_vector = last_bigram_vector + len(trigram_set[0])
-    print('last_trigram_vector', last_trigram_vector)
-
-    all_vectors = list(itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1]))
-    print('number of vectors', len(all_vectors))
-
-    Y = tsne.fit_transform(all_vectors)
     plt.figure()
 
-    n = [0, last_noun_vector, last_pke_vector, last_bigram_vector, last_trigram_vector]
-    cnt = 0
-    for idx, set in enumerate(sets_to_plot):
-        words, vectors, words_unplotted = set
+    for i in range(len(keyword_types)):
+        type = keyword_types[i]
+        words = keyword_vectors_df['{}_keyw'.format(type)]
+        Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
+        unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
 
-        plt.scatter(Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1], c=colours[idx], label=labels[idx])
-
-        for label, x, y in zip(words, Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1]):
+        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
+        for label, x, y in zip(words, Xs, Ys):
             plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
-        print('\nPlotted', labels[idx])
-        print('words unplotted from', labels[idx],': ', words_unplotted)
-        cnt += 1
+        print('\nPlotted', labels[i])
+        print(labels[i],'which were not plotted due to lack of embedding: ', list(unplotted))
 
     plt.legend()
     plt.show()
 
+    if save_fig:
+        plt.savefig("Saved_Images/Keyword_Types_WordEmbedding.png", dpi=900)
+    return
 
 
+keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
+PlotWord_Embeddings(keyword_vectors_df)
