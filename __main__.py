@@ -42,6 +42,15 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
+from collections import defaultdict
+from pprint import pprint
+import tensorflow as tf
+import tensorflow_hub as hub
+from sklearn.cluster import DBSCAN
+import importlib
+topics = importlib.import_module("msci-project.src.topics")
+# from msci-project.src.topics import make_similarity_matrix, plot_similarity
+
 ## Pre-processing Functions...
 def Prep_Content_for_Ngram_Extraction(content):
     """
@@ -353,7 +362,7 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
 #     """
 
 ## Code...
-def Extract_Keyword_Vectors():
+def Extract_Keyword_Vectors(content, content_sentences):
     """
     (made on 5th January, works well haven't tested function today (6th) so far though ======)
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
@@ -368,19 +377,10 @@ def Extract_Keyword_Vectors():
         into groups based on keyword type. Hence a little more fiddly.
 
     """
-    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
-    path_to_transcript = Path(
-        '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
-
-    # Choose which pretrained model to use. GoogleNews is better (Note A)
+    # Choose pre-trained model... Note A
     Glove_path = r'GloVe/glove.840B.300d.txt'
     Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'
     path_to_vecs = Google_path
-
-    # Get content from transcript
-    with open(path_to_transcript, 'r') as f:
-        content = f.read()
-        content_sentences = nltk.sent_tokenize(content)
 
     words = Prep_Content_for_Ngram_Extraction(content)
     print("-Extracted content/sentences/words from transcript.")
@@ -451,11 +451,13 @@ def Extract_Keyword_Vectors():
 
     return nouns_set, pke_set, bigram_set, trigram_set
 
-def Find_Keyword_Use_Cases(content_sent_tokenized, ):
-    """coomment
+
+def Find_Keyword_Use_Cases(content_sent_tokenized):
+    """
     should use regular expressions to make faster
-     go segment by segment and look for all the keywords/phrases in it, make it into a list """
-    #create flat list of all keywords
+    go segment by segment and look for all the keywords/phrases in it, make it into a list
+    """
+    # create flat list of all keywords
     # search for bigrams/trigrams separately
 
 def Sentence_Wise_Keyword_Averaging():
@@ -610,9 +612,6 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
     fig.show()
 
-
-
-# Plot Word Embeddings (done 5th Jan. Works nicely but takes a while!)
 def PlotWord_Embeddings(keyword_vectors_df, save_fig=False):
     """
     Plots the Word2Vec layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
@@ -644,6 +643,51 @@ def PlotWord_Embeddings(keyword_vectors_df, save_fig=False):
         plt.savefig("Saved_Images/Keyword_Types_WordEmbedding.png", dpi=900)
     return
 
+def Segment_Transcript(content_sentences):
+    """
+    Taken from Msci project work that Jonas did on 5th January
+    """
+    #load transcript
+    print("-Loading sentence embedder, this takes a while...")
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    print("Done")
 
-keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
-PlotWord_Embeddings(keyword_vectors_df)
+    #embed using google sentence encoder
+    embeddings = embed(content_sentences)
+    print('Embedded using Google Sentence Encoder')
+
+    #approach 1: use density based clustering algorithm to cluster sentences into topics
+    sim_m = topics.make_similarity_matrix(content_sentences, embeddings)
+
+    cluster_labels = DBSCAN(eps=2.2, min_samples=1).fit_predict(sim_m) #eps is sensitivity
+
+    clusters = defaultdict(list)
+    for cl, sentence in zip(cluster_labels, content_sentences):
+        clusters[cl].append(sentence)
+    print('\n list(clusters.values()): ')
+    pprint(list(clusters.values())) #these are sentence clusters
+    print('\nNumber of Clusters: ', len(list(clusters.values())))
+
+    #find the sentence index at which the clusters start
+
+
+    #print('\nnow plotting')
+    #topics.plot_similarity(content_sentences, embeddings, 90) #visualised here
+
+
+if __name__=='__main__':
+    # Testing Keyword stuff...
+    # keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
+    # PlotWord_Embeddings(keyword_vectors_df)
+
+    #Testing Segmentation stuff...
+    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
+    path_to_transcript = Path(
+        '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
+
+    # Get content from transcript
+    with open(path_to_transcript, 'r') as f:
+        content = f.read()
+        content_sentences = nltk.sent_tokenize(content)
+
+    Segment_Transcript(content_sentences)
