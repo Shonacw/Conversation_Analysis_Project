@@ -1,10 +1,7 @@
 """
 #Breakdown of Code...
 
-
 #Notes mentioned in code...
-NOTE G:
-    The google pre-trained model already contains some phrases (bigrams)
 
 """
 from nltk.collocations import BigramCollocationFinder
@@ -19,6 +16,7 @@ import nltk  # Importing nltk as "import nltk.pos_tag" wasn't working (?)
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+from gensim.models import Phrases
 
 from itertools import groupby
 import itertools
@@ -36,6 +34,13 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
 import pandas as pd
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.axes3d import get_test_data
+from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.patches import FancyArrowPatch
+from mpl_toolkits.mplot3d import proj3d
 
 ## Pre-processing Functions...
 def Prep_Content_for_Ngram_Extraction(content):
@@ -152,7 +157,7 @@ def Rake_Keywords(content, Info=False):
     """
     Function to extract keywords from document using RAKE
     """
-    rake_object = rake.Rake("SmartStoplist.txt") #, 2, 3, 2 #min characters in word, max number of words in phrase, min number of times it's in text
+    rake_object = rake.Rake("SmartStoplist.txt")
     keywords = rake_object.run(content)
     if Info:
         print("\nRAKE Keywords:", keywords)
@@ -216,6 +221,32 @@ def Extract_Nouns(content_sentences, Info=False):
         print('\nExtracted Nouns: ', nouns_to_plot)
 
     return nouns_to_plot
+
+def Gensim_Phrase():
+    """This stuff taken from Inference when was messing around with phrase extraction"""
+    phrases = Phrases(content, min_count=2, threshold=3)
+    for phrase in phrases[content]:
+        print(phrase)
+    # Export a FrozenPhrases object that is more efficient but doesn't allow any more training.
+    # frozen_phrases = phrases.freeze()
+    # print(frozen_phrases[sent]) #give it a sentence like
+
+    ## N-GRAM EXTRACTION
+    from gensim.models.phrases import Phrases, Phraser
+
+    def build_phrases(sentences):
+        phrases = Phrases(sentences,
+                          min_count=2,
+                          threshold=3,
+                          progress_per=1000)
+        return Phraser(phrases)
+
+    phrases_model.save('phrases_model.txt')
+
+    phrases_model = Phraser.load('phrases_model.txt')
+
+    def sentence_to_bi_grams(phrases_model, sentence):
+        return ' '.join(phrases_model[sentence])
 
 def Plot_Wordcloud(content_sentences, save=False):
     """
@@ -321,88 +352,278 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
 #     """
 
 ## Code...
+def Extract_Keyword_Vectors():
+    """
+    (made on 5th January, works well haven't tested function today (6th) so far though ======)
+    Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
+    then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df which is then saved to hdf
+    for easy loading in future tasks.
 
-# Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
-path_to_transcript = Path(
-    '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
+    Note A:
+        Currently using GoogleNews pretrained word vectors, but could also use Glove. The benefit of the Google model is
+         that it contains vectors for some 'phrases' (bigrams/ trigrams) which is helpful for the plot being meaningful!
+    """
+    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
+    path_to_transcript = Path(
+        '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
 
-Glove_path = r'GloVe/glove.840B.300d.txt'
-Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'  # NOTE G
+    # Choose which pretrained model to use. GoogleNews is better (Note A)
+    Glove_path = r'GloVe/glove.840B.300d.txt'
+    Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'
+    path_to_vecs = Google_path
 
-path_to_vecs = Google_path
+    # Get content from transcript
+    with open(path_to_transcript, 'r') as f:
+        content = f.read()
+        content_sentences = nltk.sent_tokenize(content)
 
-# Get content from given transcript
-with open(path_to_transcript, 'r') as f:
-    content = f.read()
-    content_sentences = nltk.sent_tokenize(content)
+    words = Prep_Content_for_Ngram_Extraction(content)
+    print("-Extracted content/sentences/words from transcript.")
 
-words = Prep_Content_for_Ngram_Extraction(content)
-print("extracted content/sentences/words")
-print("getting embeddings...")
-# Get embeddings dictionary of word vectors  from pre-trained word embedding
-embeddings_dict = {}
-with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
-    try:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            vector = np.asarray(values[1:], "float32")
-            embeddings_dict[word] = vector
-    except:
-        f.__next__()
-print("got embeddings")
-# # save embeddings dict
-# df = pd.DataFrame([embeddings_dict])
-# df.to_hdf('embeddings_dict.h5', key='df', mode='w')
-#
-# #load embeddings dict
-# df = pd.read_hdf('embeddings_dict.h5', key='df')
-# embeddings_dict = df.to_dict()
-# Extract words to plot
-nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict, Info=True)
-print('done nouns')
-pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content, Info=True), embeddings_dict, Info=True)
-print('done pke')
-bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict, Info=True)
-print('done bigrams')
-trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict, Info=True)
-print('done trigrams')
+    # Get embeddings dictionary of word vectors  from pre-trained word embedding
+    embeddings_dict = {}
+    print("-Obtaining embeddings...")
+    with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
+        try:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                vector = np.asarray(values[1:], "float32")
+                embeddings_dict[word] = vector
+        except:
+            f.__next__()
+    print("-Obtained embeddings.")
+
+    # Extract words to plot
+    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict, Info=True)
+    print('-Extracted embeddings for nouns.')
+    pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content, Info=True), embeddings_dict, Info=True)
+    print('-Extracted embeddings for pke keywords.')
+    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict, Info=True)
+    print('-Extracted embeddings for bigrams.')
+    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict, Info=True)
+    print('-Extracted embeddings for trigrams.')
+
+    # Store keywords + embeddings in a pandas data-frame
+    keyword_vectors_df = pd.Dataframe(columns = ['noun_keyw',   'noun_X',    'noun_Y',
+                                                 'pke_keyw',     'pke_X',    'pke_Y',
+                                                 'bigram_keyw',  'bigram_X', 'bigram_Y',
+                                                 'trigram_keyw', 'trigram_X','trigram_Y'])
+    keyword_vectors_df['noun_keyw'] = nouns_set[0]
+    keyword_vectors_df['noun_X'], keyword_vectors_df['noun_Y'] = nouns_set[1], nouns_set[2]
+    keyword_vectors_df['pke_keyw'] = pke_set[0]
+    keyword_vectors_df['pke_X'], keyword_vectors_df['pke_Y'] = pke_set[1], pke_set[2]
+    keyword_vectors_df['bigram_keyw'] = bigram_set[0]
+    keyword_vectors_df['bigram_X'], keyword_vectors_df['bigram_Y'] = bigram_set[1], bigram_set[2]
+    keyword_vectors_df['trigram_keyw'] = trigram_set[0]
+    keyword_vectors_df['trigram_X'], keyword_vectors_df['trigram_Y'] = trigram_set[1], trigram_set[2]
+
+    # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
+    keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_df.h5', key='df', mode='w')
+
+    # Print segment of data-frame to ensure it was formatted correctly
+    print(keyword_vectors_df.head())
+
+    return nouns_set, pke_set, bigram_set, trigram_set
+
+def Sentence_Wise_Keyword_Averaging():
+    """
+    Sentence by sentence analysis (this would look super messy?) or maybe not as some sentences wouldnt contain a keyword
+    so would be a reasonable amount of space (along sentence_number axis) between points
+    """
+
+def Segment_Wise_Keyword_Averaging(content_in_sentences, list_of_segment_starting_points, keyword_vectors_df):
+    """
+    Function to perform calculate average topic position during each segment of the conversation.
+
+    If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
+    that will be (hopefully) semantically similar.
+
+    Requires the sentence-tokenized full transcript, list of sentences indices corresponding the start of each segment,
+
+    need to a) find which keywords are used in each segment and turn into a dict, i.e. {'segment 1': ['brain', 'body']}
+    then using the vector information about each keyword (which can be searched up in the keyword_vectors_df)
+    can find average position in topic space for each segment of the transcript.
+    """
+
+    #haven't yet cleaned/ updated=======
+
+    Keywo_Embed_df_manual = pd.read_hdf('./SGCW/Keyword_Embeddings_df_manual.h5', key='dfs')
+    segs_manual_info_df = pd.read_hdf('./SGCW/segs_manual_info.h5', key='dfs')
+    keywords_manual = segs_manual_info_df['keyword_list'].values
+    (av_xs_manual, av_ys_manual, segment_numbs_manual) = ([], [], [])
+
+    for idx, list_manual in enumerate(keywords_manual):
+        ## MANUAL
+        # Access XY coord for each word in the sublist
+        word_list_X = []
+        word_list_Y = []
+        for word in list_manual:
+            # print(word)
+            word_list_X.append(Keywo_Embed_df_manual[Keywo_Embed_df_manual['Word'] == word].X.values[0])
+            word_list_Y.append(Keywo_Embed_df_manual[Keywo_Embed_df_manual['Word'] == word].Y.values[0])
+
+        # Finding average positions
+        av_xs_manual.append(np.mean(word_list_X))
+        av_ys_manual.append(np.mean(word_list_Y))
+
+        segment_numbs_manual.append(idx)
+
+    Topic_avs_df_manual = pd.DataFrame()
+    Topic_avs_df_manual['Av_X'] = av_xs_manual
+    Topic_avs_df_manual['Av_Y'] = av_ys_manual
+    Topic_avs_df_manual.to_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs', mode='w')
+
+def Plot_2D_Topic_Evolution_SegmentWise():
+    """ Plots the nice 2D word embedding space with an arrow following the direction of the topics discussed in each
+    segment of the transcript. """
+    labels = df_manual['Topic_Num'].values
+    xs = df_manual['Av_X'].values
+    ys = df_manual['Av_Y'].values
+
+    ax1.quiver(xs[:-1], ys[:-1], xs[1:]-xs[:-1], ys[1:]-ys[:-1], scale_units='xy',
+               angles='xy', scale=1, color='b', width=0.005)
+
+    # zip joins x and y coordinates in pairs
+    for x, y, label in zip(xs, ys, labels):
+
+        ax1.annotate(label+1, # this is the text
+                     (x,y), # this is the point to label
+                     textcoords="offset points", # how to position the text
+                     xytext=(0,10), # distance from text to points (x,y)
+                     ha='center') # horizontal alignment can be left, right or center
+
+    #plot special colours for the first and last point
+    ax1.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
+    ax1.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+    ax1.set_title('Manual')
+
+    fig.show()
 
 
-# Plot
-tsne = TSNE(n_components=2, random_state=0)
-sets_to_plot = [nouns_set, pke_set, bigram_set, trigram_set]
-colours = ['blue', 'green', 'orange', 'pink']
-labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
 
-last_noun_vector = len(nouns_set[0])
-print('last_noun_vector', last_noun_vector)
-last_pke_vector = last_noun_vector + len(pke_set[0])
-print('last_pke_vector', last_pke_vector)
-last_bigram_vector = last_pke_vector + len(bigram_set[0])
-print('last_bigram_vector', last_bigram_vector)
-last_trigram_vector = last_bigram_vector + len(trigram_set[0])
-print('last_trigram_vector', last_trigram_vector)
+## Now for 3d version (?)
 
-all_vectors = itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1])
-print('number of vectors', len(all_vectors))
-Y = tsne.fit_transform(all_vectors)
-plt.figure()
+class Arrow3D(FancyArrowPatch):
+    def __init__(self, xs, ys, zs, *args, **kwargs):
+        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
+        self._verts3d = xs, ys, zs
 
-n = [0, last_noun_vector, last_pke_vector, last_bigram_vector, last_trigram_vector]
-cnt = 0
-for idx, set in enumerate(sets_to_plot):
-    words, vectors, words_unplotted = set
+    def draw(self, renderer):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+        FancyArrowPatch.draw(self, renderer)
 
-    plt.scatter(Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1], c=colours[idx], label=labels[idx])
+def Plot_3D_Trajectory_through_TopicSpace():
+    """
+    Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
+    """
+    df_manual = pd.read_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs')
+    labels_manual = df_manual['Topic_Num'].values
+    df_slice = pd.read_hdf('./SGCW/Topic_avs_df_slice.h5', key='dfs')
+    labels_slice = df_slice['Topic_Num'].values
 
-    for label, x, y in zip(words, Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1]):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
-    print('\nPlotted', labels[idx])
-    print('words unplotted from', labels[idx],': ', words_unplotted)
-    cnt +=1
+    # set up a figure twice as wide as it is tall
+    fig = plt.figure(figsize=(22, 11))  # plt.figaspect(0.5))
+    fig.suptitle('Movement through topic space over time')
 
-plt.legend()
-plt.show()
+    # set up the axes for the first plot
+    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+
+    ##MANUAL ----------------------------------------------------------
+    # Data for a three-dimensional line
+    word_emb_xs = df_manual['Av_X'].values
+    word_emb_ys = df_manual['Av_Y'].values
+    label_seg_df = pd.read_hdf('./SGCW/segs_manual_info.h5', key='dfs')
+    segment_numbers = label_seg_df['first_sent_numbers'].values
+    print('segment_numbers', segment_numbers)
+
+    #ax.plot3D(xs, segment_numbers, ys, 'bo-')
+    ax1.set_xlabel('$time (Segment Number)$', fontsize=13)
+    ax1.set_ylabel('$X$', fontsize=20, rotation = 0)
+    ax1.set_zlabel('$Y$', fontsize=20)
+    ax1.zaxis.set_rotate_label(False)
+    ax1.set_title('Manual')
+
+    cnt = 0
+    # (old_x, old_y, old_z) = (0, 0, 0)
+    for x, y, z, label in zip(segment_numbers, word_emb_xs, word_emb_ys, labels_manual):
+      cnt +=1
+      ax1.plot([x], [y], [z],'o') #markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6)
+      ax1.text(x, y, z, label+1, size=10)
+      if cnt ==1:
+        (old_x, old_y, old_z) = (x, y, z)
+        continue
+
+      a = Arrow3D([old_x, x], [old_y,y], [old_z, z], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+      ax1.add_artist(a)
+
+      (old_x, old_y, old_z) = (x, y, z)
+
+
+    ## AXIS STUFF
+    ax1.dist = 13
+    ax1 = plt.gca()
+    # ax.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels([])
+    ax1.zaxis.set_ticklabels([])
+
+    # for line in ax.xaxis.get_ticklines():
+    #     line.set_visible(False)
+    for line in ax1.yaxis.get_ticklines():
+        line.set_visible(False)
+    for line in ax1.zaxis.get_ticklines():
+        line.set_visible(False)
+
+    fig.show()
+
+
+
+# Plot Word Embeddings (done 5th Jan. Works nicely but takes a while!)
+def PlotWord_Embeddings(nouns_set, pke_set, bigram_set, trigram_set):
+    """
+    (done 5th Jan. Works nicely but takes a while!)
+
+    Plots the Word2Vec layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
+    all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
+    to the type of keywords.
+    """
+    tsne = TSNE(n_components=2, random_state=0)
+    sets_to_plot = [nouns_set, pke_set, bigram_set, trigram_set]
+    colours = ['blue', 'green', 'orange', 'pink']
+    labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
+
+    last_noun_vector = len(nouns_set[0])
+    print('last_noun_vector', last_noun_vector)
+    last_pke_vector = last_noun_vector + len(pke_set[0])
+    print('last_pke_vector', last_pke_vector)
+    last_bigram_vector = last_pke_vector + len(bigram_set[0])
+    print('last_bigram_vector', last_bigram_vector)
+    last_trigram_vector = last_bigram_vector + len(trigram_set[0])
+    print('last_trigram_vector', last_trigram_vector)
+
+    all_vectors = list(itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1]))
+    print('number of vectors', len(all_vectors))
+
+    Y = tsne.fit_transform(all_vectors)
+    plt.figure()
+
+    n = [0, last_noun_vector, last_pke_vector, last_bigram_vector, last_trigram_vector]
+    cnt = 0
+    for idx, set in enumerate(sets_to_plot):
+        words, vectors, words_unplotted = set
+
+        plt.scatter(Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1], c=colours[idx], label=labels[idx])
+
+        for label, x, y in zip(words, Y[n[cnt]:n[cnt+1], 0], Y[n[cnt]:n[cnt+1], 1]):
+            plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+        print('\nPlotted', labels[idx])
+        print('words unplotted from', labels[idx],': ', words_unplotted)
+        cnt += 1
+
+    plt.legend()
+    plt.show()
+
 
 
