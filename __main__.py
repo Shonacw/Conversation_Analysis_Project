@@ -235,11 +235,11 @@ def Extract_Nouns(content_sentences, Info=False):
 
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
-    words_to_plot = [word for word in nlp(word_tokenize(sents_preprocessed_flat_onestring))
-                     if word.tag_ in ['NN', 'FW'] and word not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+    words_to_plot = [word.text for word in nlp(sents_preprocessed_flat_onestring)
+                     if word.pos_ in ['NOUN', 'X'] and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
                                                        'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
                                                        'shouldnt']
-                     and len(word) != 1]
+                     and len(word.text) != 1]
     nouns_to_plot = list(dict.fromkeys(words_to_plot))            # Remove duplicate words
     if Info:
         print('\nExtracted Nouns: ', nouns_to_plot)
@@ -542,7 +542,7 @@ def Segment_Wise_Keyword_Averaging(content_in_sentences, list_of_segment_startin
     can find average position in topic space for each segment of the transcript.
     """
 
-def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=False):
+def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, save_fig=False):
     """
     Plots the nice 2D word embedding space with an arrow following the direction of the topics discussed in each
     segment of the transcript.
@@ -574,14 +574,14 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=False):
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
-    plt.title('2D_Topic_Evolution_SegmentWise')
+    plt.title(save_name)
     if save_fig:
-        plt.savefig("Saved_Images/2D_Topic_Evolution_SegmentWise.png", dpi=900)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
     plt.show()
 
     return
 
-def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=False):
+def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, only_nouns=True, save_fig=False):
     """
     Plots BOTH a background of keywords + the 2D quiver arrow following the direction of the topics discussed in each
     segment of the transcript.
@@ -632,10 +632,10 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
-    plt.title('Embeddings_AND_Quiver_10evenparts')
+    plt.title(save_name)
     plt.legend()
     if save_fig:
-        plt.savefig("Saved_Images/Embeddings_AND_Quiver.png", dpi=900)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
     plt.show()
 
 
@@ -742,6 +742,7 @@ def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
         print(labels[i], 'which were not plotted due to lack of embedding: ', list(unplotted))
 
     plt.legend()
+    plt.title('Keywords_Embedding')
     if save_fig:
         plt.savefig("Saved_Images/Keyword_Types_WordEmbedding.png")
     plt.show()
@@ -885,7 +886,7 @@ def Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit=0.52, In
 
     return cos_sim_df
 
-def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, Info=False):
+def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, save_name='segments_info_df', Info=False):
     """
     Function to perform segment-wise keyword analysis.
     Collects information about they keywords contained in each segment of the transcript.
@@ -952,7 +953,7 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
 
     # Convert dictionary to dataframe
     segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
-    segments_info_df.to_hdf('Saved_dfs/segments_info_df.h5', key='df', mode='w')
+    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
     if Info:
         print('-Created segments_info_df. Preview: ')
         print(segments_info_df.head().to_string())
@@ -1013,38 +1014,45 @@ def Preprocess_Content(content):
 if __name__=='__main__':
 
     # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
-    path_to_transcript = Path(
-        '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/data/shorter_formatted_plain_labelled.txt')
+    #/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/
+    path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
     # Get content from transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
         content = Preprocess_Content(content)
         content_sentences = nltk.sent_tokenize(content)
-    print(content_sentences)
+
     ## Step One: Segmentation
+    seg_method = 'Even'
+    number_of_segments = 25
     first_sent_idxs_list = Peform_Segmentation(content_sentences,
-                                               Evenly=True, Num_Even_Segs=10,
+                                               Evenly=True, Num_Even_Segs=number_of_segments,
                                                Infersent=False, cos_sim_limit=0.52)
 
     ## Step TWO: Keyword Extraction
-    nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
+    #nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
 
     # [OR if keywords already extracted and saved together in keyword_vectors_df, simply load dataframe]
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key = 'df')
 
     ## Step THREE: Segment-Wise Information Extraction
-    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, Info=True)
+    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
+                                         save_name='{0}_{1}_segments_info_df'.format(number_of_segments, seg_method),
+                                         Info=True)
 
-    segments_info_df = pd.read_hdf('Saved_dfs/segments_info_df.h5', key = 'df')
+    #segments_info_df = pd.read_hdf('Saved_dfs/segments_info_df.h5', key = 'df')
 
     ## Step FIVE: Plots.
     #Plot Word Embedding
-    PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
+    #PlotWord_Embeddings(keyword_vectors_df, save_fig=True)
 
     # Plot Quiver Plot
-    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=False)
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=True,
+                                        save_name='{0}_{1}_Segments_Quiver_Plot'.format(number_of_segments, seg_method))
 
     # Plot Quiver + Embedding
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=False )
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=True,
+                               save_name='{0}_{1}_Segments_Quiver_and_Embeddings_Plot'.format(number_of_segments, seg_method))
+
     # Plot the keywords + their average (keeping background spacing the same, not zooming into lil sections every time)
