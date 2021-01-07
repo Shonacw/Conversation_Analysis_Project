@@ -226,11 +226,17 @@ def PKE_keywords(content, number=30, Info=False):
 def Extract_Nouns(content_sentences, Info=False):
     """
     Function to extract all potentially-interesting nouns from a given document. Used when plotting word embedding.
+    before was if pos[0] == 'N'
+    'NN' is singular noun, 'NNP' is proper noun, 'FW' is foreign word
+    i.e. no NNS or NNPS which are the same but plural..
+    was word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
     """
+    nlp = spacy.load("en_core_web_sm")
+
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
-    words_to_plot = [word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
-                     if pos[0] == 'N' and word not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+    words_to_plot = [word for word in nlp(word_tokenize(sents_preprocessed_flat_onestring))
+                     if word.tag_ in ['NN', 'FW'] and word not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
                                                        'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
                                                        'shouldnt']
                      and len(word) != 1]
@@ -1000,6 +1006,7 @@ def Preprocess_Content(content):
     nlp = spacy.load('en', disable=['parser', 'ner'])
     doc = nlp(content)
     content_lemma = " ".join([token.lemma_ for token in doc]) #note this will replace any detected pronoun with '-PRON-'
+    content_lemma = re.sub(r'-PRON-', "", content_lemma)
 
     return content_lemma
 
@@ -1012,9 +1019,9 @@ if __name__=='__main__':
     # Get content from transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
-        content_lemma = Preprocess_Content(content)
-        content_sentences = nltk.sent_tokenize(content_lemma)
-
+        content = Preprocess_Content(content)
+        content_sentences = nltk.sent_tokenize(content)
+    print(content_sentences)
     ## Step One: Segmentation
     first_sent_idxs_list = Peform_Segmentation(content_sentences,
                                                Evenly=True, Num_Even_Segs=10,
