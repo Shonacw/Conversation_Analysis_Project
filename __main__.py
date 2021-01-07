@@ -12,6 +12,7 @@ from nltk.collocations import TrigramCollocationFinder
 from nltk.metrics import TrigramAssocMeasures
 from gensim.models import KeyedVectors
 import nltk  # Importing nltk as "import nltk.pos_tag" wasn't working (?)
+import spacy
 
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
@@ -625,10 +626,10 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
-    plt.title('2D_Topic_Evolution_SegmentWise + Noun Embeddings')
+    plt.title('Embeddings_AND_Quiver_10evenparts')
     plt.legend()
     if save_fig:
-        plt.savefig("Saved_Images/Embeddings_AND_Quiver_10evenparts.png", dpi=900)
+        plt.savefig("Saved_Images/Embeddings_AND_Quiver.png", dpi=900)
     plt.show()
 
 
@@ -994,7 +995,13 @@ def Peform_Segmentation(content_sentences, Evenly=False, Num_Even_Segs=10, Infer
 
     return first_sent_idxs_list
 
+def Preprocess_Content(content):
+    """Function"""
+    nlp = spacy.load('en', disable=['parser', 'ner'])
+    doc = nlp(content)
+    content_lemma = " ".join([token.lemma_ for token in doc]) #note this will replace any detected pronoun with '-PRON-'
 
+    return content_lemma
 
 if __name__=='__main__':
 
@@ -1005,7 +1012,8 @@ if __name__=='__main__':
     # Get content from transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
-        content_sentences = nltk.sent_tokenize(content)
+        content_lemma = Preprocess_Content(content)
+        content_sentences = nltk.sent_tokenize(content_lemma)
 
     ## Step One: Segmentation
     first_sent_idxs_list = Peform_Segmentation(content_sentences,
@@ -1013,23 +1021,23 @@ if __name__=='__main__':
                                                Infersent=False, cos_sim_limit=0.52)
 
     ## Step TWO: Keyword Extraction
-    #nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
+    nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
 
     # [OR if keywords already extracted and saved together in keyword_vectors_df, simply load dataframe]
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key = 'df')
 
     ## Step THREE: Segment-Wise Information Extraction
     segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, Info=True)
-    #or
+
     segments_info_df = pd.read_hdf('Saved_dfs/segments_info_df.h5', key = 'df')
 
     ## Step FIVE: Plots.
     #Plot Word Embedding
-    # PlotWord_Embeddings(keyword_vectors_df, save_fig=True)
+    PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
 
     # Plot Quiver Plot
-    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=True)
+    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=False)
 
     # Plot Quiver + Embedding
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=True )
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=False )
     # Plot the keywords + their average (keeping background spacing the same, not zooming into lil sections every time)
