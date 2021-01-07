@@ -835,30 +835,34 @@ def Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit=0.52, In
 
     return cos_sim_df
 
-def get_segments_info(df, content_sentences, all_keywords, Info=False):
+def get_segments_info(first_sent_idxs_list, content_sentences, all_keywords, Info=False):
     """
-    df = cos_sim_df
-    the sentence indices for which a new sentence are just the values of 'Sentence2_idx' column which also have a '1'
-    in the 'New_Section' column
+    Function to perform segment-wise keyword analysis.
+    Collects information about they keywords contained in each segment of the transcript.
+    
+    params
+     'first_sent_idxs_list':
+        List containing the index of sentences which start a new segment.
+    
+    Returns a dataframe 'segments_info_df'
     """
     if Info:
         print('\n-Obtaining information about each segment using cos_sim_df...')
 
     segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts' : []}
 
-    df_mini = df[df['New_Section'] == 1]
     old_idx = 0
-    for idx, row in df_mini.iterrows():
-        segments_dict['first_sent_numbers'].append(row['Sentence2_idx'])  # POSITION of each section
-        length = np.int(row['Sentence2_idx']) - np.int(old_idx)  #  LENGTH of each section
+    for idx in first_sent_idxs_list:
+        segments_dict['first_sent_numbers'].append(idx)         # POSITION of each section
+        length = np.int(idx) - np.int(old_idx)                  # LENGTH of each section
         segments_dict['length_of_segment'].append(length)
 
-        sentences_in_segment = content_sentences[old_idx : row['Sentence2_idx']]
+        sentences_in_segment = content_sentences[old_idx : idx]
         keywords_dict = Find_Keywords_in_Segment(sentences_in_segment, all_keywords, Info=False)
         segments_dict['keyword_list'].append(list(keywords_dict.keys()))
         segments_dict['keyword_counts'].append(list(keywords_dict.values()))
 
-        old_idx = row['Sentence2_idx']
+        old_idx = idx
 
     # Convert dictionary to dataframe
     segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
@@ -867,24 +871,47 @@ def get_segments_info(df, content_sentences, all_keywords, Info=False):
         print('-Created segments_info_df. Preview: ')
         print(segments_info_df.head().to_string())
         print('Lengths of Segments:', segments_dict['length_of_segment'])
-        print([len(words_list) for words_list in segments_dict['keyword_list']])
-        print('Number of segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
+        print('#Keywords in each Segment:', [len(words_list) for words_list in segments_dict['keyword_list']])
+        print('#Segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
 
     return segments_info_df
 
 
 ## Umbrella (?) (parent?) (Mother?) (BIG BOY?) Functions...
-def Peform_Segmentation(Evenly=False, Num_Even_Segs=10, Infersent=False, cos_sim_limit=0.52):
+def Peform_Segmentation(content_sentences, Evenly=False, Num_Even_Segs=10, Infersent=False, cos_sim_limit=0.52):
     """
     Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
+    Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
     """
     if Infersent:
+        ## 1
         # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
         embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
+
+        # Obtain cosine similarity info dataframe
         cos_sim_df = Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit, Info=True)
 
         # [OR if embeddings were already obtained, simply load dataframe]
         # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
+
+        ## 2
+        first_sent_idxs_list = []
+        df_mini = cos_sim_df[cos_sim_df['New_Section'] == 1]
+        for idx, row in df_mini.iterrows():
+            first_sent_idxs_list.append(row['Sentence2_idx'])
+
+    if Evenly:
+        def split(a, n):
+            k, m = divmod(len(a), n)
+            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+        num_sents = len(content_sentences)
+        idx_split = split(range(num_sents), Num_Even_Segs)
+        first_sent_idxs_list = [i[0] for i in idx_split]
+
+    return first_sent_idxs_list
+
+
 
 
 if __name__=='__main__':
@@ -897,15 +924,12 @@ if __name__=='__main__':
         content = f.read()
         content_sentences = nltk.sent_tokenize(content)
 
-    ## Step One: SEGMENTATION - this uses Infersent sentence embedding + cosine similarity for cutoff
-    # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
-    # embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
-    ##cos_sim_df = Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit, Info=True)
+    ## Step One: Segmentation
+    first_sent_idxs_list = Peform_Segmentation(content_sentences,
+                                               Evenly=True, Num_Even_Segs=10,
+                                               Infersent=False, cos_sim_limit=0.52)
 
-    # [OR if embeddings were already obtained, simply load dataframe]
-    cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
-
-    ## Step TWO Obtain all keywords
+    ## Step TWO: Keyword Extraction
     # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
 
     # [OR if keywords already extracted and saved together in keyword_vectors_df, simply load dataframe]
@@ -916,8 +940,8 @@ if __name__=='__main__':
     """NOTE this is INEFFICIENT. i'm combining all the keywords here, then in the next function i'm separating them again
     but just feel like this is more generalisable... so will do this for now until I decide which way to store them"""
 
-    # Step THREE: Collect information about the keywords contained in each segment
-    segments_info_df = get_segments_info(cos_sim_df, content_sentences, all_keywords, Info=True)
+    ## Step THREE: Segment-Wise Information Extraction
+    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, all_keywords, Info=True)
 
     ## Step FOUR: Calculate average keyword position for each segment
 
