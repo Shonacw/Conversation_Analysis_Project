@@ -17,6 +17,7 @@ import spacy
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import networkx as nx
 from gensim.models import Phrases
 
 from itertools import groupby
@@ -661,6 +662,14 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
 
 def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
     """
+    STEPS
+    1: Use InferSent (facebook.ai) to create utterance embeddings from a podcast transcript
+    2: Evaluate the Cosine Similarity between every pair of (consecutive) sentence embeddings in the whole conversation
+    3: Build a network and leave nodes connected with a mutual similarity > some cutoff. Clusters are then topics, nodes
+        are sentences, and edges are the similarity between sentences.
+
+    Notes:
+        Using GloVe (V1), not FastText (V2) vectors so far.
     V = 1 for GloVe, 2 for FastText
     """
     all_combinations = False  # True to compare ALL sentences, False to compare only consecutive sentences
@@ -796,6 +805,30 @@ def Cluster_Transcript(content_sentences):
 
 
 ## Functions for plotting...
+
+def Plot_InferSent_Clusters(sentences, cos_sim_df, cos_sim_cutoff, save_fig=False):
+
+    """  Haven't updated this properly. """
+    G = nx.DiGraph()  # Instantiate graph
+    cos_sim_df = pd.read_hdf('InferSent_Stuff/Glove_cos_sim_df.h5',
+                             key='df')  # Load dataframe with sentence embedding info
+
+    # Build graph
+    G.add_nodes_from(range(len(sentences)))
+    for row in cos_sim_df.itertuples(index=True):
+        print('row.Cosine_Similarity: ', row.Cosine_Similarity)
+        if row.Cosine_Similarity >= cos_sim_cutoff:
+            G.add_edge(row.Sentence1_idx, row.Sentence2_idx, weight=row.Cosine_Similarity)
+
+    # Plot network to see clusters
+    edges = G.edges()
+    weights = [G[u][v]['weight'] for u, v in edges]
+    nx.draw(G, width=weights, with_labels=True, font_weight='bold')
+    plt.show()
+    if save_fig:
+        plt.savefig("Saved_Images/InferSent_Clusters.png")
+
+
 def Plot_Wordcloud(content_sentences, save=False):
     """
     Function to plot a 2D Wordcloud from the top words in a given document.

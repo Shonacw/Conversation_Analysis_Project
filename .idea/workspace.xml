@@ -25,29 +25,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_allsents_CBOW_4workers_1mincount_20window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved Images/ZOOMED2-Word2Vec_nounsonly_CBOW_8workers_1mincount_10window.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/100_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/10_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/10_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/200_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/200_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/250_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/250_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/25_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/25_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/300_Even_Segments_Quiver_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/300_Even_Segments_Quiver_and_Embeddings_Plot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/100_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/100_Even_segments_info_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/200_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/200_Even_segments_info_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/25_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/25_Even_segments_info_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/keyword_vectors_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/keyword_vectors_df.h5" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -249,7 +226,7 @@
       <workItem from="1609019558656" duration="39000" />
       <workItem from="1609019654916" duration="19071000" />
       <workItem from="1609675898597" duration="777000" />
-      <workItem from="1610106788839" duration="15207000" />
+      <workItem from="1610106788839" duration="15597000" />
     </task>
     <task id="LOCAL-00001" summary="Added SliceCast work to Msci project folder">
       <created>1609020355513</created>
@@ -356,7 +333,21 @@
       <option name="project" value="LOCAL" />
       <updated>1610116050939</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Piccies">
+      <created>1610128131044</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1610128131044</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Piccies">
+      <created>1610128165706</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1610128165706</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -387,7 +378,8 @@
     <MESSAGE value="Realised where I'd made a mistake, added note" />
     <MESSAGE value="?" />
     <MESSAGE value="-" />
-    <option name="LAST_COMMIT_MESSAGE" value="-" />
+    <MESSAGE value="Piccies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Piccies" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -398,10 +390,10 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1610116050804">
+    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1610128165411">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1610116050804" />
+    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1610128165411" />
     <state width="1386" height="185" key="GridCell.Tab.0.bottom" timestamp="1610128068952">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -438,10 +430,10 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1609675958620" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1610116052268">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1610128194750">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1610116052268" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1610128194750" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
