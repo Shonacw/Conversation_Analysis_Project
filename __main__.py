@@ -205,9 +205,11 @@ def Counter_Keywords(content_sentences, Info=False):
 
     return keywords
 
-def PKE_keywords(content, number=30, Info=False):
+def PKE_keywords(content, number=50, Info=False):
     """
     Function to extract key words and phrases from a document ('content') using the PKE implementation of TopicRank.
+
+    picks up no verbs.
     """
     extractor = pke.unsupervised.TopicRank()
     extractor.load_document(input=content)
@@ -241,18 +243,32 @@ def Extract_Nouns(content_sentences, Info=False):
     i.e. no NNS or NNPS which are the same but plural..
     was word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
     """
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")  #en_core_web_sm wasn't detecting verbs well   #en_core_web_lg
 
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
     words_to_plot = [word.text for word in nlp(sents_preprocessed_flat_onestring)
-                     if word.pos_ in ['NOUN', 'X'] and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+                     if word.pos_ in ['NOUN']
+                     and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
                                                        'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
                                                        'shouldnt']
                      and len(word.text) != 1]
+
+    POSs = [word.pos_ for word in nlp(sents_preprocessed_flat_onestring)
+                     if word.pos_ in ['NOUN']
+                     and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+                                                       'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
+                                                       'shouldnt']
+                     and len(word.text) != 1]
+
     nouns_to_plot = list(dict.fromkeys(words_to_plot))            # Remove duplicate words
+
     if Info:
-        print('\nExtracted Nouns: ', nouns_to_plot)
+        print('number of nouns extracted with en_core_web_sm (before removing duplicates): ', len(words_to_plot))
+        # print('\nExtracted Nouns and POSs: ')
+        # for i, j in zip(words_to_plot, POSs):
+        #     print(i,j)
+
 
     return nouns_to_plot
 
@@ -325,7 +341,6 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
     Note C:
         If multiple possible versions of a given word exists in the embedding vocab, take only the first instance
     """
-
     words, vectors, words_unplotted = [], [], []
     for word in words_to_extract:
         if "_" in word:                                                      # Note A
@@ -381,7 +396,7 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
     # Get embeddings dictionary of word vectors  from pre-trained word embedding
     embeddings_dict = {}
     if Info:
-        print("-Obtaining keyword word vectors using GoogleNews embeddings...")
+        print("-Obtaining keyword word vectors using GoogleNews embeddings... (this takes a while)")
     with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
         try:
             for line in f:
@@ -396,7 +411,7 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
 
     # Extract words to plot
 
-    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences), embeddings_dict)
+    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict)
     pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content), embeddings_dict)
     bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict)
     trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict)
@@ -532,8 +547,7 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
     return first_sent_idxs_list
 
 
-def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
-                      Node_Position='total_average', save_name='segments_info_df', Info=False):
+def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, save_name='segments_info_df', Info=False):
     """
     Function to perform segment-wise keyword analysis.
     Collects information about they keywords contained in each segment of the transcript.
@@ -546,6 +560,7 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
 
     keyword averaging note: If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
     that will be (hopefully) semantically similar.
+
     """
     if Info:
         print('\n-Obtaining information about each segment using cos_sim_df...')
@@ -605,15 +620,20 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
         # Collect vectors for possible locations to place the node representing each segment
         segments_dict['total_average_keywords_wordvec'].append([np.mean(Xvecs), np.mean(Yvecs)])
 
-        idx_of_top_keyword = keywords_count.index(max(keywords_count))
-        keywords_list = np.array(keywords_list)
-        top_keyword, top_keyword_XY = keywords_list[idx_of_top_keyword], [Xvecs[idx_of_top_keyword],
+        if len(keywords_count) >= 1 :
+            idx_of_top_keyword = keywords_count.index(max(keywords_count))
+            keywords_list = np.array(keywords_list)
+            top_keyword, top_keyword_XY = keywords_list[idx_of_top_keyword], [Xvecs[idx_of_top_keyword],
                                                                           Yvecs[idx_of_top_keyword]]
+        else:
+            top_keyword = None
+            top_keyword_XY = None
         segments_dict['top_count_keyword'].append(top_keyword)
         segments_dict['top_count_wordvec'].append(top_keyword_XY)
 
         # Check that there are at least 3 keywords for the section
         Xvecs, Yvecs = np.array(Xvecs), np.array(Yvecs)
+
         if len(keywords_list) >= 3:
             idxs_of_top_3_keywords = sorted(range(len(keywords_count)), key=lambda i: keywords_count[i])[-3:]
             top_3_keywords = keywords_list[idxs_of_top_3_keywords]
@@ -622,7 +642,8 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
             segments_dict['top_3_counts_keywords'].append(top_3_keywords)
             segments_dict['top_3_counts_wordvec'].append([np.mean(top_3_keywords_X), np.mean(top_3_keywords_Y)])
         else:
-            segments_dict['top_3_counts_wordvec'].append(None)
+            segments_dict['top_3_counts_keywords'].append(['nan', 'nan', 'nan'])
+            segments_dict['top_3_counts_wordvec'].append('nan')
 
         old_idx = idx
 
@@ -839,18 +860,28 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
                      'top_count_keyword': [], 'top_count_wordvec': [],
                      'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
     """
-    labels = range(len(segments_info_df['total_average_keywords_wordvec'])) # numerical labels
 
     if Node_Position =='total_average':
         node_position = segments_info_df['total_average_keywords_wordvec'].values
+        labels = range(len(node_position))  # numerical labels
 
     if Node_Position == '1_max_count':
         labels_text = segments_info_df['top_count_keyword'].values
         node_position = segments_info_df['top_count_wordvec'].values
 
+        # Check the segments all had enough keywords to have taken max(count)...
+        node_position = [pos for pos in node_position if pos != None]
+        labels_text = [label for label in labels_text if label != None]
+        labels = range(len(node_position))
+
     if Node_Position == '3_max_count':
         labels_text = segments_info_df['top_3_counts_keywords'].values
         node_position = segments_info_df['top_3_counts_wordvec'].values
+
+        # Check the segments all had enough keywords to have taken max(count)...
+        node_position = [pos for pos in node_position if str(pos[0]) != 'n']
+        labels_text = [label for label in labels_text if str(label) != 'nan']
+        labels = range(len(node_position))
 
     xs = [x[0] for x in node_position]
     ys = [x[1] for x in node_position]
@@ -910,8 +941,6 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, 
     plt.rc('font', size=10) # putting it back to normal
 
     # QUIVER PART
-    labels = range(len(segments_info_df['total_average_keywords_wordvec'])) # numerical labels
-
     if Node_Position == 'total_average':
         node_position = segments_info_df['total_average_keywords_wordvec'].values
 
@@ -919,9 +948,18 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, 
         labels_text = segments_info_df['top_count_keyword'].values
         node_position = segments_info_df['top_count_wordvec'].values
 
+        # Check the segments all had enough keywords to have taken max(count)...
+        node_position = [pos for pos in node_position if pos != None]
+        labels_text = [label for label in labels_text if label != None]
+
     if Node_Position == '3_max_count':
         labels_text = segments_info_df['top_3_counts_keywords'].values
         node_position = segments_info_df['top_3_counts_wordvec'].values
+
+        # Check the segments all had enough keywords to have taken max(count)...
+        node_position = [pos for pos in node_position if str(pos[0]) != 'n']
+        labels_text = [label for label in labels_text if str(label) != 'nan']
+    labels = range(len(node_position))
 
     xs = [x[0] for x in node_position]
     ys = [x[1] for x in node_position]
@@ -1022,19 +1060,15 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
     fig.show()
 
+##
 
-## CODE...
-if __name__=='__main__':
-    saving_figs = False
-    node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
-    seg_method = 'Even'                                 #'InferSent'
 
-    Even_number_of_segments = 25                        # for when seg_method = 'Even'
-    InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
 
+def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs):
+    """
+    Mother Function.
+    """
     ## Load + Pre-process Transcript
-    path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
-
     with open(path_to_transcript, 'r') as f:
         content = f.read()
         content = Preprocess_Content(content)
@@ -1049,12 +1083,12 @@ if __name__=='__main__':
     # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
 
     # OR just load the dataframe
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key = 'df')
+    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
 
     ## Segment-Wise Information Extraction
-    if seg_method =='Even':
+    if seg_method == 'Even':
         save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
-    if seg_method =='InferSent':
+    if seg_method == 'InferSent':
         save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
 
     # Create dataframe with the information about the segments
@@ -1063,7 +1097,6 @@ if __name__=='__main__':
 
     # OR just load the dataframe
     # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
-
 
     ## Plot Word Embedding
     # PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
@@ -1081,11 +1114,30 @@ if __name__=='__main__':
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
         save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                seg_method, node_location_method)
+                                                                                               seg_method,
+                                                                                               node_location_method)
     if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
-                                                                                      node_location_method)
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method, only_nouns=True,
+        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+            InferSent_cos_sim_limit,
+            node_location_method)
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+                               only_nouns=True,
                                save_fig=saving_figs, save_name=save_name)
 
-    # Plot the keywords + their average (keeping background spacing the same, not zooming into lil sections every time)
+
+## CODE...
+if __name__=='__main__':
+
+    path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
+
+    seg_method = 'Even'                                 #'Even      # 'InferSent'
+    node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
+
+    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
+
+    saving_figs = True
+
+
+    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
+
