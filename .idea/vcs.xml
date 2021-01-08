@@ -4,5 +4,6 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/InferSent" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/SliceCast" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/msci-project" vcs="Git" />
   </component>
 </project>
