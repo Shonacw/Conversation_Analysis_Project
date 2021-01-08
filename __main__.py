@@ -4,87 +4,68 @@
 #Notes mentioned in code...
 
 """
+import torch
+from sklearn.manifold import TSNE
+from gensim.models import KeyedVectors
+import tensorflow_hub as hub
+from sklearn.cluster import DBSCAN
+from sklearn.decomposition import PCA
+from gensim.models import Phrases #Phraser
+
+
+import re
+import spacy
+import pke
+import RAKE as rake
+from collections import Counter
 from nltk.collocations import BigramCollocationFinder
 from nltk.corpus import stopwords
 from nltk.metrics import BigramAssocMeasures
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.collocations import TrigramCollocationFinder
 from nltk.metrics import TrigramAssocMeasures
-from gensim.models import KeyedVectors
-import nltk  # Importing nltk as "import nltk.pos_tag" wasn't working (?)
-import spacy
 
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-import networkx as nx
-from gensim.models import Phrases
-
-from itertools import groupby
 import itertools
-import re
 from pathlib import Path
-import RAKE as rake
-from collections import Counter
-import pke
 import operator
 from functools import reduce
-
 import numpy as np
 from scipy import spatial
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-
 import pandas as pd
-import string
+import sys
+import unicodedata
+from collections import defaultdict
+from pprint import pprint
 
+import networkx as nx
+from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.axes3d import get_test_data
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from collections import defaultdict
-from pprint import pprint
-import tensorflow as tf
-import tensorflow_hub as hub
-from sklearn.cluster import DBSCAN
+from InferSent.models import InferSent
 import importlib
 topics = importlib.import_module("msci-project.src.topics")
-
-from InferSent.models import InferSent
-import torch
-import sys
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
-import unicodedata
-# from msci-project.src.topics import make_similarity_matrix, plot_similarity
 
-## Pre-processing Functions...
-
+## Functions for pre-processing...
 def Preprocess_Content(content):
-    """Function"""
+    """
+    Function to perform Lemmatization of the whole transcript when it is first imported.
+    """
     nlp = spacy.load('en', disable=['parser', 'ner'])
     doc = nlp(content)
-    content_lemma = " ".join([token.lemma_ for token in doc]) #note this will replace any detected pronoun with '-PRON-'
+    content_lemma = " ".join([token.lemma_ for token in doc])
     content_lemma = re.sub(r'-PRON-', "", content_lemma)
-
     return content_lemma
 
-def Prep_Content_for_Ngram_Extraction(content):
+def Extract_bigrams(words, n=20, Info=False):
     """
-    Given raw 'content' read in from .txt transcript, process into a list of lower case words
-    from which useful bigrams and trigrams can be extracted.
-    """
-    content_tokenized = word_tokenize(content)
-    words = [w.lower() for w in content_tokenized]
-    return words
-
-def Extract_bigrams(words):
-    """
-    Function to extract interesting bigrams used in the vocabulary of a podcast. Input is a list of words
-    from the podcast transcript.
+    Function to extract bigrams mentioned in the given transcript.
+    Input is the Podcast transcript in the form of a list of words and 'n' the number of Bigrams to consider.
     """
     stopset = set(stopwords.words('english'))
     filter_stops = lambda w: len(w) < 3 or w in stopset
@@ -92,19 +73,21 @@ def Extract_bigrams(words):
     bcf = BigramCollocationFinder.from_words(words)
     bcf.apply_word_filter(filter_stops)               # Ignore bigrams whose words contain < 3 chars / are stopwords
     bcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
-    bigrams_extracted = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, 20)) # Considering top 20
+    bigrams_extracted = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, n))
     final_bigrams = []
     for bigram_list in bigrams_extracted:
         bigram_0, bigram_1 = bigram_list
         bigram_condensed = str(bigram_0 + '_' + bigram_1)
         final_bigrams.append(bigram_condensed)
-    print('Bigrams: ', final_bigrams)
+
+    if Info:
+        print('Bigrams: ', final_bigrams)
     return final_bigrams
 
-def Extract_trigrams(words):
+def Extract_trigrams(words, n=20, Info=False):
     """
-    Function to extract interesting trigrams used in the vocabulary of a podcast. Input is a list of words
-    from the podcast transcript.
+    Function to extract interesting trigrams mentioned in the given transcript.
+    Input is a list of words from the podcast transcript and 'n' is the max number of trigrams to consider.
     """
     stopset = set(stopwords.words('english'))
     filter_stops = lambda w: len(w) < 3 or w in stopset
@@ -112,13 +95,15 @@ def Extract_trigrams(words):
     tcf = TrigramCollocationFinder.from_words(words)
     tcf.apply_word_filter(filter_stops)               # Ignore trigrams whose words contain < 3 chars / are stopwords
     tcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
-    trigrams_extracted = list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, 20)) # Considering top 20
+    trigrams_extracted = list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, n))
     final_trigrams = []
     for trigram_list in trigrams_extracted:
         trigram_0, trigram_1, trigram_2 = trigram_list
         trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
         final_trigrams.append(trigram_condensed)
-    print('Trigrams: ', final_trigrams)
+
+    if Info:
+        print('Trigrams: ', final_trigrams)
     return final_trigrams
 
 def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
@@ -128,8 +113,8 @@ def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
 
     Note why trigrams were replaced first:
     ['brain', 'simulation'] was a detected bigram, and ['deep', 'brain', 'simulation'] was a detected trigram. If
-    I condensed all the words 'brain' and 'simulation' into 'brain_simulation' then once I searched for the trigrams
-    there would be none left, as it would instead have 'deep', 'brain_simulation'.
+     all the cases of 'brain' and 'simulation' are condensed into 'brain_simulation' first, then there would be no cases
+     of 'deep', 'brain', and 'simulation' left in the transcript and therefore no trigrams would be found.
     """
     list_of_condensed_grams = []
     content_tokenized = word_tokenize(content)
@@ -156,7 +141,7 @@ def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
                    and content_tokenized[i+1].lower() == bigram_1]
         for i in indices:
             content_tokenized[i] = bigram_condensed
-            content_tokenized[i+1] = '-'                # Placeholders to maintain index numbering - are removed later on
+            content_tokenized[i+1] = '-'               # Placeholders to maintain index numbering - are removed later on
 
     return content_tokenized
 
@@ -175,8 +160,6 @@ def Preprocess_Sentences(content_sentences):
         sent_lower = [w.lower() for w in word_tokenize(sent) if w not in stop_words]
         # Join into one string so can use reg expressions
         result = ' '.join(map(str, sent_lower))
-        # Stemming? Lemmatization ?
-
         sents_preprocessed.append(result)
 
     return sents_preprocessed
@@ -184,7 +167,7 @@ def Preprocess_Sentences(content_sentences):
 ## Keyword Functions...
 def Rake_Keywords(content, Info=False):
     """
-    Function to extract keywords from document using RAKE
+    Function to extract keywords from document using RAKE (https://pypi.org/project/rake-nltk/).
     """
     rake_object = rake.Rake("data/Rake_SmartStoplist.txt")
     keywords = rake_object.run(content)
@@ -195,8 +178,8 @@ def Rake_Keywords(content, Info=False):
 
 def Counter_Keywords(content_sentences, Info=False):
     """
-    Function to extract the top words used in a document using a counter.
-    Note these are not 'keywords', just most popular words.
+    Function to extract the top words used in a document using a simple counter.
+    Note these are not really 'keywords'; just the most common words.
     """
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
@@ -208,9 +191,8 @@ def Counter_Keywords(content_sentences, Info=False):
 
 def PKE_keywords(content, number=50, Info=False):
     """
-    Function to extract key words and phrases from a document ('content') using the PKE implementation of TopicRank.
-
-    picks up no verbs.
+    Function to extract keywords and phrases from a document using the PKE implementation of TopicRank.
+    pke info: https://github.com/boudinfl/pke
     """
     extractor = pke.unsupervised.TopicRank()
     extractor.load_document(input=content)
@@ -239,12 +221,11 @@ def PKE_keywords(content, number=50, Info=False):
 def Extract_Nouns(content_sentences, Info=False):
     """
     Function to extract all potentially-interesting nouns from a given document. Used when plotting word embedding.
-    before was if pos[0] == 'N'
-    'NN' is singular noun, 'NNP' is proper noun, 'FW' is foreign word
-    i.e. no NNS or NNPS which are the same but plural..
-    was word for (word, pos) in nltk.pos_tag(word_tokenize(sents_preprocessed_flat_onestring))
+
+    TODO: Somehow improve this.. both nltk and spacy are picking up a load of verbs and POS-tagging them as NOUNS..
+        this becomes annoying later on when trying to decipher the topics of conversation: verbs do not add any insight!
     """
-    nlp = spacy.load("en_core_web_sm")  #en_core_web_sm wasn't detecting verbs well   #en_core_web_lg
+    nlp = spacy.load("en_core_web_sm")              #en_core_web_sm   #en_core_web_lg
 
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
@@ -262,7 +243,7 @@ def Extract_Nouns(content_sentences, Info=False):
                                                        'shouldnt']
                      and len(word.text) != 1]
 
-    nouns_to_plot = list(dict.fromkeys(words_to_plot))            # Remove duplicate words
+    nouns_to_plot = list(dict.fromkeys(words_to_plot))  # Remove duplicate words
 
     if Info:
         print('number of nouns extracted with en_core_web_sm (before removing duplicates): ', len(words_to_plot))
@@ -270,69 +251,13 @@ def Extract_Nouns(content_sentences, Info=False):
         # for i, j in zip(words_to_plot, POSs):
         #     print(i,j)
 
-
     return nouns_to_plot
 
-def Gensim_Phrase():
-    """This stuff taken from Inference when was messing around with phrase extraction"""
-    phrases = Phrases(content, min_count=2, threshold=3)
-    for phrase in phrases[content]:
-        print(phrase)
-    # Export a FrozenPhrases object that is more efficient but doesn't allow any more training.
-    # frozen_phrases = phrases.freeze()
-    # print(frozen_phrases[sent]) #give it a sentence like
-
-    # N-GRAM EXTRACTION
-    from gensim.models.phrases import Phrases, Phraser
-
-    def build_phrases(sentences):
-        phrases = Phrases(sentences,
-                          min_count=2,
-                          threshold=3,
-                          progress_per=1000)
-        return Phraser(phrases)
-
-    phrases_model.save('phrases_model.txt')
-
-    phrases_model = Phraser.load('phrases_model.txt')
-
-    def sentence_to_bi_grams(phrases_model, sentence):
-        return ' '.join(phrases_model[sentence])
-
-
-## Word Embedding Functions...
-def Convert_bin_to_txt(look_at_vocab=False):
-    """
-    Function to convert pre-trained word vector files from .bin to .txt format so that can explore vocabulary.
-    Only used this function once but keeping in case.
-    """
-    path_in = 'Google_WordVectors/GoogleNews-vectors-negative300.bin'
-    path_out = 'Google_WordVectors/GoogleNews-vectors-negative300.txt'
-    model = KeyedVectors.load_word2vec_format(path_in, binary=True)
-    model.save_word2vec_format(path_out, binary=False)
-
-    if look_at_vocab:
-        model_google = KeyedVectors.load_word2vec_format(path_out, binary=True)
-        words = list(model_google.wv.vocab)[:100000]     # Only looking at first hundred thousand
-        phrases = [word for word in words if '_' in word]
-        print('\nVocab containing an underscore from Google model:', phrases)
-    return
-
-def find_closest_embeddings(embeddings_dict):
-    return sorted(embeddings_dict.keys(), key=lambda word: spatial.distance.euclidean(embeddings_dict[word], embedding))
-
-def Check_Embedding(embeddings_dict):
-    print(find_closest_embeddings(embeddings_dict["king"])[1:6])
-    print(find_closest_embeddings(embeddings_dict["twig"] - embeddings_dict["branch"] + embeddings_dict["hand"])[:5])
-    #model.most_similar("woman")   model.similarity("girl", "woman")
-    return
-
-
 ## Functions for dealing with Keywords...
+
 def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=False):
     """
-    Function for extracting the embedding vectors for certain keywords I would like to plot on a word embedding graph.
-    By default will extract the embeddings for the top 30 PKE keywords and all potentially-interesting nouns.
+    Function for extracting the word vectors for the given keywords.
 
     Note A:
         Must check all possible versions of given word (all-capitals, non-capitals, etc) as Google Embeddings
@@ -365,13 +290,13 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
     if Info:
         print('Number of Words from Document without an embedding: ', len(words_unplotted))
         print('List of Words lacking an embedding:', words_unplotted)
+
     return words, vectors, words_unplotted
 
 def Extract_Keyword_Vectors(content, content_sentences, Info=False):
     """
-    (made on 5th January, works well haven't tested function today (6th) so far though ======)
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
-    then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df which is then saved to hdf
+    then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df' which is saved to hdf
     for easy loading in future tasks.
 
     Note A:
@@ -379,18 +304,20 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
         that it contains vectors for some 'phrases' (bigrams/ trigrams) which is helpful for the plot being meaningful!
     Note B:
         The tsne vector dimensionality must be done all together, but in a way that I can then split the vectors back
-        into groups based on keyword type. Hence a little more fiddly.
+        into groups based on keyword type. Hence why code a little more fiddly.
 
     """
     if Info:
         print('\n-Extracting keywords + obtaining their word vectors using GoogleNews pretrained model...')
 
-    # Choose pre-trained model... Note A
+    # Choose pre-trained model...   Note A
     Glove_path = r'GloVe/glove.840B.300d.txt'
     Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'
     path_to_vecs = Google_path
 
-    words = Prep_Content_for_Ngram_Extraction(content)
+    content_tokenized = word_tokenize(content)
+    words = [w.lower() for w in content_tokenized]
+
     if Info:
         print("-Extracted content/sentences/words from transcript.")
 
@@ -411,7 +338,6 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
         print("-Obtained all GoogleNews embeddings.")
 
     # Extract words to plot
-
     nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict)
     pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content), embeddings_dict)
     bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict)
@@ -468,15 +394,14 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
 
 def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
     """
-    should use regular expressions to make faster
-    go segment by segment and look for all the keywords/phrases in it, make it into a list
+    Function to search segment-by-segment for the given keywords.
     """
-    keywords_contained_in_segment = {} #keys are keywords, values are the number of ocurrences of the keyword in the seg
+    keywords_contained_in_segment = {}
 
-    sents_in_subsection_flat = ''.join(list(itertools.chain.from_iterable(sents_in_segment))) # one string
-    words_in_subsection = word_tokenize(sents_in_subsection_flat)   #might need to remove punctuation before doing this
+    sents_in_subsection_flat = ''.join(list(itertools.chain.from_iterable(sents_in_segment)))
+    words_in_subsection = word_tokenize(sents_in_subsection_flat)
 
-    #convert to strings
+    # Convert to strings
     all_keywords = [str(word) for word in all_keywords]
     word_list = [word for word in all_keywords if len(word.split('_')) == 1]
     bigram_list = [word for word in all_keywords if len(word.split('_')) == 2]
@@ -513,7 +438,7 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
 
 def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52):
     """
-    Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
+    Function to segment up a transcript. By default will segment the transcript into 'Num_Even_Segs' even segments.
     Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
     """
     if segmentation_method == 'InferSent':
@@ -559,8 +484,9 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
 
     Returns a dataframe 'segments_info_df'
 
-    keyword averaging note: If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
-    that will be (hopefully) semantically similar.
+    NOTE on keyword averaging:
+        If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
+        that will be (hopefully) semantically similar.
 
     """
     if Info:
@@ -670,16 +596,8 @@ def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
 
     Notes:
         Using GloVe (V1), not FastText (V2) vectors so far.
-    V = 1 for GloVe, 2 for FastText
+        V = 1 for GloVe, 2 for FastText
     """
-    all_combinations = False  # True to compare ALL sentences, False to compare only consecutive sentences
-    cutoff = 0.5  # Cutoff value for weighted graph
-    # STEP 1
-    # Build sentences list...
-    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan
-    # with open(path, 'r') as f:
-    #     content = f.read()
-    #     sentences = nltk.sent_tokenize(content)
     if Info:
         print('\nObtaining sentence embeddings with InferSent...')
 
@@ -714,14 +632,11 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
         if = 0.5  there are 10 segments
         if = 0.45 there are 3 segments
     """
-
     def cosine(u, v):
         return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
     tbl = dict.fromkeys(i for i in list(range(sys.maxunicode)) if unicodedata.category(chr(i)).startswith('P'))
 
-    # def remove_punctuation(text):
-    #     return text.translate(tbl)
     if Info:
         print('\n-Creating cos_sim_df dataframe...')
 
@@ -730,7 +645,8 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
     cos_sim_df = pd.DataFrame(columns=['Sentence1', 'Sentence1_idx', 'Sentence2', 'Sentence2_idx', 'Cosine_Similarity',
                                        'New_Section'])
 
-    # Firstly, put all sentences of length <5 to blank in a new content_sentences_object (preliminary method to deal with filler sents)
+    # Firstly, put all sentences of length <5 to blank in a new content_sentences_object
+    # (preliminary method to deal with filler sents)
     for idx, sentence in enumerate(content_sentences_copy):
         sentence = sentence.translate(tbl)  # remove_punctuation(sentence)
         num_words = len(word_tokenize(sentence))
@@ -770,8 +686,7 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
 
 def Cluster_Transcript(content_sentences):
     """
-    NOT USING SO FAR.
-    Taken from Msci project work that Jonas did on 5th January
+    NOT USING SO FAR. Taken from Msci project work that Jonas did on 5th January
 
     Doesn't segment like i hoped it would - just clusters sentences (in no particular order, i.e. not considering
     whether they are consecutive) so could be used for topic detection but not segmentation.
@@ -807,8 +722,9 @@ def Cluster_Transcript(content_sentences):
 ## Functions for plotting...
 
 def Plot_InferSent_Clusters(sentences, cos_sim_df, cos_sim_cutoff, save_fig=False):
-
-    """  Haven't updated this properly. """
+    """
+    Haven't updated this properly yet.
+    """
     G = nx.DiGraph()  # Instantiate graph
     cos_sim_df = pd.read_hdf('InferSent_Stuff/Glove_cos_sim_df.h5',
                              key='df')  # Load dataframe with sentence embedding info
@@ -886,12 +802,8 @@ def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
 
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Position='total_average', save_fig=False):
     """
-    Plots the nice 2D word embedding space with an arrow following the direction of the topics discussed in each
+    Plots the 2D word embedding space with a Quiver arrow following the direction of the topics discussed in each
     segment of the transcript.
-    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
-                     'total_average_keywords_wordvec': [],
-                     'top_count_keyword': [], 'top_count_wordvec': [],
-                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
     """
 
     if Node_Position =='total_average':
@@ -941,7 +853,6 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
     if save_fig:
         plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
     plt.show()
-
     return
 
 def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, Node_Position='total_average',
@@ -1033,6 +944,7 @@ class Arrow3D(FancyArrowPatch):
 
 def Plot_3D_Trajectory_through_TopicSpace():
     """
+    Note updated yet.
     Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
     """
     df_manual = pd.read_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs')
@@ -1076,7 +988,6 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
       (old_x, old_y, old_z) = (x, y, z)
 
-
     # AXIS STUFF
     ax1.dist = 13
     ax1 = plt.gca()
@@ -1093,9 +1004,9 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
     fig.show()
 
-##
 
 
+## The main function putting it all together
 
 def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs):
     """
@@ -1173,4 +1084,3 @@ if __name__=='__main__':
 
 
     Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
-
