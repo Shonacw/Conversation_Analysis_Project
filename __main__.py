@@ -186,7 +186,7 @@ def Rake_Keywords(content, Info=False):
     """
     Function to extract keywords from document using RAKE
     """
-    rake_object = rake.Rake("SmartStoplist.txt")
+    rake_object = rake.Rake("data/Rake_SmartStoplist.txt")
     keywords = rake_object.run(content)
     if Info:
         print("\nRAKE Keywords:", keywords)
