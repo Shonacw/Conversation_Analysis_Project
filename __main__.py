@@ -61,6 +61,16 @@ import unicodedata
 # from msci-project.src.topics import make_similarity_matrix, plot_similarity
 
 ## Pre-processing Functions...
+
+def Preprocess_Content(content):
+    """Function"""
+    nlp = spacy.load('en', disable=['parser', 'ner'])
+    doc = nlp(content)
+    content_lemma = " ".join([token.lemma_ for token in doc]) #note this will replace any detected pronoun with '-PRON-'
+    content_lemma = re.sub(r'-PRON-', "", content_lemma)
+
+    return content_lemma
+
 def Prep_Content_for_Ngram_Extraction(content):
     """
     Given raw 'content' read in from .txt transcript, process into a list of lower case words
@@ -255,7 +265,7 @@ def Gensim_Phrase():
     # frozen_phrases = phrases.freeze()
     # print(frozen_phrases[sent]) #give it a sentence like
 
-    ## N-GRAM EXTRACTION
+    # N-GRAM EXTRACTION
     from gensim.models.phrases import Phrases, Phraser
 
     def build_phrases(sentences):
@@ -272,26 +282,6 @@ def Gensim_Phrase():
     def sentence_to_bi_grams(phrases_model, sentence):
         return ' '.join(phrases_model[sentence])
 
-def Plot_Wordcloud(content_sentences, save=False):
-    """
-    Function to plot a 2D Wordcloud from the top words in a given document.
-    """
-    sents_preprocessed = Preprocess_Sentences(content_sentences)
-    sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
-    stop_words = set(stopwords.words('english'))
-
-    wordcloud = WordCloud(background_color='white',
-                            stopwords=stop_words,
-                            max_words=100,
-                            max_font_size=50,
-                            random_state=42).generate(str(sents_preprocessed_flat))
-    fig = plt.figure()
-    plt.imshow(wordcloud)
-    plt.axis('off')
-    plt.show()
-    if save:
-        fig.savefig("Saved_Images/WordCloud.png", dpi=900)
-    return
 
 ## Word Embedding Functions...
 def Convert_bin_to_txt(look_at_vocab=False):
@@ -321,8 +311,7 @@ def Check_Embedding(embeddings_dict):
     return
 
 
-## Functions for extracting/ plotting pre-trained word embeddings for specific vocabulary from given document
-
+## Functions for dealing with Keywords...
 def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=False):
     """
     Function for extracting the embedding vectors for certain keywords I would like to plot on a word embedding graph.
@@ -336,15 +325,6 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
     Note C:
         If multiple possible versions of a given word exists in the embedding vocab, take only the first instance
     """
-    # # Extract words to plot
-    # if not keywords_only and not nouns_only:
-    #     keywords_and_nouns = itertools.chain(PKE_keywords(content, Info=True),
-    #                                          Extract_Nouns(content_sentences, Info=True))
-    #     words_to_plot = keywords_and_nouns
-    # elif keywords_only:
-    #     words_to_plot = PKE_keywords(content, Info=True)
-    # elif nouns_only:
-    #     words_to_plot = Extract_Nouns(content_sentences, Info=True)
 
     words, vectors, words_unplotted = [], [], []
     for word in words_to_extract:
@@ -371,12 +351,6 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
         print('List of Words lacking an embedding:', words_unplotted)
     return words, vectors, words_unplotted
 
-# def Plot_Word_Embedding(path_to_transcript, path_to_pretrained_vecs):
-#     """
-#     Function for plotting word embeddings.
-#     """
-
-## Code...
 def Extract_Keyword_Vectors(content, content_sentences, Info=False):
     """
     (made on 5th January, works well haven't tested function today (6th) so far though ======)
@@ -476,7 +450,6 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
 
     return nouns_set, pke_set, bigram_set, trigram_set
 
-
 def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
     """
     should use regular expressions to make faster
@@ -520,200 +493,27 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
 
     return keywords_contained_in_segment
 
-
-
-def Sentence_Wise_Keyword_Averaging():
+## Functions for plotting...
+def Plot_Wordcloud(content_sentences, save=False):
     """
-    Sentence by sentence analysis (this would look super messy?) or maybe not as some sentences wouldnt contain a keyword
-    so would be a reasonable amount of space (along sentence_number axis) between points
+    Function to plot a 2D Wordcloud from the top words in a given document.
     """
+    sents_preprocessed = Preprocess_Sentences(content_sentences)
+    sents_preprocessed_flat = reduce(operator.add, sents_preprocessed)
+    stop_words = set(stopwords.words('english'))
 
-def Segment_Wise_Keyword_Averaging(content_in_sentences, list_of_segment_starting_points, keyword_vectors_df):
-    """
-    Function to perform calculate average topic position during each segment of the conversation.
-
-    If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
-    that will be (hopefully) semantically similar.
-
-    Requires the sentence-tokenized full transcript, list of sentences indices corresponding the start of each segment,
-
-    need to a) find which keywords are used in each segment and turn into a dict, i.e. {'segment 1': ['brain', 'body']}
-    then using the vector information about each keyword (which can be searched up in the keyword_vectors_df)
-    can find average position in topic space for each segment of the transcript.
-    """
-
-def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, save_fig=False):
-    """
-    Plots the nice 2D word embedding space with an arrow following the direction of the topics discussed in each
-    segment of the transcript.
-
-    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
-                     'average_wordvec_keyword': []}
-    """
-
-    labels = range(len(segments_info_df['average_wordvec_keyword']))
-    av_positions = segments_info_df['average_wordvec_keyword'].values
-    xs = [x[0] for x in av_positions]
-    ys = [x[1] for x in av_positions]
-
-    u = [i-j for i, j in zip(xs[1:], xs[:-1])]
-    v = [i-j for i, j in zip(ys[1:], ys[:-1])]
-
-    plt.figure()
-    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color='b', width=0.005)
-
-    # zip joins x and y coordinates in pairs
-    for x, y, label in zip(xs, ys, labels):
-        plt.annotate(label+1, # this is the text
-                     (x, y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,10), # distance from text to points (x,y)
-                     ha='center') # horizontal alignment can be left, right or center
-
-    #plot special colours for the first and last point
-    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
-    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
-    plt.title(save_name)
-    if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
+    wordcloud = WordCloud(background_color='white',
+                            stopwords=stop_words,
+                            max_words=100,
+                            max_font_size=50,
+                            random_state=42).generate(str(sents_preprocessed_flat))
+    fig = plt.figure()
+    plt.imshow(wordcloud)
+    plt.axis('off')
     plt.show()
-
+    if save:
+        fig.savefig("Saved_Images/WordCloud.png", dpi=900)
     return
-
-def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, only_nouns=True, save_fig=False):
-    """
-    Plots BOTH a background of keywords + the 2D quiver arrow following the direction of the topics discussed in each
-    segment of the transcript.
-    """
-    # EMBEDDING PART
-    keyword_types = ['noun', 'pke', 'bigram', 'trigram']
-    colours = ['pink', 'green', 'orange', 'blue']
-    labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
-
-    number_types_toplot = range(len(keyword_types))
-    if only_nouns:
-        number_types_toplot = [0]
-
-    plt.figure()
-    plt.rc('font', size=8)
-    for i in number_types_toplot:
-        type = keyword_types[i]
-        words = keyword_vectors_df['{}_keyw'.format(type)]
-        Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
-        unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
-
-        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
-        for label, x, y in zip(words, Xs, Ys):
-            plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points", color='darkgrey')
-
-    plt.rc('font', size=10) # putting it back to normal
-
-    # QUIVER PART
-    labels = range(len(segments_info_df['average_wordvec_keyword']))
-    av_positions = segments_info_df['average_wordvec_keyword'].values
-    xs = [x[0] for x in av_positions]
-    ys = [x[1] for x in av_positions]
-
-    u = [i-j for i, j in zip(xs[1:], xs[:-1])]
-    v = [i-j for i, j in zip(ys[1:], ys[:-1])]
-
-    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color='b', width=0.005)
-
-    # zip joins x and y coordinates in pairs
-    for x, y, label in zip(xs, ys, labels):
-        plt.annotate(label+1, # this is the text
-                     (x, y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,10), # distance from text to points (x,y)
-                     ha='center') # horizontal alignment can be left, right or center
-
-    #plot special colours for the first and last point
-    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
-    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
-    plt.title(save_name)
-    plt.legend()
-    if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
-    plt.show()
-
-
-## Now for 3d version (?)
-
-class Arrow3D(FancyArrowPatch):
-    def __init__(self, xs, ys, zs, *args, **kwargs):
-        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
-        self._verts3d = xs, ys, zs
-
-    def draw(self, renderer):
-        xs3d, ys3d, zs3d = self._verts3d
-        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
-        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
-        FancyArrowPatch.draw(self, renderer)
-
-def Plot_3D_Trajectory_through_TopicSpace():
-    """
-    Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
-    """
-    df_manual = pd.read_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs')
-    labels_manual = df_manual['Topic_Num'].values
-    df_slice = pd.read_hdf('./SGCW/Topic_avs_df_slice.h5', key='dfs')
-    labels_slice = df_slice['Topic_Num'].values
-
-    # set up a figure twice as wide as it is tall
-    fig = plt.figure(figsize=(22, 11))  # plt.figaspect(0.5))
-    fig.suptitle('Movement through topic space over time')
-
-    # set up the axes for the first plot
-    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-
-    ##MANUAL ----------------------------------------------------------
-    # Data for a three-dimensional line
-    word_emb_xs = df_manual['Av_X'].values
-    word_emb_ys = df_manual['Av_Y'].values
-    label_seg_df = pd.read_hdf('./SGCW/segs_manual_info.h5', key='dfs')
-    segment_numbers = label_seg_df['first_sent_numbers'].values
-    print('segment_numbers', segment_numbers)
-
-    #ax.plot3D(xs, segment_numbers, ys, 'bo-')
-    ax1.set_xlabel('$time (Segment Number)$', fontsize=13)
-    ax1.set_ylabel('$X$', fontsize=20, rotation = 0)
-    ax1.set_zlabel('$Y$', fontsize=20)
-    ax1.zaxis.set_rotate_label(False)
-    ax1.set_title('Manual')
-
-    cnt = 0
-    # (old_x, old_y, old_z) = (0, 0, 0)
-    for x, y, z, label in zip(segment_numbers, word_emb_xs, word_emb_ys, labels_manual):
-      cnt +=1
-      ax1.plot([x], [y], [z],'o') #markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6)
-      ax1.text(x, y, z, label+1, size=10)
-      if cnt ==1:
-        (old_x, old_y, old_z) = (x, y, z)
-        continue
-
-      a = Arrow3D([old_x, x], [old_y,y], [old_z, z], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
-      ax1.add_artist(a)
-
-      (old_x, old_y, old_z) = (x, y, z)
-
-
-    ## AXIS STUFF
-    ax1.dist = 13
-    ax1 = plt.gca()
-    # ax.xaxis.set_ticklabels([])
-    ax1.yaxis.set_ticklabels([])
-    ax1.zaxis.set_ticklabels([])
-
-    # for line in ax.xaxis.get_ticklines():
-    #     line.set_visible(False)
-    for line in ax1.yaxis.get_ticklines():
-        line.set_visible(False)
-    for line in ax1.zaxis.get_ticklines():
-        line.set_visible(False)
-
-    fig.show()
 
 def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
     """
@@ -749,42 +549,340 @@ def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
 
     return
 
-def Cluster_Transcript(content_sentences):
+def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Position='total_average', save_fig=False):
     """
-    Taken from Msci project work that Jonas did on 5th January
-
-    Doesn't segment like i hoped it would - just clusters sentences (in no particular order, i.e. not considering
-    whether they are consecutive) so could be used for topic detection but not segmentation.
+    Plots the nice 2D word embedding space with an arrow following the direction of the topics discussed in each
+    segment of the transcript.
+    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
+                     'total_average_keywords_wordvec': [],
+                     'top_count_keyword': [], 'top_count_wordvec': [],
+                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
     """
-    #load transcript
-    print("-Loading sentence embedder, this takes a while...")
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    print("Done")
+    labels = range(len(segments_info_df['total_average_keywords_wordvec'])) # numerical labels
 
-    #embed using google sentence encoder
-    embeddings = embed(content_sentences)
-    print('Embedded using Google Sentence Encoder')
+    if Node_Position =='total_average':
+        node_position = segments_info_df['total_average_keywords_wordvec'].values
 
-    #approach 1: use density based clustering algorithm to cluster sentences into topics
-    sim_m = topics.make_similarity_matrix(content_sentences, embeddings)
+    if Node_Position == '1_max_count':
+        labels_text = segments_info_df['top_count_keyword'].values
+        node_position = segments_info_df['top_count_wordvec'].values
 
-    cluster_labels = DBSCAN(eps=2.2, min_samples=1).fit_predict(sim_m) #eps is sensitivity
+    if Node_Position == '3_max_count':
+        labels_text = segments_info_df['top_3_counts_keywords'].values
+        node_position = segments_info_df['top_3_counts_wordvec'].values
 
-    clusters = defaultdict(list)
-    for cl, sentence in zip(cluster_labels, content_sentences):
-        clusters[cl].append(sentence)
-    print('\n list(clusters.values()): ')
-    pprint(list(clusters.values())) #these are sentence clusters
-    print('\nNumber of Clusters: ', len(list(clusters.values())))
+    xs = [x[0] for x in node_position]
+    ys = [x[1] for x in node_position]
 
-    #find the sentence index at which the clusters start
+    u = [i-j for i, j in zip(xs[1:], xs[:-1])]
+    v = [i-j for i, j in zip(ys[1:], ys[:-1])]
+
+    plt.figure()
+    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+               angles='xy', scale=1, color='b', width=0.005)
+
+    # zip joins x and y coordinates in pairs
+    for x, y, label in zip(xs, ys, labels):
+        plt.annotate(label+1, # this is the text
+                     (x, y), # this is the point to label
+                     textcoords="offset points", # how to position the text
+                     xytext=(0,10), # distance from text to points (x,y)
+                     ha='center') # horizontal alignment can be left, right or center
+
+    #plot special colours for the first and last point
+    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
+    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+    plt.title(save_name)
+    if save_fig:
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
+    plt.show()
+
+    return
+
+def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, Node_Position='total_average',
+                               only_nouns=True, save_fig=False):
+    """
+    Plots BOTH a background of keywords + the 2D quiver arrow following the direction of the topics discussed in each
+    segment of the transcript.
+    """
+    # EMBEDDING PART
+    keyword_types = ['noun', 'pke', 'bigram', 'trigram']
+    colours = ['pink', 'green', 'orange', 'blue']
+    labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
+
+    number_types_toplot = range(len(keyword_types))
+    if only_nouns:
+        number_types_toplot = [0]
+
+    plt.figure()
+    plt.rc('font', size=8)
+    for i in number_types_toplot:
+        type = keyword_types[i]
+        words = keyword_vectors_df['{}_keyw'.format(type)]
+        Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
+        unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
+
+        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
+        for label, x, y in zip(words, Xs, Ys):
+            plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points", color='darkgrey')
+
+    plt.rc('font', size=10) # putting it back to normal
+
+    # QUIVER PART
+    labels = range(len(segments_info_df['total_average_keywords_wordvec'])) # numerical labels
+
+    if Node_Position == 'total_average':
+        node_position = segments_info_df['total_average_keywords_wordvec'].values
+
+    if Node_Position == '1_max_count':
+        labels_text = segments_info_df['top_count_keyword'].values
+        node_position = segments_info_df['top_count_wordvec'].values
+
+    if Node_Position == '3_max_count':
+        labels_text = segments_info_df['top_3_counts_keywords'].values
+        node_position = segments_info_df['top_3_counts_wordvec'].values
+
+    xs = [x[0] for x in node_position]
+    ys = [x[1] for x in node_position]
+
+    u = [i-j for i, j in zip(xs[1:], xs[:-1])]
+    v = [i-j for i, j in zip(ys[1:], ys[:-1])]
+
+    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+               angles='xy', scale=1, color='b', width=0.005)
+
+    # zip joins x and y coordinates in pairs
+    for x, y, label in zip(xs, ys, labels):
+        plt.annotate(label+1, # this is the text
+                     (x, y), # this is the point to label
+                     textcoords="offset points", # how to position the text
+                     xytext=(0, 10), # distance from text to points (x,y)
+                     ha='center') # horizontal alignment can be left, right or center
+
+    #plot special colours for the first and last point
+    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
+    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+    plt.title(save_name)
+    plt.legend()
+    if save_fig:
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
+    plt.show()
+
+class Arrow3D(FancyArrowPatch):
+    def __init__(self, xs, ys, zs, *args, **kwargs):
+        FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
+        self._verts3d = xs, ys, zs
+
+    def draw(self, renderer):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, renderer.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+        FancyArrowPatch.draw(self, renderer)
+
+def Plot_3D_Trajectory_through_TopicSpace():
+    """
+    Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
+    """
+    df_manual = pd.read_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs')
+    labels_manual = df_manual['Topic_Num'].values
+    df_slice = pd.read_hdf('./SGCW/Topic_avs_df_slice.h5', key='dfs')
+    labels_slice = df_slice['Topic_Num'].values
+
+    # set up a figure twice as wide as it is tall
+    fig = plt.figure(figsize=(22, 11))  # plt.figaspect(0.5))
+    fig.suptitle('Movement through topic space over time')
+
+    # set up the axes for the first plot
+    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+
+    # Data for a three-dimensional line
+    word_emb_xs = df_manual['Av_X'].values
+    word_emb_ys = df_manual['Av_Y'].values
+    label_seg_df = pd.read_hdf('./SGCW/segs_manual_info.h5', key='dfs')
+    segment_numbers = label_seg_df['first_sent_numbers'].values
+    print('segment_numbers', segment_numbers)
+
+    #ax.plot3D(xs, segment_numbers, ys, 'bo-')
+    ax1.set_xlabel('$time (Segment Number)$', fontsize=13)
+    ax1.set_ylabel('$X$', fontsize=20, rotation = 0)
+    ax1.set_zlabel('$Y$', fontsize=20)
+    ax1.zaxis.set_rotate_label(False)
+    ax1.set_title('Manual')
+
+    cnt = 0
+    # (old_x, old_y, old_z) = (0, 0, 0)
+    for x, y, z, label in zip(segment_numbers, word_emb_xs, word_emb_ys, labels_manual):
+      cnt +=1
+      ax1.plot([x], [y], [z],'o') #markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6)
+      ax1.text(x, y, z, label+1, size=10)
+      if cnt ==1:
+        (old_x, old_y, old_z) = (x, y, z)
+        continue
+
+      a = Arrow3D([old_x, x], [old_y,y], [old_z, z], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+      ax1.add_artist(a)
+
+      (old_x, old_y, old_z) = (x, y, z)
 
 
-    #print('\nnow plotting')
-    #topics.plot_similarity(content_sentences, embeddings, 90) #visualised here
+    # AXIS STUFF
+    ax1.dist = 13
+    ax1 = plt.gca()
+    # ax.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels([])
+    ax1.zaxis.set_ticklabels([])
+
+    # for line in ax.xaxis.get_ticklines():
+    #     line.set_visible(False)
+    for line in ax1.yaxis.get_ticklines():
+        line.set_visible(False)
+    for line in ax1.zaxis.get_ticklines():
+        line.set_visible(False)
+
+    fig.show()
+
+## Functions for Segmentation/ other stuff...
+
+def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52):
+    """
+    Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
+    Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
+    """
+    if segmentation_method == 'InferSent':
+        # 1
+        # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
+        embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
+
+        # Obtain cosine similarity info dataframe
+        cos_sim_df = Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit, Info=True)
+
+        # [OR if embeddings were already obtained, simply load dataframe]
+        # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
+
+        # 2
+        first_sent_idxs_list = []
+        df_mini = cos_sim_df[cos_sim_df['New_Section'] == 1]
+        for idx, row in df_mini.iterrows():
+            first_sent_idxs_list.append(row['Sentence2_idx'])
+
+    if segmentation_method == 'Even':
+        def split(a, n):
+            k, m = divmod(len(a), n)
+            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+        num_sents = len(content_sentences)
+        idx_split = split(range(num_sents), Num_Even_Segs)
+        first_sent_idxs_list = [i[0] for i in idx_split][1:]
+
+    #if SliceCast:
+        #
+
+    return first_sent_idxs_list
 
 
-## Functions for Segmentation with InferSent...
+def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
+                      Node_Position='total_average', save_name='segments_info_df', Info=False):
+    """
+    Function to perform segment-wise keyword analysis.
+    Collects information about they keywords contained in each segment of the transcript.
+
+    params
+     'first_sent_idxs_list':
+        List containing the index of sentences which start a new segment.
+
+    Returns a dataframe 'segments_info_df'
+
+    keyword averaging note: If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
+    that will be (hopefully) semantically similar.
+    """
+    if Info:
+        print('\n-Obtaining information about each segment using cos_sim_df...')
+
+    def getIndexes(dfObj, value):
+        ''' Get index positions of value in dataframe i.e. dfObj.'''
+        listOfPos = list()
+        # Get bool dataframe with True at positions where the given value exists
+        result = dfObj.isin([value])
+        # Get list of columns that contains the value
+        seriesObj = result.any()
+        columnNames = list(seriesObj[seriesObj == True].index)
+        # Iterate over list of columns and fetch the rows indexes where value exists
+        for col in columnNames:
+            rows = list(result[col][result[col] == True].index)
+            for row in rows:
+                listOfPos.append([row, col])
+                # listOfPos.append(col)
+        # Return a list of tuples indicating the positions of value in the dataframe
+        return listOfPos
+
+    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
+                                        keyword_vectors_df['bigram_keyw'].values,
+                                        keyword_vectors_df['trigram_keyw'].values
+                                        ))
+
+    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
+                     'total_average_keywords_wordvec': [],
+                     'top_count_keyword': [], 'top_count_wordvec': [],
+                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
+
+    old_idx = 0
+    for idx in first_sent_idxs_list:
+        # Collect basic information about this segment
+        segments_dict['first_sent_numbers'].append(idx)  # POSITION of each section
+        length = np.int(idx) - np.int(old_idx)  # LENGTH of each section
+        segments_dict['length_of_segment'].append(length)
+
+        # Collect keywords contained in this segment as well as their counts
+        sentences_in_segment = content_sentences[old_idx:idx]
+        keywords_dict = Find_Keywords_in_Segment(sentences_in_segment, all_keywords, Info=False)
+        keywords_list, keywords_count = list(keywords_dict.keys()), list(keywords_dict.values())
+        segments_dict['keyword_list'].append(keywords_list)
+        segments_dict['keyword_counts'].append(keywords_count)
+
+        # Collect the Word embeddings for the keywords contained in this segment
+        df = keyword_vectors_df
+        Xvecs, Yvecs = [], []
+        for keyword in keywords_list:
+            # get index for row and column
+            row, col_name = getIndexes(df, keyword)[0]
+            col_idx = [idx for idx, val in enumerate(df.columns)][0]
+            # get the average vector position  #note !need to make sure columns are in right order
+            Xvecs.append(df.iloc[row, col_idx + 1])
+            Yvecs.append(df.iloc[row, col_idx + 2])
+
+        # Collect vectors for possible locations to place the node representing each segment
+        segments_dict['total_average_keywords_wordvec'].append([np.mean(Xvecs), np.mean(Yvecs)])
+
+        idx_of_top_keyword = keywords_count.index(max(keywords_count))
+        keywords_list = np.array(keywords_list)
+        top_keyword, top_keyword_XY = keywords_list[idx_of_top_keyword], [Xvecs[idx_of_top_keyword],
+                                                                          Yvecs[idx_of_top_keyword]]
+        segments_dict['top_count_keyword'].append(top_keyword)
+        segments_dict['top_count_wordvec'].append(top_keyword_XY)
+
+        # Check that there are at least 3 keywords for the section
+        Xvecs, Yvecs = np.array(Xvecs), np.array(Yvecs)
+        if len(keywords_list) >= 3:
+            idxs_of_top_3_keywords = sorted(range(len(keywords_count)), key=lambda i: keywords_count[i])[-3:]
+            top_3_keywords = keywords_list[idxs_of_top_3_keywords]
+            top_3_keywords_X, top_3_keywords_X = Xvecs[idxs_of_top_3_keywords], Yvecs[idxs_of_top_3_keywords]
+            segments_dict['top_3_counts_wordvec'].append([np.mean(top_3_keywords_X), np.mean(top_3_keywords_X)])
+        else:
+            segments_dict['top_3_counts_wordvec'].append(None)
+
+        old_idx = idx
+
+    # Convert dictionary to dataframe
+    segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
+    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
+    if Info:
+        print('-Created segments_info_df. Preview: ')
+        print(segments_info_df.head().to_string())
+        print('Lengths of Segments:', segments_dict['length_of_segment'])
+        print('#Keywords in each Segment:', [len(words_list) for words_list in segments_dict['keyword_list']])
+        print('#Segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
+
+    return segments_info_df
 
 def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
     """
@@ -821,7 +919,7 @@ def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
 
     return embeddings
 
-def Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit=0.52, Info=False):
+def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Info=False):
     """
     Function to
     param cos_sim_limit:
@@ -886,173 +984,106 @@ def Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit=0.52, In
 
     return cos_sim_df
 
-def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, save_name='segments_info_df', Info=False):
+def Cluster_Transcript(content_sentences):
     """
-    Function to perform segment-wise keyword analysis.
-    Collects information about they keywords contained in each segment of the transcript.
+    NOT USING SO FAR.
+    Taken from Msci project work that Jonas did on 5th January
 
-    params
-     'first_sent_idxs_list':
-        List containing the index of sentences which start a new segment.
-
-    Returns a dataframe 'segments_info_df'
+    Doesn't segment like i hoped it would - just clusters sentences (in no particular order, i.e. not considering
+    whether they are consecutive) so could be used for topic detection but not segmentation.
     """
-    if Info:
-        print('\n-Obtaining information about each segment using cos_sim_df...')
+    #load transcript
+    print("-Loading sentence embedder, this takes a while...")
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    print("Done")
 
-    def getIndexes(dfObj, value):
-        ''' Get index positions of value in dataframe i.e. dfObj.'''
-        listOfPos = list()
-        # Get bool dataframe with True at positions where the given value exists
-        result = dfObj.isin([value])
-        # Get list of columns that contains the value
-        seriesObj = result.any()
-        columnNames = list(seriesObj[seriesObj == True].index)
-        # Iterate over list of columns and fetch the rows indexes where value exists
-        for col in columnNames:
-            rows = list(result[col][result[col] == True].index)
-            for row in rows:
-                listOfPos.append([row, col])
-                # listOfPos.append(col)
-        # Return a list of tuples indicating the positions of value in the dataframe
-        return listOfPos
+    #embed using google sentence encoder
+    embeddings = embed(content_sentences)
+    print('Embedded using Google Sentence Encoder')
 
-    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
-                                        keyword_vectors_df['bigram_keyw'].values, keyword_vectors_df['trigram_keyw'].values
-                                        ))
+    #approach 1: use density based clustering algorithm to cluster sentences into topics
+    sim_m = topics.make_similarity_matrix(content_sentences, embeddings)
 
-    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
-                     'average_wordvec_keyword': []}
+    cluster_labels = DBSCAN(eps=2.2, min_samples=1).fit_predict(sim_m) #eps is sensitivity
 
-    old_idx = 0
-    for idx in first_sent_idxs_list:
-        # Collect basic information about this segment
-        segments_dict['first_sent_numbers'].append(idx)         # POSITION of each section
-        length = np.int(idx) - np.int(old_idx)                  # LENGTH of each section
-        segments_dict['length_of_segment'].append(length)
+    clusters = defaultdict(list)
+    for cl, sentence in zip(cluster_labels, content_sentences):
+        clusters[cl].append(sentence)
+    print('\n list(clusters.values()): ')
+    pprint(list(clusters.values())) #these are sentence clusters
+    print('\nNumber of Clusters: ', len(list(clusters.values())))
 
-        # Collect keywords contained in this segment as well as their counts
-        sentences_in_segment = content_sentences[old_idx:idx]
-        keywords_dict = Find_Keywords_in_Segment(sentences_in_segment, all_keywords, Info=False)
-        segments_dict['keyword_list'].append(list(keywords_dict.keys()))
-        segments_dict['keyword_counts'].append(list(keywords_dict.values()))
-
-        # Collect the Word embeddings for the keywords contained in this segment
-        df = keyword_vectors_df
-        Xvecs, Yvecs = [], []
-        for keyword in list(keywords_dict.keys()):
-            # get index for row and column
-            row, col_name = getIndexes(df, keyword)[0]
-            col_idx = [idx for idx, val in enumerate(df.columns)][0]
-            #get the average vector position  #note !need to make sure columns are in right order
-            Xvecs.append(df.iloc[row, col_idx+1])
-            Yvecs.append(df.iloc[row, col_idx+2])
-
-        segments_dict['average_wordvec_keyword'].append([np.mean(Xvecs), np.mean(Yvecs)])
-        old_idx = idx
-
-    # Convert dictionary to dataframe
-    segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
-    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
-    if Info:
-        print('-Created segments_info_df. Preview: ')
-        print(segments_info_df.head().to_string())
-        print('Lengths of Segments:', segments_dict['length_of_segment'])
-        print('#Keywords in each Segment:', [len(words_list) for words_list in segments_dict['keyword_list']])
-        print('#Segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
-        print("segments_dict['average_wordvec_keyword']", segments_dict['average_wordvec_keyword'])
-
-    return segments_info_df
+    #find the sentence index at which the clusters start
 
 
-## Umbrella (?) (parent?) (Mother?) (BIG BOY?) Functions...
-def Peform_Segmentation(content_sentences, Evenly=False, Num_Even_Segs=10, Infersent=False, cos_sim_limit=0.52):
-    """
-    Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
-    Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
-    """
-    if Infersent:
-        ## 1
-        # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
-        embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
+    #print('\nnow plotting')
+    #topics.plot_similarity(content_sentences, embeddings, 90) #visualised here
 
-        # Obtain cosine similarity info dataframe
-        cos_sim_df = Calc_CosSim_Long_Sents(content_sentences, embeddings, cos_sim_limit, Info=True)
 
-        # [OR if embeddings were already obtained, simply load dataframe]
-        # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
 
-        ## 2
-        first_sent_idxs_list = []
-        df_mini = cos_sim_df[cos_sim_df['New_Section'] == 1]
-        for idx, row in df_mini.iterrows():
-            first_sent_idxs_list.append(row['Sentence2_idx'])
-
-    if Evenly:
-        def split(a, n):
-            k, m = divmod(len(a), n)
-            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
-
-        num_sents = len(content_sentences)
-        idx_split = split(range(num_sents), Num_Even_Segs)
-        first_sent_idxs_list = [i[0] for i in idx_split][1:]
-
-    #if SliceCast:
-        #
-
-    return first_sent_idxs_list
-
-def Preprocess_Content(content):
-    """Function"""
-    nlp = spacy.load('en', disable=['parser', 'ner'])
-    doc = nlp(content)
-    content_lemma = " ".join([token.lemma_ for token in doc]) #note this will replace any detected pronoun with '-PRON-'
-    content_lemma = re.sub(r'-PRON-', "", content_lemma)
-
-    return content_lemma
-
+## CODE...
 if __name__=='__main__':
+    saving_figs = False
+    node_location_method = '3_max_count'              # 'total_average'    # '1_max_count'     # '3_max_count'
+    seg_method = 'Even'                                 #'InferSent'
 
-    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan...
-    #/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/
+    Even_number_of_segments = 25                        # for when seg_method = 'Even'
+    InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
+
+    ## Load + Pre-process Transcript
     path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
-    # Get content from transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
         content = Preprocess_Content(content)
         content_sentences = nltk.sent_tokenize(content)
 
-    ## Step One: Segmentation
-    seg_method = 'Even'
-    number_of_segments = 25
-    first_sent_idxs_list = Peform_Segmentation(content_sentences,
-                                               Evenly=True, Num_Even_Segs=number_of_segments,
-                                               Infersent=False, cos_sim_limit=0.52)
+    ## Segmentation
+    first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
+                                                Num_Even_Segs=Even_number_of_segments,
+                                                cos_sim_limit=InferSent_cos_sim_limit)
 
-    ## Step TWO: Keyword Extraction
-    #nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
+    ## Keyword Extraction
+    # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
 
-    # [OR if keywords already extracted and saved together in keyword_vectors_df, simply load dataframe]
+    # OR just load the dataframe
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key = 'df')
 
-    ## Step THREE: Segment-Wise Information Extraction
+    ## Segment-Wise Information Extraction
+    if seg_method =='Even':
+        save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
+    if seg_method =='InferSent':
+        save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
+
+    # Create dataframe with the information about the segments
     segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
-                                         save_name='{0}_{1}_segments_info_df'.format(number_of_segments, seg_method),
-                                         Info=True)
+                                         save_name=save_name, Info=True)
 
-    #segments_info_df = pd.read_hdf('Saved_dfs/segments_info_df.h5', key = 'df')
+    # OR just load the dataframe
+    # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
 
-    ## Step FIVE: Plots.
-    #Plot Word Embedding
-    #PlotWord_Embeddings(keyword_vectors_df, save_fig=True)
 
-    # Plot Quiver Plot
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=True,
-                                        save_name='{0}_{1}_Segments_Quiver_Plot'.format(number_of_segments, seg_method))
+    ## Plot Word Embedding
+    # PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
 
-    # Plot Quiver + Embedding
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, only_nouns=True, save_fig=True,
-                               save_name='{0}_{1}_Segments_Quiver_and_Embeddings_Plot'.format(number_of_segments, seg_method))
+    ## Plot Quiver Plot
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+                                                                                      node_location_method)
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+                                        save_name=save_name)
+
+    ## Plot Quiver + Embedding
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+                                                                                      node_location_method)
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method, only_nouns=True,
+                               save_fig=saving_figs, save_name=save_name)
 
     # Plot the keywords + their average (keeping background spacing the same, not zooming into lil sections every time)
