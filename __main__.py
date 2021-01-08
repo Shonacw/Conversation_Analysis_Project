@@ -493,6 +493,287 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
 
     return keywords_contained_in_segment
 
+## Functions for Segmentation...
+
+def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52):
+    """
+    Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
+    Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
+    """
+    if segmentation_method == 'InferSent':
+        # 1
+        # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
+        embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
+
+        # Obtain cosine similarity info dataframe
+        cos_sim_df = Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit, Info=True)
+
+        # [OR if embeddings were already obtained, simply load dataframe]
+        # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
+
+        # 2
+        first_sent_idxs_list = []
+        df_mini = cos_sim_df[cos_sim_df['New_Section'] == 1]
+        for idx, row in df_mini.iterrows():
+            first_sent_idxs_list.append(row['Sentence2_idx'])
+
+    if segmentation_method == 'Even':
+        def split(a, n):
+            k, m = divmod(len(a), n)
+            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+        num_sents = len(content_sentences)
+        idx_split = split(range(num_sents), Num_Even_Segs)
+        first_sent_idxs_list = [i[0] for i in idx_split][1:]
+
+    #if SliceCast:
+        #
+
+    return first_sent_idxs_list
+
+
+def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
+                      Node_Position='total_average', save_name='segments_info_df', Info=False):
+    """
+    Function to perform segment-wise keyword analysis.
+    Collects information about they keywords contained in each segment of the transcript.
+
+    params
+     'first_sent_idxs_list':
+        List containing the index of sentences which start a new segment.
+
+    Returns a dataframe 'segments_info_df'
+
+    keyword averaging note: If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
+    that will be (hopefully) semantically similar.
+    """
+    if Info:
+        print('\n-Obtaining information about each segment using cos_sim_df...')
+
+    def getIndexes(dfObj, value):
+        ''' Get index positions of value in dataframe i.e. dfObj.'''
+        listOfPos = list()
+        # Get bool dataframe with True at positions where the given value exists
+        result = dfObj.isin([value])
+        # Get list of columns that contains the value
+        seriesObj = result.any()
+        columnNames = list(seriesObj[seriesObj == True].index)
+        # Iterate over list of columns and fetch the rows indexes where value exists
+        for col in columnNames:
+            rows = list(result[col][result[col] == True].index)
+            for row in rows:
+                listOfPos.append([row, col])
+                # listOfPos.append(col)
+        # Return a list of tuples indicating the positions of value in the dataframe
+        return listOfPos
+
+    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
+                                        keyword_vectors_df['bigram_keyw'].values,
+                                        keyword_vectors_df['trigram_keyw'].values
+                                        ))
+
+    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
+                     'total_average_keywords_wordvec': [],
+                     'top_count_keyword': [], 'top_count_wordvec': [],
+                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
+
+    old_idx = 0
+    for idx in first_sent_idxs_list:
+        # Collect basic information about this segment
+        segments_dict['first_sent_numbers'].append(idx)  # POSITION of each section
+        length = np.int(idx) - np.int(old_idx)  # LENGTH of each section
+        segments_dict['length_of_segment'].append(length)
+
+        # Collect keywords contained in this segment as well as their counts
+        sentences_in_segment = content_sentences[old_idx:idx]
+        keywords_dict = Find_Keywords_in_Segment(sentences_in_segment, all_keywords, Info=False)
+        keywords_list, keywords_count = list(keywords_dict.keys()), list(keywords_dict.values())
+        segments_dict['keyword_list'].append(keywords_list)
+        segments_dict['keyword_counts'].append(keywords_count)
+
+        # Collect the Word embeddings for the keywords contained in this segment
+        df = keyword_vectors_df
+        Xvecs, Yvecs = [], []
+        for keyword in keywords_list:
+            # get index for row and column
+            row, col_name = getIndexes(df, keyword)[0]
+            col_idx = [idx for idx, val in enumerate(df.columns)][0]
+            # get the average vector position  #note !need to make sure columns are in right order
+            Xvecs.append(df.iloc[row, col_idx + 1])
+            Yvecs.append(df.iloc[row, col_idx + 2])
+
+        # Collect vectors for possible locations to place the node representing each segment
+        segments_dict['total_average_keywords_wordvec'].append([np.mean(Xvecs), np.mean(Yvecs)])
+
+        idx_of_top_keyword = keywords_count.index(max(keywords_count))
+        keywords_list = np.array(keywords_list)
+        top_keyword, top_keyword_XY = keywords_list[idx_of_top_keyword], [Xvecs[idx_of_top_keyword],
+                                                                          Yvecs[idx_of_top_keyword]]
+        segments_dict['top_count_keyword'].append(top_keyword)
+        segments_dict['top_count_wordvec'].append(top_keyword_XY)
+
+        # Check that there are at least 3 keywords for the section
+        Xvecs, Yvecs = np.array(Xvecs), np.array(Yvecs)
+        if len(keywords_list) >= 3:
+            idxs_of_top_3_keywords = sorted(range(len(keywords_count)), key=lambda i: keywords_count[i])[-3:]
+            top_3_keywords = keywords_list[idxs_of_top_3_keywords]
+            #print('top_3_keywords: ', top_3_keywords)
+            top_3_keywords_X, top_3_keywords_Y = Xvecs[idxs_of_top_3_keywords], Yvecs[idxs_of_top_3_keywords]
+            segments_dict['top_3_counts_keywords'].append(top_3_keywords)
+            segments_dict['top_3_counts_wordvec'].append([np.mean(top_3_keywords_X), np.mean(top_3_keywords_Y)])
+        else:
+            segments_dict['top_3_counts_wordvec'].append(None)
+
+        old_idx = idx
+
+    # Convert dictionary to dataframe
+    segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
+    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
+    if Info:
+        print('-Created segments_info_df. Preview: ')
+        print(segments_info_df.head().to_string())
+        print('Lengths of Segments:', segments_dict['length_of_segment'])
+        print('#Keywords in each Segment:', [len(words_list) for words_list in segments_dict['keyword_list']])
+        print('#Segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
+
+    return segments_info_df
+
+def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
+    """
+    V = 1 for GloVe, 2 for FastText
+    """
+    all_combinations = False  # True to compare ALL sentences, False to compare only consecutive sentences
+    cutoff = 0.5  # Cutoff value for weighted graph
+    # STEP 1
+    # Build sentences list...
+    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan
+    # with open(path, 'r') as f:
+    #     content = f.read()
+    #     sentences = nltk.sent_tokenize(content)
+    if Info:
+        print('\nObtaining sentence embeddings with InferSent...')
+
+    # InferSent...
+    MODEL_PATH = 'encoder/infersent%s.pkl' % V
+    if V == 1:
+        W2V_PATH = 'GloVe/glove.840B.300d.txt'
+    if V == 2:
+        W2V_PATH = 'fastText/crawl-300d-2M.vec'
+    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+                    'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
+
+    infersent = InferSent(params_model)
+    infersent.load_state_dict(torch.load(MODEL_PATH))
+    infersent.set_w2v_path(W2V_PATH)
+    infersent.build_vocab(sentences, tokenize=True)
+    embeddings = infersent.encode(sentences, tokenize=True)
+
+    if Info:
+        print('-Obtained sentence embeddings with InferSent.')
+
+    return embeddings
+
+def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Info=False):
+    """
+    Function to
+    param cos_sim_limit:
+        The parameter which will determine the number of segments
+        if = 0.6  there are 64 segments
+        if = 0.55 there are 25 segments
+        if = 0.52 there are 15 segments
+        if = 0.5  there are 10 segments
+        if = 0.45 there are 3 segments
+    """
+
+    def cosine(u, v):
+        return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
+
+    tbl = dict.fromkeys(i for i in list(range(sys.maxunicode)) if unicodedata.category(chr(i)).startswith('P'))
+
+    # def remove_punctuation(text):
+    #     return text.translate(tbl)
+    if Info:
+        print('\n-Creating cos_sim_df dataframe...')
+
+    idxs_blank = []
+    content_sentences_copy = content_sentences
+    cos_sim_df = pd.DataFrame(columns=['Sentence1', 'Sentence1_idx', 'Sentence2', 'Sentence2_idx', 'Cosine_Similarity',
+                                       'New_Section'])
+
+    # Firstly, put all sentences of length <5 to blank in a new content_sentences_object (preliminary method to deal with filler sents)
+    for idx, sentence in enumerate(content_sentences_copy):
+        sentence = sentence.translate(tbl)  # remove_punctuation(sentence)
+        num_words = len(word_tokenize(sentence))
+        if num_words <= 5:
+            content_sentences_copy[idx] = []
+            idxs_blank.append(idx)
+
+    idxs_sentences_to_compare = [x for x in list(range(len(content_sentences_copy))) if x not in idxs_blank]
+    cnt = 0
+    for idx, i in enumerate(idxs_sentences_to_compare):
+        if idx == len(idxs_sentences_to_compare) - 1:
+            break
+        j = idxs_sentences_to_compare[idx + 1]
+        sent1, sent2 = content_sentences_copy[i], content_sentences_copy[j]
+        cos_sim = cosine(embeddings[i], embeddings[j])
+        if cos_sim < cos_sim_limit:
+            new_segment = 1
+        else:
+            new_segment = 0
+        cos_sim_df.loc[cnt] = [sent1, i, sent2, j, cos_sim, new_segment]
+        cnt += 1
+
+        # if Info:
+        #     print('pair', cnt, '/', len(idxs_sentences_to_compare), 'idxs: ', i, 'vs.', j, '        ', cos_sim,
+        #           '      ',
+        #           sent1, '======', sent2)
+
+    # Save df to hdf
+    cos_sim_df.to_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df', mode='w')
+
+    if Info:
+        print('-Number of segments: ', cos_sim_df.New_Section.value_counts().loc[1])
+        print('-Saved Cos_Sim_df to hd5 file. Preview of cos_sim_df:')
+        print(cos_sim_df.head().to_string())
+
+    return cos_sim_df
+
+def Cluster_Transcript(content_sentences):
+    """
+    NOT USING SO FAR.
+    Taken from Msci project work that Jonas did on 5th January
+
+    Doesn't segment like i hoped it would - just clusters sentences (in no particular order, i.e. not considering
+    whether they are consecutive) so could be used for topic detection but not segmentation.
+    """
+    #load transcript
+    print("-Loading sentence embedder, this takes a while...")
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    print("Done")
+
+    #embed using google sentence encoder
+    embeddings = embed(content_sentences)
+    print('Embedded using Google Sentence Encoder')
+
+    #approach 1: use density based clustering algorithm to cluster sentences into topics
+    sim_m = topics.make_similarity_matrix(content_sentences, embeddings)
+
+    cluster_labels = DBSCAN(eps=2.2, min_samples=1).fit_predict(sim_m) #eps is sensitivity
+
+    clusters = defaultdict(list)
+    for cl, sentence in zip(cluster_labels, content_sentences):
+        clusters[cl].append(sentence)
+    print('\n list(clusters.values()): ')
+    pprint(list(clusters.values())) #these are sentence clusters
+    print('\nNumber of Clusters: ', len(list(clusters.values())))
+
+    #find the sentence index at which the clusters start
+
+
+    #print('\nnow plotting')
+    #topics.plot_similarity(content_sentences, embeddings, 90) #visualised here
+
+
 ## Functions for plotting...
 def Plot_Wordcloud(content_sentences, save=False):
     """
@@ -741,290 +1022,11 @@ def Plot_3D_Trajectory_through_TopicSpace():
 
     fig.show()
 
-## Functions for Segmentation/ other stuff...
-
-def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52):
-    """
-    Function to segment up a transcript. By default will segment up the transcript into 'Num_Even_Segs' even segments.
-    Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
-    """
-    if segmentation_method == 'InferSent':
-        # 1
-        # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
-        embeddings = Obtain_Sent_Embeddings_InferSent(content_sentences, Info=False)
-
-        # Obtain cosine similarity info dataframe
-        cos_sim_df = Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit, Info=True)
-
-        # [OR if embeddings were already obtained, simply load dataframe]
-        # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
-
-        # 2
-        first_sent_idxs_list = []
-        df_mini = cos_sim_df[cos_sim_df['New_Section'] == 1]
-        for idx, row in df_mini.iterrows():
-            first_sent_idxs_list.append(row['Sentence2_idx'])
-
-    if segmentation_method == 'Even':
-        def split(a, n):
-            k, m = divmod(len(a), n)
-            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
-
-        num_sents = len(content_sentences)
-        idx_split = split(range(num_sents), Num_Even_Segs)
-        first_sent_idxs_list = [i[0] for i in idx_split][1:]
-
-    #if SliceCast:
-        #
-
-    return first_sent_idxs_list
-
-
-def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
-                      Node_Position='total_average', save_name='segments_info_df', Info=False):
-    """
-    Function to perform segment-wise keyword analysis.
-    Collects information about they keywords contained in each segment of the transcript.
-
-    params
-     'first_sent_idxs_list':
-        List containing the index of sentences which start a new segment.
-
-    Returns a dataframe 'segments_info_df'
-
-    keyword averaging note: If segments are small enough, i.e. only 2-5 utterances at a time, should only really contain a couple of keywords
-    that will be (hopefully) semantically similar.
-    """
-    if Info:
-        print('\n-Obtaining information about each segment using cos_sim_df...')
-
-    def getIndexes(dfObj, value):
-        ''' Get index positions of value in dataframe i.e. dfObj.'''
-        listOfPos = list()
-        # Get bool dataframe with True at positions where the given value exists
-        result = dfObj.isin([value])
-        # Get list of columns that contains the value
-        seriesObj = result.any()
-        columnNames = list(seriesObj[seriesObj == True].index)
-        # Iterate over list of columns and fetch the rows indexes where value exists
-        for col in columnNames:
-            rows = list(result[col][result[col] == True].index)
-            for row in rows:
-                listOfPos.append([row, col])
-                # listOfPos.append(col)
-        # Return a list of tuples indicating the positions of value in the dataframe
-        return listOfPos
-
-    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
-                                        keyword_vectors_df['bigram_keyw'].values,
-                                        keyword_vectors_df['trigram_keyw'].values
-                                        ))
-
-    segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
-                     'total_average_keywords_wordvec': [],
-                     'top_count_keyword': [], 'top_count_wordvec': [],
-                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
-
-    old_idx = 0
-    for idx in first_sent_idxs_list:
-        # Collect basic information about this segment
-        segments_dict['first_sent_numbers'].append(idx)  # POSITION of each section
-        length = np.int(idx) - np.int(old_idx)  # LENGTH of each section
-        segments_dict['length_of_segment'].append(length)
-
-        # Collect keywords contained in this segment as well as their counts
-        sentences_in_segment = content_sentences[old_idx:idx]
-        keywords_dict = Find_Keywords_in_Segment(sentences_in_segment, all_keywords, Info=False)
-        keywords_list, keywords_count = list(keywords_dict.keys()), list(keywords_dict.values())
-        segments_dict['keyword_list'].append(keywords_list)
-        segments_dict['keyword_counts'].append(keywords_count)
-
-        # Collect the Word embeddings for the keywords contained in this segment
-        df = keyword_vectors_df
-        Xvecs, Yvecs = [], []
-        for keyword in keywords_list:
-            # get index for row and column
-            row, col_name = getIndexes(df, keyword)[0]
-            col_idx = [idx for idx, val in enumerate(df.columns)][0]
-            # get the average vector position  #note !need to make sure columns are in right order
-            Xvecs.append(df.iloc[row, col_idx + 1])
-            Yvecs.append(df.iloc[row, col_idx + 2])
-
-        # Collect vectors for possible locations to place the node representing each segment
-        segments_dict['total_average_keywords_wordvec'].append([np.mean(Xvecs), np.mean(Yvecs)])
-
-        idx_of_top_keyword = keywords_count.index(max(keywords_count))
-        keywords_list = np.array(keywords_list)
-        top_keyword, top_keyword_XY = keywords_list[idx_of_top_keyword], [Xvecs[idx_of_top_keyword],
-                                                                          Yvecs[idx_of_top_keyword]]
-        segments_dict['top_count_keyword'].append(top_keyword)
-        segments_dict['top_count_wordvec'].append(top_keyword_XY)
-
-        # Check that there are at least 3 keywords for the section
-        Xvecs, Yvecs = np.array(Xvecs), np.array(Yvecs)
-        if len(keywords_list) >= 3:
-            idxs_of_top_3_keywords = sorted(range(len(keywords_count)), key=lambda i: keywords_count[i])[-3:]
-            top_3_keywords = keywords_list[idxs_of_top_3_keywords]
-            top_3_keywords_X, top_3_keywords_X = Xvecs[idxs_of_top_3_keywords], Yvecs[idxs_of_top_3_keywords]
-            segments_dict['top_3_counts_wordvec'].append([np.mean(top_3_keywords_X), np.mean(top_3_keywords_X)])
-        else:
-            segments_dict['top_3_counts_wordvec'].append(None)
-
-        old_idx = idx
-
-    # Convert dictionary to dataframe
-    segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
-    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
-    if Info:
-        print('-Created segments_info_df. Preview: ')
-        print(segments_info_df.head().to_string())
-        print('Lengths of Segments:', segments_dict['length_of_segment'])
-        print('#Keywords in each Segment:', [len(words_list) for words_list in segments_dict['keyword_list']])
-        print('#Segments with zero keywords:', [len(words_list) for words_list in list(keywords_dict.keys())].count(0))
-
-    return segments_info_df
-
-def Obtain_Sent_Embeddings_InferSent(sentences, V=1, Info=False):
-    """
-    V = 1 for GloVe, 2 for FastText
-    """
-    all_combinations = False  # True to compare ALL sentences, False to compare only consecutive sentences
-    cutoff = 0.5  # Cutoff value for weighted graph
-    # STEP 1
-    # Build sentences list...
-    # Load pre-processed transcript of interview between Elon Musk and Joe Rogan
-    # with open(path, 'r') as f:
-    #     content = f.read()
-    #     sentences = nltk.sent_tokenize(content)
-    if Info:
-        print('\nObtaining sentence embeddings with InferSent...')
-
-    # InferSent...
-    MODEL_PATH = 'encoder/infersent%s.pkl' % V
-    if V == 1:
-        W2V_PATH = 'GloVe/glove.840B.300d.txt'
-    if V == 2:
-        W2V_PATH = 'fastText/crawl-300d-2M.vec'
-    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
-                    'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
-
-    infersent = InferSent(params_model)
-    infersent.load_state_dict(torch.load(MODEL_PATH))
-    infersent.set_w2v_path(W2V_PATH)
-    infersent.build_vocab(sentences, tokenize=True)
-    embeddings = infersent.encode(sentences, tokenize=True)
-
-    if Info:
-        print('-Obtained sentence embeddings with InferSent.')
-
-    return embeddings
-
-def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Info=False):
-    """
-    Function to
-    param cos_sim_limit:
-        The parameter which will determine the number of segments
-        if = 0.6  there are 64 segments
-        if = 0.55 there are 25 segments
-        if = 0.52 there are 15 segments
-        if = 0.5  there are 10 segments
-        if = 0.45 there are 3 segments
-    """
-
-    def cosine(u, v):
-        return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
-
-    tbl = dict.fromkeys(i for i in list(range(sys.maxunicode)) if unicodedata.category(chr(i)).startswith('P'))
-
-    # def remove_punctuation(text):
-    #     return text.translate(tbl)
-    if Info:
-        print('\n-Creating cos_sim_df dataframe...')
-
-    idxs_blank = []
-    content_sentences_copy = content_sentences
-    cos_sim_df = pd.DataFrame(columns=['Sentence1', 'Sentence1_idx', 'Sentence2', 'Sentence2_idx', 'Cosine_Similarity',
-                                       'New_Section'])
-
-    # Firstly, put all sentences of length <5 to blank in a new content_sentences_object (preliminary method to deal with filler sents)
-    for idx, sentence in enumerate(content_sentences_copy):
-        sentence = sentence.translate(tbl)  # remove_punctuation(sentence)
-        num_words = len(word_tokenize(sentence))
-        if num_words <= 5:
-            content_sentences_copy[idx] = []
-            idxs_blank.append(idx)
-
-    idxs_sentences_to_compare = [x for x in list(range(len(content_sentences_copy))) if x not in idxs_blank]
-    cnt = 0
-    for idx, i in enumerate(idxs_sentences_to_compare):
-        if idx == len(idxs_sentences_to_compare) - 1:
-            break
-        j = idxs_sentences_to_compare[idx + 1]
-        sent1, sent2 = content_sentences_copy[i], content_sentences_copy[j]
-        cos_sim = cosine(embeddings[i], embeddings[j])
-        if cos_sim < cos_sim_limit:
-            new_segment = 1
-        else:
-            new_segment = 0
-        cos_sim_df.loc[cnt] = [sent1, i, sent2, j, cos_sim, new_segment]
-        cnt += 1
-
-        # if Info:
-        #     print('pair', cnt, '/', len(idxs_sentences_to_compare), 'idxs: ', i, 'vs.', j, '        ', cos_sim,
-        #           '      ',
-        #           sent1, '======', sent2)
-
-    # Save df to hdf
-    cos_sim_df.to_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df', mode='w')
-
-    if Info:
-        print('-Number of segments: ', cos_sim_df.New_Section.value_counts().loc[1])
-        print('-Saved Cos_Sim_df to hd5 file. Preview of cos_sim_df:')
-        print(cos_sim_df.head().to_string())
-
-    return cos_sim_df
-
-def Cluster_Transcript(content_sentences):
-    """
-    NOT USING SO FAR.
-    Taken from Msci project work that Jonas did on 5th January
-
-    Doesn't segment like i hoped it would - just clusters sentences (in no particular order, i.e. not considering
-    whether they are consecutive) so could be used for topic detection but not segmentation.
-    """
-    #load transcript
-    print("-Loading sentence embedder, this takes a while...")
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    print("Done")
-
-    #embed using google sentence encoder
-    embeddings = embed(content_sentences)
-    print('Embedded using Google Sentence Encoder')
-
-    #approach 1: use density based clustering algorithm to cluster sentences into topics
-    sim_m = topics.make_similarity_matrix(content_sentences, embeddings)
-
-    cluster_labels = DBSCAN(eps=2.2, min_samples=1).fit_predict(sim_m) #eps is sensitivity
-
-    clusters = defaultdict(list)
-    for cl, sentence in zip(cluster_labels, content_sentences):
-        clusters[cl].append(sentence)
-    print('\n list(clusters.values()): ')
-    pprint(list(clusters.values())) #these are sentence clusters
-    print('\nNumber of Clusters: ', len(list(clusters.values())))
-
-    #find the sentence index at which the clusters start
-
-
-    #print('\nnow plotting')
-    #topics.plot_similarity(content_sentences, embeddings, 90) #visualised here
-
-
 
 ## CODE...
 if __name__=='__main__':
     saving_figs = False
-    node_location_method = '3_max_count'              # 'total_average'    # '1_max_count'     # '3_max_count'
+    node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
     seg_method = 'Even'                                 #'InferSent'
 
     Even_number_of_segments = 25                        # for when seg_method = 'Even'
