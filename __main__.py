@@ -48,6 +48,9 @@ from mpl_toolkits.mplot3d import proj3d
 from InferSent.models import InferSent
 import importlib
 topics = importlib.import_module("msci-project.src.topics")
+SliceNet = importlib.import_module("SliceCast.src.SliceNet")
+netUtils = importlib.import_module("SliceCast.src.netUtils")
+
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -62,49 +65,37 @@ def Preprocess_Content(content):
     content_lemma = re.sub(r'-PRON-', "", content_lemma)
     return content_lemma
 
-def Extract_bigrams(words, n=20, Info=False):
+def reformat_sgcw_remove_all(text):
     """
-    Function to extract bigrams mentioned in the given transcript.
-    Input is the Podcast transcript in the form of a list of words and 'n' the number of Bigrams to consider.
+    Takes the Joe Rogan podcast transcript (which I already slightly pre-processed
+    a while back) and turns it into a single long string of text without speakers
+    or times
+
+    use: # Paths
+    path_shorter = Path('./SGCW/shorter_formatted.txt')
+    path_shorter_and_formatted = Path('./SGCW/shorter_formatted_plain.txt')
+
+    # Reformat the (shortened) Joe Rogan transcript to be consistent w SliceCast podcasts
+    with open(path_shorter) as f_shorter:
+        content = f_shorter.read()
+    better_format_text = reformat_sgcw_remove_all(content)
+
+    # Save shortened + formatted version of the Joe Rogan transcript
+    form_shorter_doc = open(path_shorter_and_formatted, 'w')
+    form_shorter_doc.write(better_format_text)
+    form_shorter_doc.close()
     """
-    stopset = set(stopwords.words('english'))
-    filter_stops = lambda w: len(w) < 3 or w in stopset
 
-    bcf = BigramCollocationFinder.from_words(words)
-    bcf.apply_word_filter(filter_stops)               # Ignore bigrams whose words contain < 3 chars / are stopwords
-    bcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
-    bigrams_extracted = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, n))
-    final_bigrams = []
-    for bigram_list in bigrams_extracted:
-        bigram_0, bigram_1 = bigram_list
-        bigram_condensed = str(bigram_0 + '_' + bigram_1)
-        final_bigrams.append(bigram_condensed)
+    print('Text format before preprocessing:\n', text[:300])
 
-    if Info:
-        print('Bigrams: ', final_bigrams)
-    return final_bigrams
+    # Strip all characters but letters and whitespace inside the speech
+    content_1 = re.sub('\w+\s\w+;[0-9]{2}:[0-9]{2};', "", text)
+    # Strip new-lines
+    content_2 = re.sub('\n', " ", content_1)
 
-def Extract_trigrams(words, n=20, Info=False):
-    """
-    Function to extract interesting trigrams mentioned in the given transcript.
-    Input is a list of words from the podcast transcript and 'n' is the max number of trigrams to consider.
-    """
-    stopset = set(stopwords.words('english'))
-    filter_stops = lambda w: len(w) < 3 or w in stopset
+    print('\nText format after preprocessing:\n', content_2)
 
-    tcf = TrigramCollocationFinder.from_words(words)
-    tcf.apply_word_filter(filter_stops)               # Ignore trigrams whose words contain < 3 chars / are stopwords
-    tcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
-    trigrams_extracted = list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, n))
-    final_trigrams = []
-    for trigram_list in trigrams_extracted:
-        trigram_0, trigram_1, trigram_2 = trigram_list
-        trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
-        final_trigrams.append(trigram_condensed)
-
-    if Info:
-        print('Trigrams: ', final_trigrams)
-    return final_trigrams
+    return content_2
 
 def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
     """
@@ -252,6 +243,50 @@ def Extract_Nouns(content_sentences, Info=False):
         #     print(i,j)
 
     return nouns_to_plot
+
+def Extract_bigrams(words, n=20, Info=False):
+    """
+    Function to extract bigrams mentioned in the given transcript.
+    Input is the Podcast transcript in the form of a list of words and 'n' the number of Bigrams to consider.
+    """
+    stopset = set(stopwords.words('english'))
+    filter_stops = lambda w: len(w) < 3 or w in stopset
+
+    bcf = BigramCollocationFinder.from_words(words)
+    bcf.apply_word_filter(filter_stops)               # Ignore bigrams whose words contain < 3 chars / are stopwords
+    bcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
+    bigrams_extracted = list(list(set) for set in bcf.nbest(BigramAssocMeasures.likelihood_ratio, n))
+    final_bigrams = []
+    for bigram_list in bigrams_extracted:
+        bigram_0, bigram_1 = bigram_list
+        bigram_condensed = str(bigram_0 + '_' + bigram_1)
+        final_bigrams.append(bigram_condensed)
+
+    if Info:
+        print('Bigrams: ', final_bigrams)
+    return final_bigrams
+
+def Extract_trigrams(words, n=20, Info=False):
+    """
+    Function to extract interesting trigrams mentioned in the given transcript.
+    Input is a list of words from the podcast transcript and 'n' is the max number of trigrams to consider.
+    """
+    stopset = set(stopwords.words('english'))
+    filter_stops = lambda w: len(w) < 3 or w in stopset
+
+    tcf = TrigramCollocationFinder.from_words(words)
+    tcf.apply_word_filter(filter_stops)               # Ignore trigrams whose words contain < 3 chars / are stopwords
+    tcf.apply_freq_filter(3)                          # Ignore trigrams which occur fewer than 3 times in the transcript
+    trigrams_extracted = list(list(set) for set in tcf.nbest(TrigramAssocMeasures.likelihood_ratio, n))
+    final_trigrams = []
+    for trigram_list in trigrams_extracted:
+        trigram_0, trigram_1, trigram_2 = trigram_list
+        trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
+        final_trigrams.append(trigram_condensed)
+
+    if Info:
+        print('Trigrams: ', final_trigrams)
+    return final_trigrams
 
 ## Functions for dealing with Keywords...
 
@@ -684,6 +719,76 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
 
     return cos_sim_df
 
+def SliceCast_Segmentation():
+    """
+    SliceCast
+    note it is a bit out of date so idk if it'll work in this same python script...
+    The joe1254.txt doc has '========,9,title.' tags at manually labelled segments locations
+    """
+
+    # Choose whether to use the base network or the network with self-attention
+    attention = True
+
+    # Current best networks
+    best_base_wiki = 'SliceCast/models/04_20_2019_2300_final.h5'
+    best_base_podcast = 'SliceCast/models/04_26_2019_1000_podcast.h5'
+    best_attn_wiki = 'SliceCast/models/05_03_2019_0800_attn.h5'
+    best_attn_podcast = 'SliceCast/models/05_02_2019_2200_attn_podcast.h5'
+
+    if attention:
+        weights_wiki = best_attn_wiki
+        weights_podcast = best_attn_podcast
+    else:
+        weights_wiki = best_base_wiki
+        weights_podcast = best_base_podcast
+
+    # Instantiate Network
+    net = SliceNet.SliceNet(classification=True,
+                   class_weights=[1.0, 7, 0.2],
+                   attention=attention)
+
+    # Segmentation using SliceCast on JoeRogan podcast
+    text_file = './data/shorter_formatted_plain_labelled.txt'
+    is_labeled = True                           # I manually added segment tokens
+    weights_path = weights_podcast              # Transfer learning
+
+    sents, labels = netUtils.getSingleExample(fname=text_file, is_labeled=is_labeled)
+    sents = np.expand_dims(sents, axis=0)
+
+    preds = net.singlePredict(sents, weights_path=weights_path)
+
+    # Place data into a pandas dataframe for analysis...
+    df = pd.DataFrame()
+    preds = np.argmax(np.squeeze(preds), axis=-1)
+    df['raw_sentences'] = sents[0]
+    if is_labeled:
+        df['labels'] = labels
+    df['preds'] = preds
+    df['sent_number'] = df.index
+
+    # save dataframe of segments to hdf5 file
+    df.to_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs', mode='w')
+    print('-Saved SliceCast segmentation info to hdf.')
+    return df
+
+def Plot_SliceCast(segmentation_df, save_fig=False):
+    """Function to plot """
+    # Plot
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    segmentation_df.plot(x='sent_number', y='preds', figsize=(10, 5), grid=True, ax=axes[0], label='Prediction')
+    # axes[0].set_title('SliceCast Predictions')
+    segmentation_df.plot(x='sent_number', y='labels', figsize=(10, 5), grid=True, ax=axes[1], color='green', label='Label')
+    # axes[1].set_title('Manual Labels')
+    axes[1].set_xlabel('Sentence Number')
+    fig.suptitle('Topic-Wise Segmentation of Podcast Transcript: SliceCast Predictions vs. Manual Labels')
+    if save_fig:
+        plt.savefig("Saved_Images/SliceCast_Segmentation.png")
+    plt.show()
+    return
+
+
+
+
 def Cluster_Transcript(content_sentences):
     """
     NOT USING SO FAR. Taken from Msci project work that Jonas did on 5th January
@@ -1083,4 +1188,8 @@ if __name__=='__main__':
     saving_figs = True
 
 
-    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
+    #Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
+
+    # segmentation_df = SliceCast_Segmentation() #or...
+    segmentation_df = pd.read_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs')
+    Plot_SliceCast(segmentation_df, save_fig=True)
