@@ -1062,40 +1062,60 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
-def Plot_3D_Trajectory_through_TopicSpace():
+def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, Node_Position='total_average',
+                                            save_fig=False):
     """
     Note updated yet.
     Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
     """
-    df_manual = pd.read_hdf('./SGCW/Topic_avs_df_manual.h5', key='dfs')
-    labels_manual = df_manual['Topic_Num'].values
-    df_slice = pd.read_hdf('./SGCW/Topic_avs_df_slice.h5', key='dfs')
-    labels_slice = df_slice['Topic_Num'].values
 
-    # set up a figure twice as wide as it is tall
-    fig = plt.figure(figsize=(22, 11))  # plt.figaspect(0.5))
-    fig.suptitle('Movement through topic space over time')
+    if Node_Position == 'total_average':
+        node_position = segments_info_df['total_average_keywords_wordvec'].values
+        first_sents = segments_info_df['first_sent_numbers'].values
 
-    # set up the axes for the first plot
-    ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+    if Node_Position == '1_max_count':
+        labels_text = segments_info_df['top_count_keyword'].values
+        node_position = segments_info_df['top_count_wordvec'].values
+        first_sents = segments_info_df['first_sent_numbers'].values
+
+        # Check the segments all had enough keywords to have taken max(count)...
+        first_sents = [i for idx, i in enumerate(first_sents) if node_position[idx]!=None]
+        node_position = [pos for pos in node_position if pos != None]
+        labels_text = [label for label in labels_text if label != None]
+
+    if Node_Position == '3_max_count':
+        labels_text = segments_info_df['top_3_counts_keywords'].values
+        node_position = segments_info_df['top_3_counts_wordvec'].values
+        first_sents = segments_info_df['first_sent_numbers'].values
+
+        # Check the segments all had enough keywords to have taken max(count)...
+        first_sents = [i for idx, i in enumerate(first_sents) if node_position[idx]!=None]
+        node_position = [pos for pos in node_position if str(pos[0]) != 'n']
+        labels_text = [label for label in labels_text if str(label) != 'nan']
+
+    labels = range(len(node_position))
 
     # Data for a three-dimensional line
-    word_emb_xs = df_manual['Av_X'].values
-    word_emb_ys = df_manual['Av_Y'].values
-    label_seg_df = pd.read_hdf('./SGCW/segs_manual_info.h5', key='dfs')
-    segment_numbers = label_seg_df['first_sent_numbers'].values
-    print('segment_numbers', segment_numbers)
+    xs = [x[0] for x in node_position]
+    ys = [x[1] for x in node_position]
+
+    # set up a figure twice as wide as it is tall
+    fig = plt.figure() #figsize=(22, 11)
+    fig.suptitle('Movement of Conversation through Topic Space over Time')
+
+    # set up the axes for the first plot
+    ax1 = fig.add_subplot(111, projection='3d') #ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 
     #ax.plot3D(xs, segment_numbers, ys, 'bo-')
-    ax1.set_xlabel('$time (Segment Number)$', fontsize=13)
+    ax1.set_xlabel('$Sentence Number$', fontsize=13)
     ax1.set_ylabel('$X$', fontsize=20, rotation = 0)
     ax1.set_zlabel('$Y$', fontsize=20)
     ax1.zaxis.set_rotate_label(False)
-    ax1.set_title('Manual')
+    #ax1.set_title('Manual')
 
     cnt = 0
     # (old_x, old_y, old_z) = (0, 0, 0)
-    for x, y, z, label in zip(segment_numbers, word_emb_xs, word_emb_ys, labels_manual):
+    for x, y, z, label in zip(first_sents, xs, ys, labels):
       cnt +=1
       ax1.plot([x], [y], [z],'o') #markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6)
       ax1.text(x, y, z, label+1, size=10)
@@ -1103,7 +1123,7 @@ def Plot_3D_Trajectory_through_TopicSpace():
         (old_x, old_y, old_z) = (x, y, z)
         continue
 
-      a = Arrow3D([old_x, x], [old_y,y], [old_z, z], mutation_scale=20, lw=3, arrowstyle="-|>", color="r")
+      a = Arrow3D([old_x, x], [old_y,y], [old_z, z], mutation_scale=20, lw=1, arrowstyle="-|>", color="b")
       ax1.add_artist(a)
 
       (old_x, old_y, old_z) = (x, y, z)
@@ -1122,7 +1142,12 @@ def Plot_3D_Trajectory_through_TopicSpace():
     for line in ax1.zaxis.get_ticklines():
         line.set_visible(False)
 
-    fig.show()
+    if save_fig:
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
+
+    plt.show()
+
+    return
 
 
 
@@ -1181,34 +1206,45 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-                                        save_name=save_name)
+    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+    #                                     save_name=save_name)
+    #
+    # ## Plot Quiver + Embedding
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                                 seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+    #                                                                     InferSent_cos_sim_limit, node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+    #                            only_nouns=True,
+    #                            save_fig=saving_figs, save_name=save_name)
 
-    ## Plot Quiver + Embedding
+    ## Plot 3D Quiver Plot
     if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                               seg_method,
-                                                                                               node_location_method)
+        save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
     if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-            InferSent_cos_sim_limit,
-            node_location_method)
+        save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
     if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+        save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-                               only_nouns=True,
-                               save_fig=saving_figs, save_name=save_name)
+    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+                                          Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
 if __name__=='__main__':
     path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
-    seg_method = 'SliceCast'                                 #'Even      # 'InferSent'       #'SliceCast'
+    seg_method = 'Even'                                 #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    Even_number_of_segments = 50                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
 
     saving_figs = False
