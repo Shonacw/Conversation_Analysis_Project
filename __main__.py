@@ -883,7 +883,7 @@ def Plot_Wordcloud(content_sentences, save=False):
     plt.axis('off')
     plt.show()
     if save:
-        fig.savefig("Saved_Images/WordCloud.png", dpi=900)
+        fig.savefig("Saved_Images/WordCloud.png", dpi=200)
     return
 
 def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
@@ -971,7 +971,7 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
     plt.title(save_name)
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
     plt.show()
     return
 
@@ -1048,7 +1048,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, 
     plt.title(save_name)
     plt.legend()
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=900)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
     plt.show()
 
 class Arrow3D(FancyArrowPatch):
@@ -1144,12 +1144,8 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 
     if save_fig:
         plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
-
     plt.show()
-
     return
-
-
 
 ## The main function putting it all together
 
@@ -1206,22 +1202,22 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-    #                                     save_name=save_name)
-    #
-    # ## Plot Quiver + Embedding
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                                 seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-    #                                                                     InferSent_cos_sim_limit, node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-    #                            only_nouns=True,
-    #                            save_fig=saving_figs, save_name=save_name)
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+                                        save_name=save_name)
+
+    ## Plot Quiver + Embedding
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                    seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+                               only_nouns=True,
+                               save_fig=saving_figs, save_name=save_name)
 
     ## Plot 3D Quiver Plot
     if seg_method == 'Even':
