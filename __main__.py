@@ -48,8 +48,6 @@ from mpl_toolkits.mplot3d import proj3d
 from InferSent.models import InferSent
 import importlib
 topics = importlib.import_module("msci-project.src.topics")
-SliceNet = importlib.import_module("SliceCast.src.SliceNet")
-netUtils = importlib.import_module("SliceCast.src.netUtils")
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -63,6 +61,7 @@ def Preprocess_Content(content):
     doc = nlp(content)
     content_lemma = " ".join([token.lemma_ for token in doc])
     content_lemma = re.sub(r'-PRON-', "", content_lemma)
+
     return content_lemma
 
 def reformat_sgcw_remove_all(text):
@@ -475,6 +474,12 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
     """
     Function to segment up a transcript. By default will segment the transcript into 'Num_Even_Segs' even segments.
     Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
+
+    NOTE:
+        the segment tags "===== bla bla" will count as a sentence in 'SliceCast' method (and their index will
+        be given as the sentence number at which a new section starts), whereas in the 'InferSent' method,
+         these tags will be removed from the document before segmentation. Therefore the sentence indices at which
+         new segments start will never match up between these methods; there is a different number of sentences in each.
     """
     if segmentation_method == 'InferSent':
         # 1
@@ -502,8 +507,8 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
         idx_split = split(range(num_sents), Num_Even_Segs)
         first_sent_idxs_list = [i[0] for i in idx_split][1:]
 
-    #if SliceCast:
-        #
+    if seg_method == 'SliceCast':
+        first_sent_idxs_list = SliceCast_Segmentation(content_sentences, doc_labelled=True)
 
     return first_sent_idxs_list
 
@@ -719,12 +724,22 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
 
     return cos_sim_df
 
-def SliceCast_Segmentation():
+def SliceCast_Segmentation(content_sentences, doc_labelled=True):
     """
     SliceCast
     note it is a bit out of date so idk if it'll work in this same python script...
     The joe1254.txt doc has '========,9,title.' tags at manually labelled segments locations
+
+    Note:
+        Only importing revelant modules IF this function is called (as opposed to putting them with the rest at top) as
+        they are slow to import and throw some tensorflow warnings.
+
+    NOT INPUTTING A LIST OF SENTENCES LIKE I DO IN THE OTHER ONES SO THE IDX OF SENTENCES WHICH START SEGMENTS CAN NOT
+    BE DIRECTLY COMPARED TO THE OTHER METHODS
     """
+    # Import Modules
+    SliceNet = importlib.import_module("SliceCast.src.SliceNet")
+    spacyOps = importlib.import_module("SliceCast.src.spacyOps")
 
     # Choose whether to use the base network or the network with self-attention
     attention = True
@@ -743,25 +758,23 @@ def SliceCast_Segmentation():
         weights_podcast = best_base_podcast
 
     # Instantiate Network
-    net = SliceNet.SliceNet(classification=True,
-                   class_weights=[1.0, 7, 0.2],
-                   attention=attention)
+    weights_path = weights_podcast  # Transfer learning
+    net = SliceNet.SliceNet(classification=True, class_weights=[1.0, 7, 0.2], attention=attention)
+    content_sentences = [sent.replace("= = = = = = = = , 9,title .", "========,9,title.") for sent in content_sentences]
 
-    # Segmentation using SliceCast on JoeRogan podcast
-    text_file = './data/shorter_formatted_plain_labelled.txt'
-    is_labeled = True                           # I manually added segment tokens
-    weights_path = weights_podcast              # Transfer learning
+    sents, labels = spacyOps.customLabeler(content_sentences)
 
-    sents, labels = netUtils.getSingleExample(fname=text_file, is_labeled=is_labeled)
+    sents = np.array(sents, dtype='object')
     sents = np.expand_dims(sents, axis=0)
 
     preds = net.singlePredict(sents, weights_path=weights_path)
+    preds = list(np.argmax(np.squeeze(preds), axis=-1))
 
     # Place data into a pandas dataframe for analysis...
     df = pd.DataFrame()
-    preds = np.argmax(np.squeeze(preds), axis=-1)
+
     df['raw_sentences'] = sents[0]
-    if is_labeled:
+    if doc_labelled:
         df['labels'] = labels
     df['preds'] = preds
     df['sent_number'] = df.index
@@ -769,23 +782,10 @@ def SliceCast_Segmentation():
     # save dataframe of segments to hdf5 file
     df.to_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs', mode='w')
     print('-Saved SliceCast segmentation info to hdf.')
-    return df
 
-def Plot_SliceCast(segmentation_df, save_fig=False):
-    """Function to plot """
-    # Plot
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
-    segmentation_df.plot(x='sent_number', y='preds', figsize=(10, 5), grid=True, ax=axes[0], label='Prediction')
-    # axes[0].set_title('SliceCast Predictions')
-    segmentation_df.plot(x='sent_number', y='labels', figsize=(10, 5), grid=True, ax=axes[1], color='green', label='Label')
-    # axes[1].set_title('Manual Labels')
-    axes[1].set_xlabel('Sentence Number')
-    fig.suptitle('Topic-Wise Segmentation of Podcast Transcript: SliceCast Predictions vs. Manual Labels')
-    if save_fig:
-        plt.savefig("Saved_Images/SliceCast_Segmentation.png")
-    plt.show()
-    return
+    first_sentence_idxs = list(df[df['preds']==1]['sent_number'].values)
 
+    return first_sentence_idxs
 
 
 
@@ -825,6 +825,21 @@ def Cluster_Transcript(content_sentences):
 
 
 ## Functions for plotting...
+
+def Plot_SliceCast(segmentation_df, save_fig=False):
+    """Function to plot """
+    # Plot
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    segmentation_df.plot(x='sent_number', y='preds', figsize=(10, 5), grid=True, ax=axes[0], label='Prediction')
+    # axes[0].set_title('SliceCast Predictions')
+    segmentation_df.plot(x='sent_number', y='labels', figsize=(10, 5), grid=True, ax=axes[1], color='green', label='Label')
+    # axes[1].set_title('Manual Labels')
+    axes[1].set_xlabel('Sentence Number')
+    fig.suptitle('Topic-Wise Segmentation of Podcast Transcript: SliceCast Predictions vs. Manual Labels')
+    if save_fig:
+        plt.savefig("Saved_Images/SliceCast_Segmentation.png")
+    plt.show()
+    return
 
 def Plot_InferSent_Clusters(sentences, cos_sim_df, cos_sim_cutoff, save_fig=False):
     """
@@ -1121,12 +1136,16 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     with open(path_to_transcript, 'r') as f:
         content = f.read()
         content = Preprocess_Content(content)
-        content_sentences = nltk.sent_tokenize(content)
+        content_sentences = sent_tokenize(content)
 
     ## Segmentation
     first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
                                                 Num_Even_Segs=Even_number_of_segments,
                                                 cos_sim_limit=InferSent_cos_sim_limit)
+
+    # if seg_method == 'SliceCast':
+    #     segmentation_df = pd.read_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs')
+    #     Plot_SliceCast(segmentation_df, save_fig=saving_figs)
 
     ## Keyword Extraction
     # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
@@ -1139,6 +1158,8 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
         save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
     if seg_method == 'InferSent':
         save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_segments_info_df'
 
     # Create dataframe with the information about the segments
     segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
@@ -1157,6 +1178,9 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     if seg_method == 'InferSent':
         save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
                                                                                       node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
+
     Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
                                         save_name=save_name)
 
@@ -1169,6 +1193,9 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
         save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
             InferSent_cos_sim_limit,
             node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+
     Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
                                only_nouns=True,
                                save_fig=saving_figs, save_name=save_name)
@@ -1176,20 +1203,14 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
 
 ## CODE...
 if __name__=='__main__':
-
     path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
-    seg_method = 'Even'                                 #'Even      # 'InferSent'
+    seg_method = 'SliceCast'                                 #'Even      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
     Even_number_of_segments = 20                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
 
-    saving_figs = True
+    saving_figs = False
 
-
-    #Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
-
-    # segmentation_df = SliceCast_Segmentation() #or...
-    segmentation_df = pd.read_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs')
-    Plot_SliceCast(segmentation_df, save_fig=True)
+    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
