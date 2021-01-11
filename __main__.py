@@ -328,12 +328,12 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
             print('possible_versions_of_word: ', possible_versions_of_word)
 
         if embedding_method == 'word2vec':
-            boolean = [x in word2vecembeddings_dict for x in possible_versions_of_word]
+            boolean = [x in word2vec_embeddings_dict for x in possible_versions_of_word]
             if any(boolean):
                 idx = int(list(np.where(boolean)[0])[0])                        # Note C
                 true_word = possible_versions_of_word[idx]
                 words.append(true_word)
-                vectors.append(word2vecembeddings_dict[true_word])
+                vectors.append(word2vec_embeddings_dict[true_word])
             else:
                 words_unplotted.append(word)
 
@@ -342,7 +342,7 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
             for word in words_to_extract:
                 # print('word', word)
                 try:
-                    embedding_dict[word] = ft.get_word_vector(word)
+                    embedding_dict[word] = fasttext_model.get_word_vector(word)
                 except:
                     words_unplotted.append(word)
 
@@ -353,44 +353,6 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
         print('List of Words lacking an embedding:', words_unplotted)
 
     return words, vectors, words_unplotted
-
-def Extract_Keyword_FastText_Embeddings(all_keywords, Info=False):
-    """
-    Function to extract the word embeddings for words in 'words_to_extract' using a pretrained FastText model
-    """
-
-    # print('1:', model.similarity('teacher', 'teaches'))
-    # print('\n2: ', model.wv.most_similar('hello'))
-    # print('\n3:', model.wv["Artificial Intelligence"])
-    # print('\n4:', model.wv.most_similar('Artificial Intelligence'))
-    # print('\n5 model vector for neuralink:', model.wv["Neuralink"])
-    # print('\n6:', model.wv.most_similar('Neuralink'))
-    # print('\n7 Artificial_Intelligence:', model.wv.most_similar('Artificial_Intelligence'))
-
-    embedding_dict = {}
-    for word in all_keywords:
-        # print('word', word)
-        try:
-            embedding_dict[word] = ft.get_word_vector(word)
-        except:
-            print('word was nan')
-
-    keyword_vectors_fasttext_df = pd.DataFrame(columns=['Words', 'Xs', 'Ys'])
-
-    tsne = TSNE(n_components=2, random_state=0)
-    reduced_vectors = tsne.fit_transform(list(embedding_dict.values()))
-
-    words = list(embedding_dict.keys())
-    Xs, Ys = reduced_vectors[:, 0], reduced_vectors[:, 1]
-
-    # save vectors:
-    keyword_vectors_fasttext_df.loc[:, 'Words'] = pd.Series(words)
-    keyword_vectors_fasttext_df.loc[:, 'Xs'] = pd.Series(Xs)
-    keyword_vectors_fasttext_df.loc[:, 'Ys'] = pd.Series(Ys)
-    keyword_vectors_fasttext_df.to_hdf('Saved_dfs/keyword_vectors_FastText_df.h5', key='df', mode='w')
-
-    return keyword_vectors_fasttext_df
-
 
 def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=True, return_all=False, Info=False):
     """
@@ -994,9 +956,9 @@ def Plot_Wordcloud(content_sentences, save=False):
         fig.savefig("Saved_Images/WordCloud.png", dpi=200)
     return
 
-def Plot_Word2Vec_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
+def Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False, Info=False):
     """
-    Plots the Word2Vec layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
+    Plots the layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
     all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
     to the type of keywords.
     """
@@ -1021,30 +983,14 @@ def Plot_Word2Vec_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
         print(labels[i], 'which were not plotted due to lack of embedding: ', list(unplotted))
 
     plt.legend()
-    plt.title('Keywords_Embedding')
+    embedding_method = embedding_method.title()
+    plt.title('{0} Keywords Embedding'.format(embedding_method))
     if save_fig:
-        plt.savefig("Saved_Images/Keyword_Types_WordEmbedding.png")
+        plt.savefig("Saved_Images/{}_WordEmbedding.png".format(embedding_method))
     plt.show()
 
     return
 
-def Plot_FastText_Embeddings(keyword_vectors_fasttext_df, save_fig=False):
-    """Function to plot FastText Word Vectors"""
-    Xs = keyword_vectors_fasttext_df['Xs'].values
-    Ys = keyword_vectors_fasttext_df['Ys'].values
-    words = keyword_vectors_fasttext_df['Words'].values
-
-    plt.figure()
-    plt.scatter(Xs, Ys)
-    for label, x, y in zip(words, Xs, Ys):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
-
-    plt.legend()
-    plt.title('FastText Keywords Embedding')
-    if save_fig:
-        plt.savefig("Saved_Images/FastText_WordEmbedding.png", dpi=500)
-    plt.show()
-    return
 
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Position='total_average', save_fig=False):
     """
@@ -1326,8 +1272,7 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     # # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
     #
     # ## Plot Word Embedding
-    # Plot_Word2Vec_Embeddings(keyword_vectors_df, save_fig=False)
-    Plot_FastText_Embeddings(keyword_vectors_df, save_fig=False)
+    Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False)
     #
     # ## Plot Quiver Plot
     # if seg_method == 'Even':
@@ -1376,7 +1321,7 @@ if __name__=='__main__':
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
-    seg_method = 'InferSent'                                 #'Even'      # 'InferSent'       #'SliceCast'
+    seg_method = 'InferSent'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
     Even_number_of_segments = 50                       # for when seg_method = 'Even'
