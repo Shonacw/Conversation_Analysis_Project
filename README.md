@@ -41,8 +41,8 @@ Embedding techniques used:
 
 Segmentation methods used: 
 * Even Segments 
-* [SliceCast](https://github.com/bmmidei/SliceCast)
-* [Infersent](https://github.com/facebookresearch/InferSent) with a variable cosine similarity cutoff.
+* [SliceCast](https://github.com/bmmidei/SliceCast) from the paper [Neural Text Segmentation on Podcast Transcripts](https://github.com/bmmidei/SliceCast/blob/master/Neural_Text_Segmentation_on_Podcast_Transcripts.pdf)
+* [Infersent](https://github.com/facebookresearch/InferSent) from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data](https://arxiv.org/abs/1705.02364),  paired with a variable cosine similarity cutoff.
 
 
 ## Discussion Trees: Visualising Conversation Structure and Topic Evolution
