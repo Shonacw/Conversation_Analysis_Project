@@ -301,7 +301,7 @@ def Extract_trigrams(words, n=20, put_underscore=True, Info=False):
 
 ## Functions for dealing with Keywords...
 
-def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=False):
+def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, fasttext_model, embedding_method, Info=False):
     """
     Function for extracting the word vectors for the given keywords.
 
@@ -323,31 +323,41 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
             possible_versions_of_word = [word, capitalised_phrase, word.upper()]
         else:
             possible_versions_of_word = [word, word.title(), word.upper()]  # Note B
+
         if Info:
             print('possible_versions_of_word: ', possible_versions_of_word)
-        boolean = [x in embeddings_dict for x in possible_versions_of_word]
-        if any(boolean):
-            idx = int(list(np.where(boolean)[0])[0])                        # Note C
-            true_word = possible_versions_of_word[idx]
-            words.append(true_word)
-            vectors.append(embeddings_dict[true_word])
-        else:
-            words_unplotted.append(word)
+
+        if embedding_method == 'word2vec':
+            boolean = [x in word2vecembeddings_dict for x in possible_versions_of_word]
+            if any(boolean):
+                idx = int(list(np.where(boolean)[0])[0])                        # Note C
+                true_word = possible_versions_of_word[idx]
+                words.append(true_word)
+                vectors.append(word2vecembeddings_dict[true_word])
+            else:
+                words_unplotted.append(word)
+
+        if embedding_method == 'fasttext':
+            embedding_dict = {}
+            for word in words_to_extract:
+                # print('word', word)
+                try:
+                    embedding_dict[word] = ft.get_word_vector(word)
+                except:
+                    words_unplotted.append(word)
+
+            words, vectors = list(embedding_dict.keys()), list(embedding_dict.values())
+
     if Info:
         print('Number of Words from Document without an embedding: ', len(words_unplotted))
         print('List of Words lacking an embedding:', words_unplotted)
 
     return words, vectors, words_unplotted
 
-def Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False):
+def Extract_Keyword_FastText_Embeddings(all_keywords, Info=False):
     """
     Function to extract the word embeddings for words in 'words_to_extract' using a pretrained FastText model
     """
-
-    ft = fasttext.load_model('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/FastText/cc.en.300.bin')
-    print('FastText wordvec dimensions before: ', ft.get_dimension())
-    fasttext.util.reduce_model(ft, 100)
-    print('FastText wordvec dimensions after: ', ft.get_dimension())
 
     # print('1:', model.similarity('teacher', 'teaches'))
     # print('\n2: ', model.wv.most_similar('hello'))
@@ -382,30 +392,13 @@ def Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False):
     return keyword_vectors_fasttext_df
 
 
-def Plot_FastText_KeywordVedcs(keyword_vectors_fasttext_df, save_fig=False):
-    """Function to plot """
-    Xs = keyword_vectors_fasttext_df['Xs'].values
-    Ys = keyword_vectors_fasttext_df['Ys'].values
-    words = keyword_vectors_fasttext_df['Words'].values
-
-    plt.figure()
-    plt.scatter(Xs, Ys)
-    for label, x, y in zip(words, Xs, Ys):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
-
-    plt.legend()
-    plt.title('FastText Keywords Embedding')
-    if save_fig:
-        plt.savefig("Saved_Images/FastText_WordEmbedding.png", dpi=500)
-    plt.show()
-    return
-
-
-def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, return_all=False, Info=False):
+def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=True, return_all=False, Info=False):
     """
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
     then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df' which is saved to hdf
     for easy loading in future tasks.
+
+    mode
 
     Note A:
         Currently using GoogleNews pretrained word vectors, but could also use Glove. The benefit of the Google model is
@@ -415,13 +408,9 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, ret
         into groups based on keyword type. Hence why code a little more fiddly.
 
     """
+
     if Info:
         print('\n-Extracting keywords + obtaining their word vectors using GoogleNews pretrained model...')
-
-    # Choose pre-trained model...   Note A
-    Glove_path = r'GloVe/glove.840B.300d.txt'
-    Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt'
-    path_to_vecs = Google_path
 
     content_tokenized = word_tokenize(content)
     words = [w.lower() for w in content_tokenized]
@@ -429,29 +418,55 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, ret
     if Info:
         print("-Extracted content/sentences/words from transcript.")
 
-    # Get embeddings dictionary of word vectors  from pre-trained word embedding
-    embeddings_dict = {}
-    if Info:
-        print("-Obtaining keyword word vectors using GoogleNews embeddings... (this takes a while)")
-    with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
-        try:
-            for line in f:
-                values = line.split()
-                word = values[0]
-                vector = np.asarray(values[1:], "float32")
-                embeddings_dict[word] = vector
-        except:
-            f.__next__()
-    if Info:
-        print("-Obtained all GoogleNews embeddings.")
+    # Collect keywords
+    nouns_list = Extract_Nouns(content_sentences, Info=True)
+    pke_list = PKE_Keywords(content, put_underscore=put_underscore)
+    bigrams_list = Extract_bigrams(words, put_underscore=put_underscore)
+    trigrams_list = Extract_trigrams(words, put_underscore=put_underscore)
+    all_keywords = list(itertools.chain(nouns_list, pke_list, bigrams_list, trigrams_list))
 
-    # Extract words to plot
-    nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict)
-    pke_set = Extract_Embeddings_For_Keywords(PKE_Keywords(content, put_underscore=put_underscore), embeddings_dict)
-    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words, put_underscore=put_underscore), embeddings_dict)
-    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words, put_underscore=put_underscore), embeddings_dict)
     if Info:
-        print('-Extracted embeddings for all keywords.')
+        print("-Extracted all keywords.")
+
+    if embedding_method == 'word2vec':
+        # Choose pre-trained model...   Note A
+        Glove_path = r'GloVe/glove.840B.300d.txt' #GloVe
+        Google_path = r'Google_WordVectors/GoogleNews-vectors-negative300.txt' # Word2Vec
+        path_to_vecs = Google_path
+
+        # Get embeddings dictionary of word vectors  from pre-trained word embedding
+        embeddings_dict = {}
+        if Info:
+            print("-Obtaining keyword word vectors using GoogleNews embeddings... (this takes a while)")
+        with open(path_to_vecs, 'r', errors='ignore', encoding='utf8') as f:
+            try:
+                for line in f:
+                    values = line.split()
+                    word = values[0]
+                    vector = np.asarray(values[1:], "float32")
+                    embeddings_dict[word] = vector
+            except:
+                f.__next__()
+
+        # Extract words to plot
+        nouns_set = Extract_Embeddings_For_Keywords(nouns_list, embeddings_dict, None, embedding_method='word2vec')
+        pke_set = Extract_Embeddings_For_Keywords(pke_list, embeddings_dict, None, embedding_method='word2vec')
+        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, embeddings_dict, None,  embedding_method='word2vec')
+        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, embeddings_dict, None, embedding_method='word2vec')
+
+    if embedding_method == 'fasttext':
+        ft = fasttext.load_model(
+            '/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/FastText/cc.en.300.bin')
+        fasttext.util.reduce_model(ft, 100) # Reduce dimensionality of FastText vectors from 300->100
+
+        # Extract words to plot
+        nouns_set = Extract_Embeddings_For_Keywords(nouns_list, None, ft, embedding_method='fasttext')
+        pke_set = Extract_Embeddings_For_Keywords(pke_list, None, ft, embedding_method='fasttext')
+        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, None, ft, embedding_method='fasttext')
+        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, None, ft, embedding_method='fasttext')
+
+    if Info:
+        print('-Extracted {0} embeddings for all keywords.'.format(embedding_method))
 
     # Reduce dimensionality of word vectors such that we can store X and Y positions.
     tsne = TSNE(n_components=2, random_state=0)
@@ -462,9 +477,10 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, ret
     last_bigram_vector = last_pke_vector + len(bigram_set[0])
     last_trigram_vector = last_bigram_vector + len(trigram_set[0])
     all_vectors = list(itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1]))
-    all_keywords = list(itertools.chain(nouns_set[0], pke_set[0], bigram_set[0], trigram_set[0]))
+
     if return_all:
         return all_keywords
+
     # Store keywords + embeddings in a pandas data-frame
     keyword_vectors_df = pd.DataFrame(columns = ['noun_keyw',   'noun_X',    'noun_Y', 'unfamiliar_noun',
                                                  'pke_keyw',     'pke_X',    'pke_Y', ' unfamiliar_pke',
@@ -496,10 +512,10 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, ret
 
     if not put_underscore:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_df.h5', key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_{0}_df.h5'.format(embedding_method), key='df', mode='w')
     if put_underscore:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_df.h5', key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
 
     if Info:
         print('-Created and saved keyword_vectors_df dataframe.')
@@ -978,7 +994,7 @@ def Plot_Wordcloud(content_sentences, save=False):
         fig.savefig("Saved_Images/WordCloud.png", dpi=200)
     return
 
-def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
+def Plot_Word2Vec_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
     """
     Plots the Word2Vec layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
     all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
@@ -1010,6 +1026,24 @@ def PlotWord_Embeddings(keyword_vectors_df, save_fig=False, Info=False):
         plt.savefig("Saved_Images/Keyword_Types_WordEmbedding.png")
     plt.show()
 
+    return
+
+def Plot_FastText_Embeddings(keyword_vectors_fasttext_df, save_fig=False):
+    """Function to plot FastText Word Vectors"""
+    Xs = keyword_vectors_fasttext_df['Xs'].values
+    Ys = keyword_vectors_fasttext_df['Ys'].values
+    words = keyword_vectors_fasttext_df['Words'].values
+
+    plt.figure()
+    plt.scatter(Xs, Ys)
+    for label, x, y in zip(words, Xs, Ys):
+        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+
+    plt.legend()
+    plt.title('FastText Keywords Embedding')
+    if save_fig:
+        plt.savefig("Saved_Images/FastText_WordEmbedding.png", dpi=500)
+    plt.show()
     return
 
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Position='total_average', save_fig=False):
@@ -1241,7 +1275,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 
 ## The main function putting it all together
 
-def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
+def Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
        Plot_Segmentation, saving_figs):
     """
     Mother Function.
@@ -1252,18 +1286,17 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
         content = Preprocess_Content(content)
         content_sentences = sent_tokenize(content)
 
-    content_tokenized = word_tokenize(content)
-    words = [w.lower() for w in content_tokenized]
-
-    nouns = Extract_Nouns(content_sentences, Info=True)
-    pkes = PKE_Keywords(content, put_underscore=False)
-    bigrams = Extract_bigrams(words, n=20, put_underscore=False, Info=True)
-    trigrams = Extract_trigrams(words, n=20, put_underscore=False, Info=True)
-
-    all_keywords = list(itertools.chain(nouns, pkes, bigrams, trigrams))
-
-    keyword_vectors_fasttext_df = Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False)
-    Plot_FastText_KeywordVedcs(keyword_vectors_fasttext_df, save_fig=True)
+    # content_tokenized = word_tokenize(content)
+    # words = [w.lower() for w in content_tokenized]
+    #
+    # nouns = Extract_Nouns(content_sentences, Info=True)
+    # pkes = PKE_Keywords(content, put_underscore=False)
+    # bigrams = Extract_bigrams(words, n=20, put_underscore=False, Info=True)
+    # trigrams = Extract_trigrams(words, n=20, put_underscore=False, Info=True)
+    #
+    # all_keywords = list(itertools.chain(nouns, pkes, bigrams, trigrams))
+    #
+    # keyword_vectors_fasttext_df = Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False)
 
 
     # ## Segmentation
@@ -1273,10 +1306,9 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     #                                            save_fig=saving_figs)
 
     ## Keyword Extraction
-    # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Info=True)
-
+    Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=False, Info=True)
     # OR just load the dataframe
-    # keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
+    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_df.h5'.format(embedding_method), key='df')
     #
     # ## Segment-Wise Information Extraction
     # if seg_method == 'Even':
@@ -1294,7 +1326,8 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
     # # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
     #
     # ## Plot Word Embedding
-    # # PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
+    # Plot_Word2Vec_Embeddings(keyword_vectors_df, save_fig=False)
+    Plot_FastText_Embeddings(keyword_vectors_df, save_fig=False)
     #
     # ## Plot Quiver Plot
     # if seg_method == 'Even':
@@ -1341,6 +1374,8 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
 if __name__=='__main__':
     path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
+    embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
+
     seg_method = 'InferSent'                                 #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
@@ -1350,5 +1385,5 @@ if __name__=='__main__':
     Plotting_Segmentation = True
     saving_figs = False
 
-    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
+    Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
        Plotting_Segmentation, saving_figs)
