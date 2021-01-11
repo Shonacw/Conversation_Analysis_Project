@@ -9,13 +9,13 @@ Code for the Dialogue Analysis part of this project can be found here: https://g
 ## Topic Segmentation and Embeddings
 Steps taken so far...
 
-*1: Keyword Extraction
+*1) Keyword Extraction*
 
-*2: Topic Space Construction
+*2) Topic Space Construction*
 
-*3: Segmentation
+*3) Segmentation*
 
-*4: Elementary Topic Exploration: Plotting
+*4) Elementary Topic Exploration: Plotting*
 
 
 Embedding techniques used:
