@@ -48,7 +48,7 @@ Steps taken so far...
     ![](Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png)
     
     The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled.
-    <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="600" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="600" />
+    <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="300" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="300" />
     
     ![](Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png)
     
