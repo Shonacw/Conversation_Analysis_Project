@@ -15,7 +15,7 @@ Steps taken so far...
 
 *3) Segmentation*
 
-*4) Elementary Topic Exploration: Plotting*
+*4) Preliminary Topic Exploration: Plotting*
 
 
 Embedding techniques used:
