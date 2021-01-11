@@ -1,6 +1,9 @@
-## Master's Project: Conversation Analysis
+## Master's Project: Conversation Structure Analysis + Visualisation using Podcast Transcripts
 
-In this MSci project...
+In this MSci project The goal is to extract information about conversations by plotting the 
+investigating topic evolution 
+what key topics were revisited during the conversation? 
+are there a set of common trajectories similar- conversations will take
 
 Specifically, we are looking at the structure of conversation under 2 different lenses: as a macroscopic trajectory through a topic space (built from the components of word embeddings) and as a string of microscopic dialogue acts.
 
@@ -13,19 +16,20 @@ Steps taken so far...
 
 *2) Topic Space Construction*
 
-*3) Segmentation*
+*3) Transcript Segmentation*
 
 *4) Preliminary Topic Exploration: Plotting*
-
 
 Embedding techniques used:
 * Sentence embeddings with InferSent (Facebook Research, https://github.com/facebookresearch/InferSent) for utterance-level analysis. 
 * Word embeddings with Word2Vec for EDU-level analysis.
 
 Segmentation methods used: 
-* Infersent
+* Infersent 
 * SliceCast
 * Even Segments 
+
+
 
 
 ## Topic Visualisation
