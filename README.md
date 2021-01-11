@@ -1,4 +1,4 @@
-## Master's Project: Conversation Structure Analysis + Visualisation using Podcast Transcripts
+# Master's Project: Conversation Structure Analysis + Visualisation using Podcast Transcripts
 
 In this MSci project we are looking at the structure of human-human conversation under 2 different lenses: as a macroscopic trajectory through a topic space (built from the components of word embeddings) and as a string of microscopic dialogue acts. From the topic space analysis we hope to build a signature graphical representation of the transcript which visualises the evolution of topics discussed, and portrays key information about the given conversation. From the dialogue analysis we hope to answer the question 'What makes Conversation Interesting?'.
 
@@ -6,7 +6,7 @@ I am focussing on the Topic-related tasks of this project (Segmentation, Embeddi
 
 *Key libraries used: sklearn, torch, gensim, nltk, spacy, scipy, pandas, networkx*
 
-## Topic Segmentation and Embeddings
+# Topic Segmentation and Embeddings
 Steps taken so far...
 
 *1) Keyword Extraction*
@@ -15,22 +15,22 @@ Steps taken so far...
 - Bigrams and Trigrams, using NLTK implementation of Collocation Finder.
 
 *2) Topic Space Construction*
-- Word2Vec implementation with GoogleNews-vectors-negative300 pretrained word embeddings 
-- FastText implementation with cc.en.300.bin
+- Word2Vec implementation with GoogleNews-vectors-negative300 pretrained word embeddings.
+- FastText implementation with the cc.en.300.bin pretrained model.
 
 *3) Transcript Segmentation*
-- Infersent implementation with arbitrary Cosine similarity cutoff between consecutive sentences
-- SliceCast implementation
-- Even chunks option for statistical analysis
+- Infersent implementation with arbitrary cosine similarity cutoff between the embeddings of consecutive sentences.
+- SliceCast implementation.
+- Even chunks, option for statistical analysis.
 
-*4) Segment Graphical Representation Investigation*
-- Average of Keyword word-vectors
-- The top keyword (in terms of #use cases) word-vector 
-- Average of top 3 keyword (in terms of #use cases) word-vectors
+*4) Graphical Representation*
+The Four key graph types created so far
+- Labelled word embeddings of keywords extracted from the given transcript 
+- Quiver plot of trajectory taken by conversation through topic space 
+- 3D Quiver plot of trajectory taken by conversation through topic space with Sentence Number on the z axis representing time.
 
-*4) Visualisation of Topic Evolution (see next section for what has been done so far)*
 
-# Links 
+## Links to methods used
 Embedding techniques used:
 * Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis, from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data] (https://arxiv.org/abs/1705.02364). 
 * Word embeddings with [Word2Vec](https://arxiv.org/abs/1301.3781) for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
@@ -42,7 +42,7 @@ Segmentation methods used:
 * [Infersent](https://github.com/facebookresearch/InferSent) from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data](https://arxiv.org/abs/1705.02364),  paired with a variable cosine similarity cutoff.
 
 
-## Discussion Trees: Visualising Conversation Structure and Topic Evolution
+# Discussion Trees: Visualising Conversation Structure and Topic Evolution
 This part of the project investigates how we can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will represent a visual snapshot of the conversation, providing a viewer immediate insight to the extent to which different topics were discussed. It will make key themes and points discussed accessible, highlighting which points need to be built out and which have yet to be explored all at just a glance. 
 Topic Exploration using trajectory through topic space. 
 
@@ -51,8 +51,16 @@ investigating topic evolution
 what key topics were revisited during the conversation? 
 are there a set of common trajectories similar- conversations will take
 
-Attempts made at visualisation so far....
-- Plotting the Word Embeddings. 
+## Notes on, and examples of, Visualisation methods attempted so far...
+How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
+- Average of all the word-vectors of the keywords present in the given segment
+- The word-vector of only the most frequent keyword
+- Average of word-vectors corresponding to the three most frequently ocurring keywords in the given segment
+How the thickness of the line is assigned (todo):
+- Dialog acts? Representation of speaker uncertainty? 
+
+
+*Plotting the Word Embeddings. 
     Here the keywords extracted from the given transcript using methods listed in 1) are plotted
     in word-embedding space using the cc.en.300 FastText pretrained model. Right is the zoomed-in version of the above plot...
   
@@ -61,7 +69,7 @@ Attempts made at visualisation so far....
   <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="700" />
     
     
-- Plotting of trajectory through topic space
+*Plotting of trajectory through topic space
     The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
     
@@ -72,11 +80,11 @@ Attempts made at visualisation so far....
     <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
     
-- Plotting of trajectory through 3D topic space
+*Plotting of trajectory through 3D topic space
     20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
-    ![](Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png)
+    <img src = "Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" width ="400" />
 
-## Usage 
+# Code Usage 
 
 Run \_\_main__.py with the following params...
 
