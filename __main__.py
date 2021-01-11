@@ -953,7 +953,7 @@ def Plot_Wordcloud(content_sentences, save=False):
     plt.axis('off')
     plt.show()
     if save:
-        fig.savefig("Saved_Images/WordCloud.png", dpi=200)
+        fig.savefig("Saved_Images/WordCloud.png", dpi=600)
     return
 
 def Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False, Info=False):
@@ -1044,7 +1044,7 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
     plt.legend()
     plt.title(save_name)
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
     plt.show()
     return
 
@@ -1121,7 +1121,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, 
     plt.title(save_name)
     plt.legend()
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
     plt.show()
 
 class Arrow3D(FancyArrowPatch):
@@ -1216,7 +1216,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
         line.set_visible(False)
 
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=700)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
     plt.show()
     return
 
