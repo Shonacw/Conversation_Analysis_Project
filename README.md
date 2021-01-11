@@ -35,11 +35,12 @@ Steps taken so far...
 
 *4) Preliminary Topic Exploration: Plotting*
 - Plotting the Word Embeddings. 
-![Word Embedding](Saved_Images/FastText_WordEmbedding.png)
     Here the keywords extracted from the given transcript using methods listed in 1) are plotted
     in word-embedding space using the cc.en.300 FastText pretrained model. Right is the zoomed-in version of the above plot...
   
-    <img src = "Saved_Images/FastText_WordEmbedding.png" width ="400" /> <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="400" />
+  <img src = "Saved_Images/Figure_1.png" width ="600" /> 
+  <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="600" />
+    
     
 - Plotting of trajectory through topic space
     The following example was created by segmenting the transcript into 20 even sections, calculating 
