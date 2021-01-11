@@ -9,6 +9,8 @@ Specifically, we are looking at the structure of conversation under 2 different 
 
 Code for the Dialogue Analysis part of this project can be found here: https://github.com/jonas-scholz123/msci-project (Jonas Scholz' Github)
 
+*Key libraries used: sklearn, torch, gensim, nltk, spacy, scipy, pandas, networkx*
+
 ## Topic Segmentation and Embeddings
 Steps taken so far...
 
@@ -21,8 +23,8 @@ Steps taken so far...
 *4) Preliminary Topic Exploration: Plotting*
 
 Embedding techniques used:
-* Sentence embeddings with InferSent (Facebook Research, https://github.com/facebookresearch/InferSent) for utterance-level analysis. 
-* Word embeddings with Word2Vec for EDU-level analysis.
+* Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis. 
+* Word embeddings with Word2Vec for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
 
 Segmentation methods used: 
 * Infersent 

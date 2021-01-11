@@ -11,7 +11,9 @@ import tensorflow_hub as hub
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 from gensim.models import Phrases #Phraser
-
+from gensim.models import FastText as ft
+import fasttext
+import fasttext.util
 
 import re
 import spacy
@@ -192,6 +194,8 @@ def PKE_Keywords(content, number=30, put_underscore=True, Info=False):
     top_keywords = []
     for i in range(len(keywords)):
         top_keywords.append(keywords[i][0])
+    if not put_underscore:
+        top_keywords_final = top_keywords
 
     if put_underscore:
         # Join ngram keywords with an underscore
@@ -204,8 +208,7 @@ def PKE_Keywords(content, number=30, put_underscore=True, Info=False):
                 top_keywords_final.append(keyword)
             except:
                 top_keywords_final.append(keyword)
-    else:
-        top_keywords_final = top_keywords
+
     if Info:
         print('Pke Keywords: ', top_keywords_final, '\n')
 
@@ -264,7 +267,7 @@ def Extract_bigrams(words, n=20, put_underscore=True, Info=False):
         if put_underscore:
             bigram_condensed = str(bigram_0 + '_' + bigram_1)
         else:
-            bigram_condensed = str(bigram_0 + bigram_1)
+            bigram_condensed = str(bigram_0 + ' ' + bigram_1)
         final_bigrams.append(bigram_condensed)
 
     if Info:
@@ -289,7 +292,7 @@ def Extract_trigrams(words, n=20, put_underscore=True, Info=False):
         if put_underscore:
             trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
         else:
-            trigram_condensed = str(trigram_0 + trigram_1 + trigram_2)
+            trigram_condensed = str(trigram_0 + ' ' + trigram_1 + ' ' +trigram_2)
         final_trigrams.append(trigram_condensed)
 
     if Info:
@@ -336,7 +339,69 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
 
     return words, vectors, words_unplotted
 
-def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Info=False):
+def Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False):
+    """
+    Function to extract the word embeddings for words in 'words_to_extract' using a pretrained FastText model
+    """
+
+    ft = fasttext.load_model('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/FastText/cc.en.300.bin')
+    print('FastText wordvec dimensions before: ', ft.get_dimension())
+    fasttext.util.reduce_model(ft, 100)
+    print('FastText wordvec dimensions after: ', ft.get_dimension())
+
+    # print('1:', model.similarity('teacher', 'teaches'))
+    # print('\n2: ', model.wv.most_similar('hello'))
+    # print('\n3:', model.wv["Artificial Intelligence"])
+    # print('\n4:', model.wv.most_similar('Artificial Intelligence'))
+    # print('\n5 model vector for neuralink:', model.wv["Neuralink"])
+    # print('\n6:', model.wv.most_similar('Neuralink'))
+    # print('\n7 Artificial_Intelligence:', model.wv.most_similar('Artificial_Intelligence'))
+
+    embedding_dict = {}
+    for word in all_keywords:
+        # print('word', word)
+        try:
+            embedding_dict[word] = ft.get_word_vector(word)
+        except:
+            print('word was nan')
+
+    keyword_vectors_fasttext_df = pd.DataFrame(columns=['Words', 'Xs', 'Ys'])
+
+    tsne = TSNE(n_components=2, random_state=0)
+    reduced_vectors = tsne.fit_transform(list(embedding_dict.values()))
+
+    words = list(embedding_dict.keys())
+    Xs, Ys = reduced_vectors[:, 0], reduced_vectors[:, 1]
+
+    # save vectors:
+    keyword_vectors_fasttext_df.loc[:, 'Words'] = pd.Series(words)
+    keyword_vectors_fasttext_df.loc[:, 'Xs'] = pd.Series(Xs)
+    keyword_vectors_fasttext_df.loc[:, 'Ys'] = pd.Series(Ys)
+    keyword_vectors_fasttext_df.to_hdf('Saved_dfs/keyword_vectors_FastText_df.h5', key='df', mode='w')
+
+    return keyword_vectors_fasttext_df
+
+
+def Plot_FastText_KeywordVedcs(keyword_vectors_fasttext_df, save_fig=False):
+    """Function to plot """
+    Xs = keyword_vectors_fasttext_df['Xs'].values
+    Ys = keyword_vectors_fasttext_df['Ys'].values
+    words = keyword_vectors_fasttext_df['Words'].values
+
+    plt.figure()
+    plt.scatter(Xs, Ys)
+    for label, x, y in zip(words, Xs, Ys):
+        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+
+    plt.legend()
+    plt.title('FastText Keywords Embedding')
+    if save_fig:
+        plt.savefig("Saved_Images/FastText_WordEmbedding.png", dpi=500)
+    plt.show()
+    return
+
+
+def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, return_all=False, Info=False):
     """
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
     then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df' which is saved to hdf
@@ -398,7 +463,8 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Inf
     last_trigram_vector = last_bigram_vector + len(trigram_set[0])
     all_vectors = list(itertools.chain(nouns_set[1], pke_set[1], bigram_set[1], trigram_set[1]))
     all_keywords = list(itertools.chain(nouns_set[0], pke_set[0], bigram_set[0], trigram_set[0]))
-
+    if return_all:
+        return all_keywords
     # Store keywords + embeddings in a pandas data-frame
     keyword_vectors_df = pd.DataFrame(columns = ['noun_keyw',   'noun_X',    'noun_Y', 'unfamiliar_noun',
                                                  'pke_keyw',     'pke_X',    'pke_Y', ' unfamiliar_pke',
@@ -1186,50 +1252,19 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
         content = Preprocess_Content(content)
         content_sentences = sent_tokenize(content)
 
-    # top_keywords = PKE_Keywords(content)
-    # print(top_keywords)
+    content_tokenized = word_tokenize(content)
+    words = [w.lower() for w in content_tokenized]
 
-    from gensim.models import FastText as ft
+    nouns = Extract_Nouns(content_sentences, Info=True)
+    pkes = PKE_Keywords(content, put_underscore=False)
+    bigrams = Extract_bigrams(words, n=20, put_underscore=False, Info=True)
+    trigrams = Extract_trigrams(words, n=20, put_underscore=False, Info=True)
 
-    model = ft.load_fasttext_format(
-        "/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/FastText/cc.en.300.bin")
-    # model = ft.load_fasttext_format("cc.en.bin")
+    all_keywords = list(itertools.chain(nouns, pkes, bigrams, trigrams))
 
-    print('1:', model.similarity('teacher', 'teaches'))
-    print('\n2: ', model.wv.most_similar('hello'))
-    print('\n3:', model.wv["Artificial Intelligence"])
-    print('\n4:', model.wv.most_similar('Artificial Intelligence'))
-    print('\n5 model vector for neuralink:', model.wv["Neuralink"])
-    print('\n6:', model.wv.most_similar('Neuralink'))
-    print('\n7 Artificial_Intelligence:', model.wv.most_similar('Artificial_Intelligence'))
+    keyword_vectors_fasttext_df = Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False)
+    Plot_FastText_KeywordVedcs(keyword_vectors_fasttext_df, save_fig=True)
 
-    Extract_Keyword_Vectors(content, content_sentences, put_underscore=False, Info=True)
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
-    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
-                                        keyword_vectors_df['bigram_keyw'].values, keyword_vectors_df['trigram_keyw'].values))
-
-    embedding_dict = {}
-    for word in all_keywords:
-        print('word', word)
-        try:
-            embedding_dict[word] = model.wv[word]
-        except:
-            print('word was nan')
-
-    tsne = TSNE(n_components=2, random_state=0)
-    reduced_vectors = tsne.fit_transform(list(embedding_dict.values()))
-    words = list(embedding_dict.keys())
-    Xs, Ys = reduced_vectors[:, 0], reduced_vectors[:, 1]
-
-    plt.figure()
-    plt.scatter(Xs, Ys)
-    for label, x, y in zip(words, Xs, Ys):
-        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
-
-    plt.legend()
-    plt.title('Keywords_Embedding')
-    plt.savefig("Saved_Images/FastText_WordEmbedding.png")
-    plt.show()
 
     # ## Segmentation
     # first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
