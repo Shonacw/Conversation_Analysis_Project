@@ -264,7 +264,7 @@ def Extract_bigrams(words, n=20, put_underscore=True, Info=False):
         if put_underscore:
             bigram_condensed = str(bigram_0 + '_' + bigram_1)
         else:
-            bigram_condenced = str(bigram_0 + bigram_1)
+            bigram_condensed = str(bigram_0 + bigram_1)
         final_bigrams.append(bigram_condensed)
 
     if Info:
@@ -428,8 +428,13 @@ def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Inf
         keyword_vectors_df.loc[:, col_names_X[i]] = pd.Series(Xs)
         keyword_vectors_df.loc[:, col_names_Y[i]] = pd.Series(Ys)
 
-    # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-    keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_df.h5', key='df', mode='w')
+    if not put_underscore:
+        # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_df.h5', key='df', mode='w')
+    if put_underscore:
+        # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_df.h5', key='df', mode='w')
+
     if Info:
         print('-Created and saved keyword_vectors_df dataframe.')
 
