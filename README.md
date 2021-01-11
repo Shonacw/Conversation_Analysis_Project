@@ -1,13 +1,8 @@
 ## Master's Project: Conversation Structure Analysis + Visualisation using Podcast Transcripts
 
-In this MSci project The goal is to extract information about conversations by plotting the 
-investigating topic evolution 
-what key topics were revisited during the conversation? 
-are there a set of common trajectories similar- conversations will take
+In this MSci project we are looking at the structure of human-human conversation under 2 different lenses: as a macroscopic trajectory through a topic space (built from the components of word embeddings) and as a string of microscopic dialogue acts. From the topic space analysis we hope to build a signature graphical representation of the transcript which visualises the evolution of topics discussed, and portrays key information about the given conversation. From the dialogue analysis we hope to answer the question 'What makes Conversation Interesting?'.
 
-Specifically, we are looking at the structure of conversation under 2 different lenses: as a macroscopic trajectory through a topic space (built from the components of word embeddings) and as a string of microscopic dialogue acts.
-
-Code for the Dialogue Analysis part of this project can be found here: https://github.com/jonas-scholz123/msci-project (Jonas Scholz' Github)
+I am focussing on the Topic-related tasks of this project (Segmentation, Embeddings, and Visualisation). Code for the Dialogue Analysis part of this project can be found on Jonas Scholz' Github: https://github.com/jonas-scholz123/msci-project 
 
 *Key libraries used: sklearn, torch, gensim, nltk, spacy, scipy, pandas, networkx*
 
@@ -48,6 +43,11 @@ Segmentation methods used:
 ## Discussion Trees: Visualising Conversation Structure and Topic Evolution
 This part of the project investigates how we can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will represent a visual snapshot of the conversation, providing a viewer immediate insight to the extent to which different topics were discussed. It will make key themes and points discussed accessible, highlighting which points need to be built out and which have yet to be explored all at just a glance. 
 Topic Exploration using trajectory through topic space. 
+
+In this MSci project The goal is to extract information about conversations by plotting the 
+investigating topic evolution 
+what key topics were revisited during the conversation? 
+are there a set of common trajectories similar- conversations will take
 
 Attempts made at visualisation so far....
 - Plotting the Word Embeddings. 
