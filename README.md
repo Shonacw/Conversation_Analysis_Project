@@ -8,6 +8,12 @@ Code for the Dialogue Analysis part of this project can be found here: https://g
 
 ## Topic Segmentation and Embeddings
 
+Embedding techniques used:
+* Sentence embeddings with InferSent (Facebook Research, https://github.com/facebookresearch/InferSent) for utterance-level analysis. 
+* Word embeddings with Word2Vec for EDU-level analysis.
+
+Segmentation methods used: 
+* 
 
 
 ## Topic Visualisation
