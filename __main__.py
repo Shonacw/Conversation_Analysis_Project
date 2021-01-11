@@ -179,7 +179,7 @@ def Counter_Keywords(content_sentences, Info=False):
 
     return keywords
 
-def PKE_keywords(content, number=50, Info=False):
+def PKE_Keywords(content, number=30, put_underscore=True, Info=False):
     """
     Function to extract keywords and phrases from a document using the PKE implementation of TopicRank.
     pke info: https://github.com/boudinfl/pke
@@ -193,16 +193,19 @@ def PKE_keywords(content, number=50, Info=False):
     for i in range(len(keywords)):
         top_keywords.append(keywords[i][0])
 
-    # Now join ngram keywords with an underscore
-    top_keywords_final = []
-    for keyword in top_keywords:
-        # see if it is formed of >1 word
-        try:
-            words = word_tokenize(keyword)
-            keyword = '_'.join(words)
-            top_keywords_final.append(keyword)
-        except:
-            top_keywords_final.append(keyword)
+    if put_underscore:
+        # Join ngram keywords with an underscore
+        top_keywords_final = []
+        for keyword in top_keywords:
+            # see if it is formed of >1 word
+            try:
+                words = word_tokenize(keyword)
+                keyword = '_'.join(words)
+                top_keywords_final.append(keyword)
+            except:
+                top_keywords_final.append(keyword)
+    else:
+        top_keywords_final = top_keywords
     if Info:
         print('Pke Keywords: ', top_keywords_final, '\n')
 
@@ -243,7 +246,7 @@ def Extract_Nouns(content_sentences, Info=False):
 
     return nouns_to_plot
 
-def Extract_bigrams(words, n=20, Info=False):
+def Extract_bigrams(words, n=20, put_underscore=True, Info=False):
     """
     Function to extract bigrams mentioned in the given transcript.
     Input is the Podcast transcript in the form of a list of words and 'n' the number of Bigrams to consider.
@@ -258,14 +261,17 @@ def Extract_bigrams(words, n=20, Info=False):
     final_bigrams = []
     for bigram_list in bigrams_extracted:
         bigram_0, bigram_1 = bigram_list
-        bigram_condensed = str(bigram_0 + '_' + bigram_1)
+        if put_underscore:
+            bigram_condensed = str(bigram_0 + '_' + bigram_1)
+        else:
+            bigram_condenced = str(bigram_0 + bigram_1)
         final_bigrams.append(bigram_condensed)
 
     if Info:
         print('Bigrams: ', final_bigrams)
     return final_bigrams
 
-def Extract_trigrams(words, n=20, Info=False):
+def Extract_trigrams(words, n=20, put_underscore=True, Info=False):
     """
     Function to extract interesting trigrams mentioned in the given transcript.
     Input is a list of words from the podcast transcript and 'n' is the max number of trigrams to consider.
@@ -280,7 +286,10 @@ def Extract_trigrams(words, n=20, Info=False):
     final_trigrams = []
     for trigram_list in trigrams_extracted:
         trigram_0, trigram_1, trigram_2 = trigram_list
-        trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
+        if put_underscore:
+            trigram_condensed = str(trigram_0 + '_' + trigram_1 + '_' + trigram_2)
+        else:
+            trigram_condensed = str(trigram_0 + trigram_1 + trigram_2)
         final_trigrams.append(trigram_condensed)
 
     if Info:
@@ -327,7 +336,7 @@ def Extract_Embeddings_For_Keywords(words_to_extract, embeddings_dict, Info=Fals
 
     return words, vectors, words_unplotted
 
-def Extract_Keyword_Vectors(content, content_sentences, Info=False):
+def Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Info=False):
     """
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
     then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df' which is saved to hdf
@@ -373,9 +382,9 @@ def Extract_Keyword_Vectors(content, content_sentences, Info=False):
 
     # Extract words to plot
     nouns_set = Extract_Embeddings_For_Keywords(Extract_Nouns(content_sentences, Info=True), embeddings_dict)
-    pke_set = Extract_Embeddings_For_Keywords(PKE_keywords(content), embeddings_dict)
-    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words), embeddings_dict)
-    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words), embeddings_dict)
+    pke_set = Extract_Embeddings_For_Keywords(PKE_Keywords(content, put_underscore=put_underscore), embeddings_dict)
+    bigram_set = Extract_Embeddings_For_Keywords(Extract_bigrams(words, put_underscore=put_underscore), embeddings_dict)
+    trigram_set = Extract_Embeddings_For_Keywords(Extract_trigrams(words, put_underscore=put_underscore), embeddings_dict)
     if Info:
         print('-Extracted embeddings for all keywords.')
 
@@ -470,7 +479,7 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
 
 ## Functions for Segmentation...
 
-def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52):
+def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52, Plot=False, save_fig=False):
     """
     Function to segment up a transcript. By default will segment the transcript into 'Num_Even_Segs' even segments.
     Returns a list containing the indices of the first sentence of each segment, 'first_sent_idxs_list'.
@@ -481,6 +490,8 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
          these tags will be removed from the document before segmentation. Therefore the sentence indices at which
          new segments start will never match up between these methods; there is a different number of sentences in each.
     """
+    print('-Performing Transcript Segmentation with', seg_method, '...')
+
     if segmentation_method == 'InferSent':
         # 1
         # Obtain sentence embeddings using InferSent + create dataframe of consec sents cosine similarity + predict segmentation
@@ -491,6 +502,10 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
 
         # [OR if embeddings were already obtained, simply load dataframe]
         # cos_sim_df = pd.read_hdf('Saved_dfs/InferSent_cos_sim_df.h5', key='df')
+
+        # Plot
+        if Plot:
+            Plot_InferSent_Clusters(content_sentences, cos_sim_df, cos_sim_limit, save_fig=save_fig)
 
         # 2
         first_sent_idxs_list = []
@@ -508,8 +523,9 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
         first_sent_idxs_list = [i[0] for i in idx_split][1:]
 
     if seg_method == 'SliceCast':
-        first_sent_idxs_list = SliceCast_Segmentation(content_sentences, doc_labelled=True)
+        first_sent_idxs_list = SliceCast_Segmentation(content_sentences, doc_labelled=True, Plot=Plot, save_fig=save_fig)
 
+    print('Done')
     return first_sent_idxs_list
 
 
@@ -724,7 +740,7 @@ def Calc_CosSim_InferSent(content_sentences, embeddings, cos_sim_limit=0.52, Inf
 
     return cos_sim_df
 
-def SliceCast_Segmentation(content_sentences, doc_labelled=True):
+def SliceCast_Segmentation(content_sentences, doc_labelled=True, Plot=False, save_fig=False):
     """
     SliceCast
     note it is a bit out of date so idk if it'll work in this same python script...
@@ -785,6 +801,9 @@ def SliceCast_Segmentation(content_sentences, doc_labelled=True):
 
     first_sentence_idxs = list(df[df['preds']==1]['sent_number'].values)
 
+    if Plot:
+        Plot_SliceCast(df, save_fig=save_fig)
+
     return first_sentence_idxs
 
 
@@ -843,16 +862,14 @@ def Plot_SliceCast(segmentation_df, save_fig=False):
 
 def Plot_InferSent_Clusters(sentences, cos_sim_df, cos_sim_cutoff, save_fig=False):
     """
-    Haven't updated this properly yet.
+    Function to plot the NetworkX graph whose nodes represent sentences and edges are formed if the cosine similarity
+    between the sentence embeddings (obtained using InferSent) are > 'cos_sim_cutoff'.
     """
     G = nx.DiGraph()  # Instantiate graph
-    cos_sim_df = pd.read_hdf('InferSent_Stuff/Glove_cos_sim_df.h5',
-                             key='df')  # Load dataframe with sentence embedding info
 
     # Build graph
     G.add_nodes_from(range(len(sentences)))
     for row in cos_sim_df.itertuples(index=True):
-        print('row.Cosine_Similarity: ', row.Cosine_Similarity)
         if row.Cosine_Similarity >= cos_sim_cutoff:
             G.add_edge(row.Sentence1_idx, row.Sentence2_idx, weight=row.Cosine_Similarity)
 
@@ -860,9 +877,13 @@ def Plot_InferSent_Clusters(sentences, cos_sim_df, cos_sim_cutoff, save_fig=Fals
     edges = G.edges()
     weights = [G[u][v]['weight'] for u, v in edges]
     nx.draw(G, width=weights, with_labels=True, font_weight='bold')
-    plt.show()
+    plt.title('InferSent Clusters with {0} Cosine Similarity Cutoff'.format(cos_sim_cutoff))
+
     if save_fig:
-        plt.savefig("Saved_Images/InferSent_Clusters.png")
+        plt.savefig("Saved_Images/InferSent_Clusters_{0}_cutoff.png".format(cos_sim_cutoff))
+
+    plt.show()
+    return
 
 
 def Plot_Wordcloud(content_sentences, save=False):
@@ -1149,7 +1170,8 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 
 ## The main function putting it all together
 
-def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs):
+def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
+       Plot_Segmentation, saving_figs):
     """
     Mother Function.
     """
@@ -1159,90 +1181,134 @@ def Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segm
         content = Preprocess_Content(content)
         content_sentences = sent_tokenize(content)
 
-    ## Segmentation
-    first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
-                                                Num_Even_Segs=Even_number_of_segments,
-                                                cos_sim_limit=InferSent_cos_sim_limit)
+    # top_keywords = PKE_Keywords(content)
+    # print(top_keywords)
 
-    # if seg_method == 'SliceCast':
-    #     segmentation_df = pd.read_hdf('Saved_dfs/SliceCast_segmented_df.h5', key='dfs')
-    #     Plot_SliceCast(segmentation_df, save_fig=saving_figs)
+    from gensim.models import FastText as ft
+
+    model = ft.load_fasttext_format(
+        "/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Conversation_Analysis_Project/FastText/cc.en.300.bin")
+    # model = ft.load_fasttext_format("cc.en.bin")
+
+    print('1:', model.similarity('teacher', 'teaches'))
+    print('\n2: ', model.wv.most_similar('hello'))
+    print('\n3:', model.wv["Artificial Intelligence"])
+    print('\n4:', model.wv.most_similar('Artificial Intelligence'))
+    print('\n5 model vector for neuralink:', model.wv["Neuralink"])
+    print('\n6:', model.wv.most_similar('Neuralink'))
+    print('\n7 Artificial_Intelligence:', model.wv.most_similar('Artificial_Intelligence'))
+
+    Extract_Keyword_Vectors(content, content_sentences, put_underscore=False, Info=True)
+    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
+    all_keywords = list(itertools.chain(keyword_vectors_df['noun_keyw'].values, keyword_vectors_df['pke_keyw'].values,
+                                        keyword_vectors_df['bigram_keyw'].values, keyword_vectors_df['trigram_keyw'].values))
+
+    embedding_dict = {}
+    for word in all_keywords:
+        print('word', word)
+        try:
+            embedding_dict[word] = model.wv[word]
+        except:
+            print('word was nan')
+
+    tsne = TSNE(n_components=2, random_state=0)
+    reduced_vectors = tsne.fit_transform(list(embedding_dict.values()))
+    words = list(embedding_dict.keys())
+    Xs, Ys = reduced_vectors[:, 0], reduced_vectors[:, 1]
+
+    plt.figure()
+    plt.scatter(Xs, Ys)
+    for label, x, y in zip(words, Xs, Ys):
+        plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points")
+
+    plt.legend()
+    plt.title('Keywords_Embedding')
+    plt.savefig("Saved_Images/FastText_WordEmbedding.png")
+    plt.show()
+
+    # ## Segmentation
+    # first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
+    #                                             Num_Even_Segs=Even_number_of_segments,
+    #                                             cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+    #                                            save_fig=saving_figs)
 
     ## Keyword Extraction
-    # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, Info=True)
+    # nouns_set, pke_set, bigram_set, trigram_set = Extract_Keyword_Vectors(content, content_sentences, put_underscore=True, Info=True)
 
     # OR just load the dataframe
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
-
-    ## Segment-Wise Information Extraction
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
-    if seg_method == 'InferSent':
-        save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_segments_info_df'
-
-    # Create dataframe with the information about the segments
-    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
-                                         save_name=save_name, Info=True)
-
-    # OR just load the dataframe
-    # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
-
-    ## Plot Word Embedding
-    # PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
-
-    ## Plot Quiver Plot
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
-                                                                                      node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
-
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-                                        save_name=save_name)
-
-    ## Plot Quiver + Embedding
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                    seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-                                                                        InferSent_cos_sim_limit, node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
-
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-                               only_nouns=True,
-                               save_fig=saving_figs, save_name=save_name)
-
-    ## Plot 3D Quiver Plot
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
-                                                                        InferSent_cos_sim_limit, node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
-
-    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
-                                          Node_Position='total_average', save_fig=True)
+    # keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_df.h5', key='df')
+    #
+    # ## Segment-Wise Information Extraction
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_segments_info_df'
+    #
+    # # Create dataframe with the information about the segments
+    # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
+    #                                      save_name=save_name, Info=True)
+    #
+    # # OR just load the dataframe
+    # # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
+    #
+    # ## Plot Word Embedding
+    # # PlotWord_Embeddings(keyword_vectors_df, save_fig=False)
+    #
+    # ## Plot Quiver Plot
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                             seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+    #                                                                                   node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+    #                                     save_name=save_name)
+    #
+    # ## Plot Quiver + Embedding
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                                 seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+    #                                                                     InferSent_cos_sim_limit, node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+    #                            only_nouns=True,
+    #                            save_fig=saving_figs, save_name=save_name)
+    #
+    # ## Plot 3D Quiver Plot
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                             seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
+    #                                                                     InferSent_cos_sim_limit, node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+    #                                       Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
 if __name__=='__main__':
     path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
 
-    seg_method = 'Even'                                 #'Even'      # 'InferSent'       #'SliceCast'
+    seg_method = 'InferSent'                                 #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
     Even_number_of_segments = 50                       # for when seg_method = 'Even'
-    InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent'
+    InferSent_cos_sim_limit = 0.30                      # for when seg_method = 'InferSent' 52
 
+    Plotting_Segmentation = True
     saving_figs = False
 
-    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit, saving_figs)
+    Go(path_to_transcript, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
+       Plotting_Segmentation, saving_figs)
