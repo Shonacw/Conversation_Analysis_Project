@@ -2,7 +2,7 @@
 
 In this MSci project we are looking at the structure of human-human conversation under 2 different lenses: as a macroscopic trajectory through a topic space (built from the components of word embeddings) and as a string of microscopic dialogue acts. From the topic space analysis we hope to build a signature graphical representation of the transcript which visualises the evolution of topics discussed, and portrays key information about the given conversation. From the dialogue analysis we hope to answer the question 'What makes Conversation Interesting?'.
 
-I am focussing on the Topic-related tasks of this project (Segmentation, Embeddings, and Visualisation). Code for the Dialogue Analysis part of this project can be found on Jonas Scholz' Github: https://github.com/jonas-scholz123/msci-project 
+I am focussing on the Topic-related tasks of this project (Segmentation, Embeddings, and Visualisation). Code for the Dialogue-Act analysis part of this project can be found on Jonas Scholz' Github: https://github.com/jonas-scholz123/msci-project 
 
 *Key libraries used: sklearn, torch, gensim, nltk, spacy, scipy, pandas, networkx*
 
@@ -10,17 +10,17 @@ I am focussing on the Topic-related tasks of this project (Segmentation, Embeddi
 Steps taken so far...
 
 *1) Keyword Extraction*
-- Keywords, using PKE implementation of TopicRank
-- Nouns, using spacy POS tagger with en_core_web_sm), 
-- Bigrams and Trigrams, using NLTK implementation of Collocation Finder
+- Keywords and phrases, using PKE implementation of TopicRank.
+- Nouns, using spacy POS tagger with the en_core_web_sm pretrained statistical model. 
+- Bigrams and Trigrams, using NLTK implementation of Collocation Finder.
 
 *2) Topic Space Construction*
-- Word2Vec implementation with GoogleNews-vectors-negative300 pretrained word embeddings
-- FastText implementation with cc.en.300.bin pretrained model
+- [Word2Vec](https://arxiv.org/abs/1301.3781) implementation with [GoogleNews-vectors-negative300](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/) pretrained word embeddings 
+- [FastText](https://arxiv.org/abs/1607.04606) implementation with [cc.en.300.bin](fast text is the wiki.en.bin same as cc.en.bin) pretrained model 
 
 *3) Transcript Segmentation*
-- InferSent implementation with arbitrary Cosine similarity cutoff between consecutive sentences
-- SliceCast implementation
+- Infersent](https://arxiv.org/abs/1705.02364) implementation with arbitrary Cosine similarity cutoff between consecutive sentences
+- [SliceCast](https://arxiv.org/abs/1803.09337) implementation
 - Even chunks option for statistical analysis
 
 *4) Segment Graphical Representation Investigation*
@@ -33,6 +33,7 @@ Steps taken so far...
 Embedding techniques used:
 * Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis. 
 * Word embeddings with Word2Vec for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
+* Word embeddings with [FastText](https://github.com/facebookresearch/fastText) for EDU-level analysis. Using [cc.en.300.bin](fast text is the wiki.en.bin same as cc.en.bin).
 
 Segmentation methods used: 
 * Even Segments 
