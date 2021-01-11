@@ -44,6 +44,7 @@ Steps taken so far...
 - Plotting of trajectory through topic space
     The following example was created by segmenting the transcript into 20 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
+    
     <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
     
