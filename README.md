@@ -24,13 +24,12 @@ Steps taken so far...
 - Even chunks, option for statistical analysis.
 
 *4) Graphical Representation*
-The Four key graph types created so far
 - Labelled word embeddings of keywords extracted from the given transcript 
 - Quiver plot of trajectory taken by conversation through topic space 
 - 3D Quiver plot of trajectory taken by conversation through topic space with Sentence Number on the z axis representing time.
 
 
-## Links to methods used
+## Useful Links
 Embedding techniques used:
 * Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis, from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data] (https://arxiv.org/abs/1705.02364). 
 * Word embeddings with [Word2Vec](https://arxiv.org/abs/1301.3781) for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
@@ -43,13 +42,14 @@ Segmentation methods used:
 
 
 # Discussion Trees: Visualising Conversation Structure and Topic Evolution
-This part of the project investigates how we can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will represent a visual snapshot of the conversation, providing a viewer immediate insight to the extent to which different topics were discussed. It will make key themes and points discussed accessible, highlighting which points need to be built out and which have yet to be explored all at just a glance. 
-Topic Exploration using trajectory through topic space. 
+This part of the project investigates how one can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will act as a visual snapshot of the conversation, providing a viewer with insight into the extent to which different topics were discussed. The goal is to make key themes and points discussed immediately accessible, highlighting which discussion points need to be built out and which have yet to be explored all at just a glance.
 
-In this MSci project The goal is to extract information about conversations by plotting the 
-investigating topic evolution 
-what key topics were revisited during the conversation? 
-are there a set of common trajectories similar- conversations will take
+Questions to answer
+- Which key topics were revisited during the conversation?
+- What was the variation in Dialog Act usage over the course of the conversation (segment-wise), and what does this tell us about the nature/ flow of the conversation? 
+- How do we quantify the efficiency of a conversation? (Mostly relevant when analysing business meeting transcripts)
+- From the conversation visualisations can we detect a set of common trajectories taken by conversations of simialr styles?
+
 
 ## Notes on, and examples of, Visualisation methods attempted so far...
 
