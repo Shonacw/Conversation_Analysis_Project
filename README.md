@@ -51,7 +51,8 @@ investigating topic evolution
 what key topics were revisited during the conversation? 
 are there a set of common trajectories similar- conversations will take
 
-## Notes on, and examples of, Visualisation methods attempted so far...
+## Notes on, and examples of, Visualisation methods attempted so far...
+
 How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
 - Average of all the word-vectors of the keywords present in the given segment
 - The word-vector of only the most frequent keyword
@@ -73,11 +74,11 @@ How the thickness of the line is assigned (todo):
     The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
     
-    <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
+   <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
-    The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled. Here we have (left image) 20 and (right image) 100 even segments using average of 3 top keyword word-vectors as the node position for each segment. 
+   The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled. Here we have (left image) 20 and (right image) 100 even segments using average of 3 top keyword word-vectors as the node position for each segment. 
     
-    <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
+   <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
     
 *Plotting of trajectory through 3D topic space
