@@ -37,20 +37,19 @@ Steps taken so far...
 - Plotting the Word Embeddings. 
 ![Word Embedding](Saved_Images/FastText_WordEmbedding.png)
     Here the keywords extracted from the given transcript using methods listed in 1) are plotted
-    in word-embedding space using the cc.en.300 FastText pretrained model.
-    
-    Zoomed-in version of the above plot...
-    ![Zoomed Word Embedding](Saved_Images/FastText_WordEmbedding_ZOOMED.png)
+    in word-embedding space using the cc.en.300 FastText pretrained model. Right is the zoomed-in version of the above plot...
+  
+    <img src = "Saved_Images/FastText_WordEmbedding.png" width ="400" /> <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="400" />
     
 - Plotting of trajectory through topic space
     The following example was created by segmenting the transcript into 20 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
-    ![](Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png)
+    <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
+
     
     The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled.
     <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
-    ![](Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png)
     
 - Plotting of trajectory through 3D topic space
     20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
