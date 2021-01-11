@@ -73,3 +73,22 @@ Attempts made at visualisation so far....
 - Plotting of trajectory through 3D topic space
     20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
     ![](Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png)
+
+#Usage
+Run \_\_main__.py with the following params...
+
+- path_to_transcript: 
+- embedding_method: Word Embedding of choice. Either 'fasttext' or 'word2vec'. 
+- seg_method: method of segmentation to use. Options are 'Even' (for splitting it evenly into n segments), 'InferSent' for using InferSent with 
+    a certain cosine similarity cut-off, or 'SliceCast'
+- node_location_method: how to define the node position for a given segment... options are 'total_average' (i.e. calculate
+the average of the keyword-vectors present in each segment), '1_max_count' for choosing just the most-frequent keyword's embedding
+as the segment node location, or '3_max_count' for taking the word vector average of the three most frequency used keywords 
+in each segment as the node location.
+
+- Even_number_of_segments: the number of even segments for the transcript to be split into, use when seg_method = 'Even'.
+- InferSent_cos_sim_limit: the value of cosine similarity at which two consecutive sentences which be deemed as not-similar-enough
+to belong to the same section (and hence a new-section tag will be placed between them). Use when for when seg_method = 'InferSent'.
+
+- Plotting_Segmentation: True or False, whether you want to plot visualisation of the segmentation task
+- saving_figs: True or False, whether you want to save figures produced on this run
