@@ -33,7 +33,23 @@ Steps taken so far...
 - The top keyword (in terms of #use cases) word-vector 
 - Average of top 3 keyword (in terms of #use cases) word-vectors
 
-*4) Preliminary Topic Exploration: Plotting*
+*4) Visualisation of Topic Evolution (see next section for what has been done so far)*
+
+Embedding techniques used:
+* Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis. 
+* Word embeddings with Word2Vec for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
+
+Segmentation methods used: 
+* Even Segments 
+* [SliceCast](https://github.com/bmmidei/SliceCast)
+* [Infersent](https://github.com/facebookresearch/InferSent) with a variable cosine similarity cutoff.
+
+
+## Discussion Trees: Visualising Conversation Structure and Topic Evolution
+This part of the project investigates how we can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will represent a visual snapshot of the conversation, providing a viewer immediate insight to the extent to which different topics were discussed. It will make key themes and points discussed accessible, highlighting which points need to be built out and which have yet to be explored all at just a glance. 
+Topic Exploration using trajectory through topic space. 
+
+Attempts made at visualisation so far....
 - Plotting the Word Embeddings. 
     Here the keywords extracted from the given transcript using methods listed in 1) are plotted
     in word-embedding space using the cc.en.300 FastText pretrained model. Right is the zoomed-in version of the above plot...
@@ -57,21 +73,3 @@ Steps taken so far...
 - Plotting of trajectory through 3D topic space
     20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
     ![](Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png)
-
-
-
-Embedding techniques used:
-* Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis. 
-* Word embeddings with Word2Vec for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
-
-Segmentation methods used: 
-* Infersent 
-* SliceCast
-* Even Segments 
-
-
-
-
-## Discussion Trees: Visualising Conversation Structure and Topic Evolution
-This part of the project investigates how we can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will represent a visual snapshot of the conversation, providing a viewer immediate insight to the extent to which different topics were discussed. It will make key themes and points discussed accessible, highlighting which points need to be built out and which have yet to be explored all at just a glance. 
-
