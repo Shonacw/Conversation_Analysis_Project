@@ -986,7 +986,7 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False, Info=F
     embedding_method = embedding_method.title()
     plt.title('{0} Keywords Embedding'.format(embedding_method))
     if save_fig:
-        plt.savefig("Saved_Images/{}_WordEmbedding.png".format(embedding_method))
+        plt.savefig("Saved_Images/{}_WordEmbedding.png".format(embedding_method), dpi=600)
     plt.show()
 
     return
@@ -1041,6 +1041,7 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+    plt.legend()
     plt.title(save_name)
     if save_fig:
         plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
@@ -1215,7 +1216,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
         line.set_visible(False)
 
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=200)
+        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=700)
     plt.show()
     return
 
@@ -1232,87 +1233,75 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
         content = Preprocess_Content(content)
         content_sentences = sent_tokenize(content)
 
-    # content_tokenized = word_tokenize(content)
-    # words = [w.lower() for w in content_tokenized]
-    #
-    # nouns = Extract_Nouns(content_sentences, Info=True)
-    # pkes = PKE_Keywords(content, put_underscore=False)
-    # bigrams = Extract_bigrams(words, n=20, put_underscore=False, Info=True)
-    # trigrams = Extract_trigrams(words, n=20, put_underscore=False, Info=True)
-    #
-    # all_keywords = list(itertools.chain(nouns, pkes, bigrams, trigrams))
-    #
-    # keyword_vectors_fasttext_df = Extract_FastText_Embeddings_For_Keywords(all_keywords, Info=False)
 
-
-    # ## Segmentation
-    # first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
-    #                                             Num_Even_Segs=Even_number_of_segments,
-    #                                             cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
-    #                                            save_fig=saving_figs)
+    ## Segmentation
+    first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
+                                                Num_Even_Segs=Even_number_of_segments,
+                                                cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+                                               save_fig=saving_figs)
 
     ## Keyword Extraction
-    Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=False, Info=True)
+    # Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=False, Info=True)
     # OR just load the dataframe
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_df.h5'.format(embedding_method), key='df')
-    #
-    # ## Segment-Wise Information Extraction
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_segments_info_df'
-    #
-    # # Create dataframe with the information about the segments
+
+    ## Segment-Wise Information Extraction
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_segments_info_df'.format(Even_number_of_segments, seg_method)
+    if seg_method == 'InferSent':
+        save_name = 'InferSent_{0}_segments_info_df'.format(InferSent_cos_sim_limit)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_segments_info_df'
+
+    # Create dataframe with the information about the segments
     # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
     #                                      save_name=save_name, Info=True)
-    #
-    # # OR just load the dataframe
-    # # segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
-    #
+
+    # OR just load the dataframe
+    segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
+
     # ## Plot Word Embedding
-    Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False)
-    #
-    # ## Plot Quiver Plot
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                             seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
-    #                                                                                   node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-    #                                     save_name=save_name)
-    #
-    # ## Plot Quiver + Embedding
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                                 seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-    #                                                                     InferSent_cos_sim_limit, node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-    #                            only_nouns=True,
-    #                            save_fig=saving_figs, save_name=save_name)
-    #
-    # ## Plot 3D Quiver Plot
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                             seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
-    #                                                                     InferSent_cos_sim_limit, node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
-    #                                       Node_Position='total_average', save_fig=True)
+    Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=saving_figs)
+
+    ## Plot Quiver Plot
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+                                                                                      node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+                                        save_name=save_name)
+
+    ## Plot Quiver + Embedding
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                    seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+                               only_nouns=True,
+                               save_fig=saving_figs, save_name=save_name)
+
+    ## Plot 3D Quiver Plot
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+                                          Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
@@ -1321,14 +1310,14 @@ if __name__=='__main__':
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
-    seg_method = 'InferSent'                            #'Even'      # 'InferSent'       #'SliceCast'
+    seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 50                       # for when seg_method = 'Even'
-    InferSent_cos_sim_limit = 0.30                      # for when seg_method = 'InferSent' 52
+    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     Plotting_Segmentation = True
-    saving_figs = False
+    saving_figs = True
 
     Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
        Plotting_Segmentation, saving_figs)

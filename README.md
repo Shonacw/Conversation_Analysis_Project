@@ -15,12 +15,46 @@ Code for the Dialogue Analysis part of this project can be found here: https://g
 Steps taken so far...
 
 *1) Keyword Extraction*
+- Keywords, using PKE implementation of TopicRank
+- Nouns, using spacy POS tagger with en_core_web_sm), 
+- Bigrams and Trigrams, using NLTK implementation of Collocation Finder
 
 *2) Topic Space Construction*
+- Word2Vec implementation with GoogleNews-vectors-negative300 pretrained word embeddings
+- FastText implementation with cc.en.300.bin pretrained model
 
 *3) Transcript Segmentation*
+- InferSent implementation with arbitrary Cosine similarity cutoff between consecutive sentences
+- SliceCast implementation
+- Even chunks option for statistical analysis
+
+*4) Segment Graphical Representation Investigation*
+- Average of Keyword word-vectors
+- The top keyword (in terms of #use cases) word-vector 
+- Average of top 3 keyword (in terms of #use cases) word-vectors
 
 *4) Preliminary Topic Exploration: Plotting*
+- Plotting the Word Embeddings. 
+![Word Embedding](Saved_Images/FastText_WordEmbedding.png)
+    Here the keywords extracted from the given transcript using methods listed in 1) are plotted
+    in word-embedding space using the cc.en.300 FastText pretrained model.
+    
+    Zoomed-in version of the above plot...
+    ![Zoomed Word Embedding](Saved_Images/FastText_WordEmbedding_ZOOMED.png)
+    
+- Plotting of trajectory through topic space
+    The following example was created by segmenting the transcript into 20 even sections, calculating 
+    the position of the nodes using the average of the top 3 keywords used in each section...
+    ![](Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png)
+    
+    The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled.
+    ![](Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png) ![](Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png)
+    
+- Plotting of trajectory through 3D topic space
+    20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
+    ![](Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png)
+
+
 
 Embedding techniques used:
 * Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis. 
