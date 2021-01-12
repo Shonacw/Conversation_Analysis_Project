@@ -47,7 +47,7 @@ Questions to answer:
 - Which key topics were revisited during the conversation?
 - What was the variation in Dialog Act usage over the course of the conversation (segment-wise), and what does this tell us about the nature/ flow of the conversation? 
 - How do we quantify the efficiency of a conversation? (Mostly relevant when analysing business meeting transcripts)
-- From the conversation visualisations can we detect a set of common trajectories taken by conversations of simialr styles?
+- From the conversation visualisations can we detect a set of common trajectories taken by conversations of similar styles?
 
 
 ## Notes on, and examples of, Visualisation methods attempted so far...
@@ -61,27 +61,27 @@ How the thickness of the line is assigned (todo):
 - Dialog acts? Representation of speaker uncertainty? 
 
 
-*Plotting the Word Embeddings. 
-    Here the keywords extracted from the given transcript using methods listed in 1) are plotted
-    in word-embedding space using the cc.en.300 FastText pretrained model. Right is the zoomed-in version of the above plot...
+*Plotting the word embeddings*
+    Here the keywords are extracted from the given transcript using methods listed in 1) and are plotted
+    in word-embedding space using the cc.en.300 FastText pretrained model.
   
   <img src = "Saved_Images/Figure_1.png" width ="700" /> 
   And a zoomed-in version...
   <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="700" />
     
     
-*Plotting of trajectory through topic space
+*Plotting of trajectory through topic space*
     The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
     
    <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
-   The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled. Here we have (left image) 20 and (right image) 100 even segments using average of 3 top keyword word-vectors as the node position for each segment. 
+   The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled. Here we have (left image) 20- and (right image) 100-even segments using average of 3 top keyword word-vectors as the node position for each segment. 
     
    <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
     
-*Plotting of trajectory through 3D topic space
+*Plotting of trajectory through 3D topic space*
     20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
     <img src = "Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" width ="400" />
 
