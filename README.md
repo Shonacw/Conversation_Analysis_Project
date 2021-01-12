@@ -61,7 +61,8 @@ How the thickness of the line is assigned (todo):
 - Dialog acts? Representation of speaker uncertainty? 
 
 
-*Plotting the word embeddings*
+######Plotting the word embeddings
+
     Here the keywords are extracted from the given transcript using methods listed in 1) and are plotted
     in word-embedding space using the cc.en.300 FastText pretrained model.
   
@@ -70,7 +71,7 @@ How the thickness of the line is assigned (todo):
   <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="700" />
     
     
-*Plotting of trajectory through topic space*
+**Plotting of trajectory through topic space**
     The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
     the position of the nodes using the average of the top 3 keywords used in each section...
     
