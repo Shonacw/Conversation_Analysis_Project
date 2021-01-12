@@ -63,18 +63,18 @@ How the thickness of the line is assigned (todo):
 
 ##### Plotting the word embeddings
 
-    Here the keywords are extracted from the given transcript using methods listed in 1) and are plotted
-    in word-embedding space using the cc.en.300 FastText pretrained model.
+   Here the keywords are extracted from the given transcript using methods listed in 1) and are plotted
+   in word-embedding space using the cc.en.300 FastText pretrained model.
   
   <img src = "Saved_Images/Figure_1.png" width ="700" /> 
   And a zoomed-in version...
   <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="700" />
     
     
-**Plotting of trajectory through topic space**
+##### Plotting of trajectory through topic space
 
-    The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
-    the position of the nodes using the average of the top 3 keywords used in each section...
+   The following example was created by segmenting the transcript into (left image) 20 and (right image) 100 even sections, calculating 
+   the position of the nodes using the average of the top 3 keywords used in each section...
     
    <img src = "Saved_Images/20_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
@@ -83,8 +83,8 @@ How the thickness of the line is assigned (todo):
    <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
     
-*Plotting of trajectory through 3D topic space*
-    20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
+##### Plotting of trajectory through 3D topic space
+   20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
     <img src = "Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" width ="400" />
 
 # Code Usage 
