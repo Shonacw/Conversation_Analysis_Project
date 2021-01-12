@@ -301,7 +301,8 @@ def Extract_trigrams(words, n=20, put_underscore=True, Info=False):
 
 ## Functions for dealing with Keywords...
 
-def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, fasttext_model, embedding_method, Info=False):
+def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, fasttext_model, embedding_method,
+                                    shift_ngrams=False, Info=False):
     """
     Function for extracting the word vectors for the given keywords.
 
@@ -314,6 +315,8 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
         If multiple possible versions of a given word exists in the embedding vocab, take only the first instance
     """
     words, vectors, words_unplotted = [], [], []
+    nlp = spacy.load("en_core_web_sm")  # doing this out here so don't need to keep reloading
+
     for word in words_to_extract:
         if "_" in word:                                                      # Note A
             new_word = []
@@ -328,19 +331,36 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
             print('possible_versions_of_word: ', possible_versions_of_word)
 
         if embedding_method == 'word2vec':
-            boolean = [x in word2vec_embeddings_dict for x in possible_versions_of_word]
-            if any(boolean):
-                idx = int(list(np.where(boolean)[0])[0])                        # Note C
-                true_word = possible_versions_of_word[idx]
-                words.append(true_word)
-                vectors.append(word2vec_embeddings_dict[true_word])
+            if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word):
+                if len(word_tokenize(word)) > 1 or '_' in word:
+                    word_to_use = get_word_from_ngram(word, nlp)
+                    if word_to_use == 'nan':
+                        words_unplotted.append(word)
+                        continue
+                    words.append(word) # save original version of ngram string... but altered version of embedding
+                    vectors.append(word2vec_embeddings_dict[word_to_use])
             else:
-                words_unplotted.append(word)
+                boolean = [x in word2vec_embeddings_dict for x in possible_versions_of_word]
+                if any(boolean):
+                    idx = int(list(np.where(boolean)[0])[0])                        # Note C
+                    true_word = possible_versions_of_word[idx]
+                    words.append(true_word)
+                    vectors.append(word2vec_embeddings_dict[true_word])
+                else:
+                    words_unplotted.append(word)
 
         if embedding_method == 'fasttext':
             embedding_dict = {}
-            for word in words_to_extract:
-                # print('word', word)
+            print(word)
+            if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word): #i.e. only perform this if the word is an ngram
+                    print('in shift_ngrams')
+                    word_to_use = get_word_from_ngram(word, nlp)
+                    if word_to_use == 'nan':# deal with un-useful keywords
+                        words_unplotted.append(word)
+                        continue
+                    else:
+                        embedding_dict[word] = fasttext_model.get_word_vector(word_to_use)
+            else:
                 try:
                     embedding_dict[word] = fasttext_model.get_word_vector(word)
                 except:
@@ -348,13 +368,14 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
 
             words, vectors = list(embedding_dict.keys()), list(embedding_dict.values())
 
-    if Info:
-        print('Number of Words from Document without an embedding: ', len(words_unplotted))
-        print('List of Words lacking an embedding:', words_unplotted)
+    #if Info:
+    #print('Number of Words from Document without an embedding: ', len(words_unplotted))
+    print('Words lacking an embedding:', words_unplotted)
 
     return words, vectors, words_unplotted
 
-def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=True, return_all=False, Info=False):
+def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=True,
+                               shift_ngrams=False, return_all=False, Info=False):
     """
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
     then all the keywords + their embeddings are stored in a dataframe 'keyword_vectors_df' which is saved to hdf
@@ -382,9 +403,9 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
     # Collect keywords
     nouns_list = Extract_Nouns(content_sentences, Info=True)
-    pke_list = PKE_Keywords(content, put_underscore=put_underscore)
-    bigrams_list = Extract_bigrams(words, put_underscore=put_underscore)
-    trigrams_list = Extract_trigrams(words, put_underscore=put_underscore)
+    pke_list = PKE_Keywords(content, put_underscore=put_underscore_ngrams)
+    bigrams_list = Extract_bigrams(words, put_underscore=put_underscore_ngrams)
+    trigrams_list = Extract_trigrams(words, put_underscore=put_underscore_ngrams)
     all_keywords = list(itertools.chain(nouns_list, pke_list, bigrams_list, trigrams_list))
 
     if Info:
@@ -412,9 +433,9 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
         # Extract words to plot
         nouns_set = Extract_Embeddings_For_Keywords(nouns_list, embeddings_dict, None, embedding_method='word2vec')
-        pke_set = Extract_Embeddings_For_Keywords(pke_list, embeddings_dict, None, embedding_method='word2vec')
-        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, embeddings_dict, None,  embedding_method='word2vec')
-        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, embeddings_dict, None, embedding_method='word2vec')
+        pke_set = Extract_Embeddings_For_Keywords(pke_list, embeddings_dict, None, embedding_method='word2vec', shift_ngrams=shift_ngrams)
+        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, embeddings_dict, None,  embedding_method='word2vec', shift_ngrams=shift_ngrams)
+        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, embeddings_dict, None, embedding_method='word2vec', shift_ngrams=shift_ngrams)
 
     if embedding_method == 'fasttext':
         ft = fasttext.load_model(
@@ -423,9 +444,12 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
         # Extract words to plot
         nouns_set = Extract_Embeddings_For_Keywords(nouns_list, None, ft, embedding_method='fasttext')
-        pke_set = Extract_Embeddings_For_Keywords(pke_list, None, ft, embedding_method='fasttext')
-        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, None, ft, embedding_method='fasttext')
-        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, None, ft, embedding_method='fasttext')
+        print('=================pke_set')
+        pke_set = Extract_Embeddings_For_Keywords(pke_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
+        print('=================bigram_set')
+        bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
+        print('================trigram_set')
+        trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
 
     if Info:
         print('-Extracted {0} embeddings for all keywords.'.format(embedding_method))
@@ -472,10 +496,10 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
         keyword_vectors_df.loc[:, col_names_X[i]] = pd.Series(Xs)
         keyword_vectors_df.loc[:, col_names_Y[i]] = pd.Series(Ys)
 
-    if not put_underscore:
+    if not put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
         keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_{0}_df.h5'.format(embedding_method), key='df', mode='w')
-    if put_underscore:
+    if put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
         keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
 
@@ -483,6 +507,43 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
         print('-Created and saved keyword_vectors_df dataframe.')
 
     return nouns_set, pke_set, bigram_set, trigram_set
+
+def get_word_from_ngram(ngram, nlp):
+    """
+    Function to relocate n_grams to coordinates by the noun they contain (if any)
+
+    """
+    # loop through pke keywords and look at the ngrams
+    if '_' in ngram: #if joined by an undrscore replace it with a space so can use word_tokenize in next part...
+        ngram = ngram.split("_")
+        ngram = ' '.join(ngram)
+
+    print(ngram)
+    pos_list = [word.pos_ for word in nlp(str(ngram))] # if word.pos_ in ['NOUN']]
+    print('pos_list', pos_list)
+    if len(pos_list) > 1:
+        counter = Counter(pos_list)
+        words = word_tokenize(ngram)
+        if 'NOUN' in counter:
+            word_to_use = words[pos_list.index('NOUN')] # TO DO deal with case of two nouns
+            print('noun part: ', word_to_use)
+
+        elif 'PROPN' in counter:
+            word_to_use = words[pos_list.index('PROPN')]
+            print('propn part: ', word_to_use)
+        else:
+            return 'nan' # if the phrase doesn't contain a noun OR pronoun, dont want it as a keyphrase
+
+    return word_to_use
+
+
+            #if count of NOUN is none but there is 1 PROPN, use that one
+            #PROPN NOUN
+
+        # for i in word.split("_"):
+        #     new_word.append(i.title())
+        # capitalised_phrase = "_".join(new_word)
+
 
 def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
     """
@@ -1223,7 +1284,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 ## The main function putting it all together
 
 def Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
-       Plot_Segmentation, saving_figs):
+       Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams):
     """
     Mother Function.
     """
@@ -1241,7 +1302,8 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
                                                save_fig=saving_figs)
 
     ## Keyword Extraction
-    # Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore=False, Info=True)
+    Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
+                               shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_df.h5'.format(embedding_method), key='df')
 
@@ -1263,45 +1325,46 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     # ## Plot Word Embedding
     Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=saving_figs)
 
-    ## Plot Quiver Plot
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
-                                                                                      node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-                                        save_name=save_name)
-
-    ## Plot Quiver + Embedding
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                    seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-                                                                        InferSent_cos_sim_limit, node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
-
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-                               only_nouns=True,
-                               save_fig=saving_figs, save_name=save_name)
-
-    ## Plot 3D Quiver Plot
-    if seg_method == 'Even':
-        save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
-                                                                                seg_method, node_location_method)
-    if seg_method == 'InferSent':
-        save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
-                                                                        InferSent_cos_sim_limit, node_location_method)
-    if seg_method == 'SliceCast':
-        save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
-
-    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
-                                          Node_Position='total_average', save_fig=True)
+    # ## Plot Quiver Plot
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                             seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+    #                                                                                   node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+    #                                     save_name=save_name)
+    #
+    # ## Plot Quiver + Embedding
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                                 seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+    #                                                                     InferSent_cos_sim_limit, node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+    #                            only_nouns=True,
+    #                            save_fig=saving_figs, save_name=save_name)
+    #
+    # ## Plot 3D Quiver Plot
+    # if seg_method == 'Even':
+    #     save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
+    #                                                                             seg_method, node_location_method)
+    # if seg_method == 'InferSent':
+    #     save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
+    #                                                                     InferSent_cos_sim_limit, node_location_method)
+    # if seg_method == 'SliceCast':
+    #     save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
+    #
+    # Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+    #                                       Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
@@ -1316,8 +1379,11 @@ if __name__=='__main__':
     Even_number_of_segments = 20                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
+    put_underscore_ngrams = True                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
+    shift_ngrams = True                             #shift embedded position of ngrams to be the position of the composite noun or pronoun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
+
     Plotting_Segmentation = True
     saving_figs = True
 
     Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
-       Plotting_Segmentation, saving_figs)
+       Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams)
