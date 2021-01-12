@@ -84,7 +84,8 @@ How the thickness of the line is assigned (todo):
     
     
 **Plotting of Trajectory Through 3D Topic Space**
-20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition. 
+
+20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition 
 <img src = "Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" width ="400" />
 
 # Code Usage 
