@@ -32,8 +32,8 @@ Steps taken so far...
 ## Useful Links
 Embedding techniques used:
 * Sentence embeddings with [InferSent](https://github.com/facebookresearch/InferSent) developed by Facebook Research for utterance-level analysis, from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data](https://arxiv.org/abs/1705.02364). 
-* Word embeddings with [Word2Vec](https://arxiv.org/abs/1301.3781) for EDU-level analysis. Using [Google's pretrained Word2Vec model](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/)
-* Word embeddings with [FastText](https://github.com/facebookresearch/fastText) based on the paper [Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606) for EDU-level analysis. Using [cc.en.300.bin](fhttps://fasttext.cc/docs/en/crawl-vectors.html).
+* Word embeddings with [Word2Vec](https://arxiv.org/abs/1301.3781) for EDU-level analysis, uing [this](https://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/) Word2Vec model pretrianed by Google.
+* Word embeddings with [FastText](https://github.com/facebookresearch/fastText) based on the paper [Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606) for EDU-level analysis, using the [cc.en.300.bin](fhttps://fasttext.cc/docs/en/crawl-vectors.html) model.
 
 Segmentation methods used: 
 * [SliceCast](https://github.com/bmmidei/SliceCast) from the paper [Neural Text Segmentation on Podcast Transcripts](https://github.com/bmmidei/SliceCast/blob/master/Neural_Text_Segmentation_on_Podcast_Transcripts.pdf)
