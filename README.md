@@ -43,7 +43,7 @@ Segmentation methods used:
 # Discussion Trees: Visualising Conversation Structure and Topic Evolution
 This part of the project investigates how one can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will act as a visual snapshot of the conversation, providing a viewer with insight into the extent to which different topics were discussed. The goal is to make key themes and points discussed immediately accessible, highlighting which discussion points need to be built out and which have yet to be explored all at just a glance.
 
-Questions to answer
+Questions to answer:
 - Which key topics were revisited during the conversation?
 - What was the variation in Dialog Act usage over the course of the conversation (segment-wise), and what does this tell us about the nature/ flow of the conversation? 
 - How do we quantify the efficiency of a conversation? (Mostly relevant when analysing business meeting transcripts)
@@ -54,8 +54,9 @@ Questions to answer
 
 How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
 - Average of all the word-vectors of the keywords present in the given segment
-- The word-vector of only the most frequent keyword
+- The word-vector of only the most frequent keyword from the segment
 - Average of word-vectors corresponding to the three most frequently ocurring keywords in the given segment
+
 How the thickness of the line is assigned (todo):
 - Dialog acts? Representation of speaker uncertainty? 
 
