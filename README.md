@@ -36,9 +36,8 @@ Embedding techniques used:
 * Word embeddings with [FastText](https://github.com/facebookresearch/fastText) based on the paper [Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606) for EDU-level analysis. Using [cc.en.300.bin](fhttps://fasttext.cc/docs/en/crawl-vectors.html).
 
 Segmentation methods used: 
-* Even Segments 
 * [SliceCast](https://github.com/bmmidei/SliceCast) from the paper [Neural Text Segmentation on Podcast Transcripts](https://github.com/bmmidei/SliceCast/blob/master/Neural_Text_Segmentation_on_Podcast_Transcripts.pdf)
-* [Infersent](https://github.com/facebookresearch/InferSent) from the paper [Supervised Learning of Universal Sentence Representations from Natural Language Inference Data](https://arxiv.org/abs/1705.02364),  paired with a variable cosine similarity cutoff.
+* [Infersent](https://github.com/facebookresearch/InferSent) sentence embeddings paired with a variable cosine similarity cutoff. Graphical method inspired by paper [Minimum_Cut_Model_for_Spoken_Lecture_Segmentation](https://www.researchgate.net/publication/220873934_Minimum_Cut_Model_for_Spoken_Lecture_Segmentation) 
 
 
 # Discussion Trees: Visualising Conversation Structure and Topic Evolution
