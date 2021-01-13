@@ -55,6 +55,43 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 ## Functions for pre-processing...
+def Process_Transcript(text, names, Info=False):
+    """
+    Function to remove names of speakers / times of Utterances from transcript, returning all spoken utterances as a
+    single string.
+    """
+    if Info:
+        print('Text format before preprocessing:\n', text[:300])
+
+    # Remove speaker names
+    for name in names:
+        text = re.sub(name, "", text)
+    # Get rid of the time marks
+    content_1 = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", text)  # \w+\s\w+;
+    # Strip new-lines
+    content_2 = re.sub('\n', " ", content_1)
+    # Strip white spaces
+    content_2.strip()
+
+    if Info:
+        print('\nText format after preprocessing:\n', content_2)
+
+    return content_2
+
+
+def Extract_Names(transcript_name):
+    """
+    Function to extract the names of the speakers given the transcript name.
+    Only works for Joe Rogan transcripts so far.
+    """
+    upper_names = []
+    for i in transcript_name.split("_"):
+        upper_names.append(i.title())
+    first_name = " ".join(upper_names[:2])
+    second_name = " ".join(upper_names[2:])
+
+    return [first_name, second_name]
+
 def Preprocess_Content(content):
     """
     Function to perform Lemmatization of the whole transcript when it is first imported.
@@ -65,38 +102,6 @@ def Preprocess_Content(content):
     content_lemma = re.sub(r'-PRON-', "", content_lemma)
 
     return content_lemma
-
-def reformat_sgcw_remove_all(text):
-    """
-    Takes the Joe Rogan podcast transcript (which I already slightly pre-processed
-    a while back) and turns it into a single long string of text without speakers
-    or times
-
-    use: # Paths
-    path_shorter = Path('./SGCW/shorter_formatted.txt')
-    path_shorter_and_formatted = Path('./SGCW/shorter_formatted_plain.txt')
-
-    # Reformat the (shortened) Joe Rogan transcript to be consistent w SliceCast podcasts
-    with open(path_shorter) as f_shorter:
-        content = f_shorter.read()
-    better_format_text = reformat_sgcw_remove_all(content)
-
-    # Save shortened + formatted version of the Joe Rogan transcript
-    form_shorter_doc = open(path_shorter_and_formatted, 'w')
-    form_shorter_doc.write(better_format_text)
-    form_shorter_doc.close()
-    """
-
-    print('Text format before preprocessing:\n', text[:300])
-
-    # Strip all characters but letters and whitespace inside the speech
-    content_1 = re.sub('\w+\s\w+;[0-9]{2}:[0-9]{2};', "", text)
-    # Strip new-lines
-    content_2 = re.sub('\n', " ", content_1)
-
-    print('\nText format after preprocessing:\n', content_2)
-
-    return content_2
 
 def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
     """
@@ -625,7 +630,7 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
     return first_sent_idxs_list
 
 
-def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, save_name='segments_info_df', Info=False):
+def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, transcript_name, save_name='segments_info_df', Info=False):
     """
     Function to perform segment-wise keyword analysis.
     Collects information about they keywords contained in each segment of the transcript.
@@ -728,7 +733,7 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
 
     # Convert dictionary to dataframe
     segments_info_df = pd.DataFrame({k: pd.Series(l) for k, l in segments_dict.items()})
-    segments_info_df.to_hdf('Saved_dfs/{}.h5'.format(save_name), key='df', mode='w')
+    segments_info_df.to_hdf('Saved_dfs/{0}/{1}.h5'.format(transcript_name, save_name), key='df', mode='w')
     if Info:
         print('-Created segments_info_df. Preview: ')
         print(segments_info_df.head().to_string())
@@ -1003,7 +1008,7 @@ def Plot_Wordcloud(content_sentences, save=False):
         fig.savefig("Saved_Images/WordCloud.png", dpi=600)
     return
 
-def Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=False, save_fig=False):
+def Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shifted_ngrams=False, save_fig=False):
     """
     Plots the layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
     all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
@@ -1032,15 +1037,15 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=False, 
     embedding_method = embedding_method.title()
     plt.title('{0} Keywords Embedding'.format(embedding_method))
     if save_fig and not shift_ngrams:
-        plt.savefig("Saved_Images/{}_WordEmbedding.png".format(embedding_method), dpi=600)
+        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding.png".format(transcript_name, embedding_method), dpi=600)
     if save_fig and shift_ngrams:
-        plt.savefig("Saved_Images/{}_WordEmbedding_ShiftedNgrams.png".format(embedding_method), dpi=600)
+        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding_ShiftedNgrams.png".format(transcript_name, embedding_method), dpi=600)
     plt.show()
 
     return
 
 
-def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Position='total_average', save_fig=False):
+def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_name, Node_Position='total_average', save_fig=False):
     """
     Plots the 2D word embedding space with a Quiver arrow following the direction of the topics discussed in each
     segment of the transcript.
@@ -1092,11 +1097,11 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, Node_Positi
     plt.legend()
     plt.title(save_name)
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
+        plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
     plt.show()
     return
 
-def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, Node_Position='total_average',
+def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_name, save_name, Node_Position='total_average',
                                only_nouns=True, save_fig=False):
     """
     Plots BOTH a background of keywords + the 2D quiver arrow following the direction of the topics discussed in each
@@ -1169,7 +1174,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, save_name, 
     plt.title(save_name)
     plt.legend()
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
+        plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
     plt.show()
 
 class Arrow3D(FancyArrowPatch):
@@ -1183,8 +1188,8 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
-def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, Node_Position='total_average',
-                                            save_fig=False):
+def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, transcript_name,
+                                          Node_Position='total_average', save_fig=False):
     """
     Note updated yet.
     Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
@@ -1264,23 +1269,35 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
         line.set_visible(False)
 
     if save_fig:
-        plt.savefig("Saved_Images/{}.png".format(save_name), dpi=600)
+        plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
     plt.show()
     return
 
 ## The main function putting it all together
 
-def Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
-       Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams):
+def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+       InferSent_cos_sim_limit, Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams):
     """
     Mother Function.
+    names = ['Joe Rogan', 'Jack Dorsey'] or names = ['Joe Rogan', 'Elon Musk']
     """
+    transcript_name = Path(path_to_transcript).stem
+    print('Transcript: ', transcript_name)
+
+    names = Extract_Names(transcript_name)
+    print('Names of speakers: ', names)
+
     ## Load + Pre-process Transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
-        content = Preprocess_Content(content)
+        content_onestring = Process_Transcript(content, names)
+        content = Preprocess_Content(content_onestring)
         content_sentences = sent_tokenize(content)
 
+    if put_underscore_ngrams:
+        und = 'underscore'
+    else:
+        und = 'nounderscore'
 
     ## Segmentation
     first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
@@ -1289,14 +1306,10 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
                                                save_fig=saving_figs)
 
     ## Keyword Extraction
-    # Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
-    #                            shift_ngrams=shift_ngrams, Info=True)
+    if not use_saved_dfs:
+        Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
+                                    shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
-    
-    if put_underscore_ngrams:
-        und = 'underscore'
-    else:
-        und = 'nounderscore'
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_{}_df.h5'.format(und, embedding_method), key='df')
 
     ## Segment-Wise Information Extraction
@@ -1308,13 +1321,14 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
         save_name = 'SliceCast_segments_info_df'
 
     # Create dataframe with the information about the segments
-    # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
-    #                                      save_name=save_name, Info=True)
+    # if not use_saved_dfs:
+    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, transcript_name,
+                                            save_name=save_name, Info=True)
     # OR just load the dataframe
-    segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
+    segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(transcript_name, save_name), key='df')
 
     # ## Plot Word Embedding
-    Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
+    Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
 
     ## Plot Quiver Plot
@@ -1327,8 +1341,8 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-                                        save_name=save_name)
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=transcript_name,
+                                        Node_Position=node_location_method, save_name=save_name)
 
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
@@ -1340,9 +1354,8 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-                               only_nouns=True,
-                               save_fig=saving_figs, save_name=save_name)
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_name, save_name=save_name,
+                               Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs)
 
     ## Plot 3D Quiver Plot
     if seg_method == 'Even':
@@ -1354,20 +1367,20 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, transcript_name,
                                           Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
 if __name__=='__main__':
-    path_to_transcript = Path('data/shorter_formatted_plain_labelled.txt')
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt')
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 100                       # for when seg_method = 'Even'
+    Even_number_of_segments = 20                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
@@ -1376,5 +1389,7 @@ if __name__=='__main__':
     Plotting_Segmentation = True
     saving_figs = True
 
-    Go(path_to_transcript, embedding_method, seg_method, node_location_method, Even_number_of_segments, InferSent_cos_sim_limit,
-       Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams)
+    use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
+
+    Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+       InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams)
