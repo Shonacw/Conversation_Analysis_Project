@@ -243,7 +243,7 @@ def Extract_Nouns(content_sentences, Info=True):
     all_pairs = [(token.text, token.pos_) for token in tokens]      # if interested later
     only_nouns = [token.text for token in tokens if token.pos_ in ['NOUN', 'PROPN']]
 
-    my_toremove_list = ['use', 'react', 'reply', 'emerge', 'roll', 'thing', 'way', 'lot', 'super']
+    my_toremove_list = ['use', 'react', 'reply', 'emerge', 'roll', 'thing', 'way', 'lot', 'super', 'lay', 'part']
     nouns_to_plot = [word for word in only_nouns if word not in my_toremove_list]
 
     if Info:
@@ -673,7 +673,8 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
     segments_dict = {'first_sent_numbers': [], 'length_of_segment': [], 'keyword_list': [], 'keyword_counts': [],
                      'total_average_keywords_wordvec': [],
                      'top_count_keyword': [], 'top_count_wordvec': [],
-                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': []}
+                     'top_3_counts_keywords': [], 'top_3_counts_wordvec': [],
+                     'noun_list' : [], 'noun_counts' : [], 'top_3_counts_nouns':[], 'top_3_counts_nounwordvec':[]}
 
     old_idx = 0
     for idx in first_sent_idxs_list:
@@ -688,6 +689,12 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
         keywords_list, keywords_count = list(keywords_dict.keys()), list(keywords_dict.values())
         segments_dict['keyword_list'].append(keywords_list)
         segments_dict['keyword_counts'].append(keywords_count)
+
+        # Find noun keywords
+        nouns_dict = Find_Keywords_in_Segment(sentences_in_segment, keyword_vectors_df['noun_keyw'].values, Info=False)
+        nouns_list, nouns_count = list(nouns_dict.keys()), list(nouns_dict.values())
+        segments_dict['noun_list'].append(nouns_list)
+        segments_dict['noun_counts'].append(nouns_count)
 
         # Collect the Word embeddings for the keywords contained in this segment
         df = keyword_vectors_df
@@ -727,6 +734,30 @@ def get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_d
         else:
             segments_dict['top_3_counts_keywords'].append(['nan', 'nan', 'nan'])
             segments_dict['top_3_counts_wordvec'].append('nan')
+
+        # Now do the same but specifically for nouns
+        Xvecs, Yvecs = [], []
+        for noun in nouns_list:
+            # get index for row and column
+            row, col_name = getIndexes(df, noun)[0]
+            col_idx = [idx for idx, val in enumerate(df.columns)][0]
+            # get the average vector position  #note !need to make sure columns are in right order
+            Xvecs.append(df.iloc[row, col_idx + 1])
+            Yvecs.append(df.iloc[row, col_idx + 2])
+
+        # Check that there are at least 3 keywords for the section
+        Xvecs, Yvecs = np.array(Xvecs), np.array(Yvecs)
+        nouns_list = np.array(nouns_list)
+        if len(nouns_list) >= 3:
+            idxs_of_top_3_keywords = sorted(range(len(nouns_count)), key=lambda i: nouns_count[i])[-3:]
+            top_3_keywords = nouns_list[idxs_of_top_3_keywords]
+            top_3_keywords_X, top_3_keywords_Y = Xvecs[idxs_of_top_3_keywords], Yvecs[idxs_of_top_3_keywords]
+            segments_dict['top_3_counts_nouns'].append(top_3_keywords)
+            segments_dict['top_3_counts_nounwordvec'].append([np.mean(top_3_keywords_X), np.mean(top_3_keywords_Y)])
+        else:
+            segments_dict['top_3_counts_nouns'].append(['nan', 'nan', 'nan'])
+            segments_dict['top_3_counts_nounwordvec'].append('nan')
+
 
         old_idx = idx
 
@@ -1310,7 +1341,8 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
         Extract_Keyword_Embeddings(content, content_sentences, embedding_method, transcript_name,
                                    put_underscore_ngrams=put_underscore_ngrams, shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_{}_df.h5'.format(und, embedding_method), key='df')
+    keyword_vectors_df = pd.read_hdf('Saved_dfs/{0}/keyword_vectors_{1}_{2}_df.h5'.format(transcript_name, und,
+                                                                                          embedding_method), key='df')
 
     ## Segment-Wise Information Extraction
     if seg_method == 'Even':
@@ -1328,8 +1360,8 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
     segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(transcript_name, save_name), key='df')
 
     # Topical Analysis section
-    Analysis.Analyse(transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-            InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
+    # Analysis.Analyse(transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+    #         InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
 
     if just_analysis:               # not interested in plotting etc
         return
@@ -1381,23 +1413,23 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
 
 ## CODE...
 if __name__=='__main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt')
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt'
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 100                       # for when seg_method = 'Even'
+    Even_number_of_segments = 200                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
     shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
-    saving_figs = True
+    saving_figs = False
 
-    use_saved_dfs = False                             # i.e. don't extract keywords/ their embeddings, just used saved df
+    use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
     just_analysis = False
 
