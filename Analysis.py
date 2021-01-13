@@ -24,15 +24,17 @@ def Analyse():
         show which parts of the convo they're brought up in most.
 
     Question 3:
-        Does the conversation jump around or do topics slowly change? Measure of adjacent keyword similarity
-        or measure of similarity between lists of keywords in consecutive sections
-        or Measure of how many keywords are shared between lists (word doc) or maybe for every key noun in the lists
-        generate 3 nearest words (in general, in english vocab, from embedding) and then add them to the list (and do
-        same for the list of keywords corresponding to the next section) and then measure the count of shared words on
-        THESE.
-        that way would hopefully see better correlation when the same keywords are NOT explicitly used
-        i.e. if section one keywords were ['child', 'person', 'travel', 'craziness', 'kid']
-        and then [''appreciate', 'baby', 'form', 'adult'] ... even though they dont share words, the words are similar!
+        Does the conversation jump around or do topics slowly change?
+            Measure of adjacent keyword similarity
+            or measure of similarity between lists of keywords in consecutive sections
+            OR Measure of how many keywords are shared between lists of section keywords
+
+        ORRRR maybe for every key noun in the lists I should generate 3 nearest words (in general, in english vocab,
+        from word embedding dictionary) and then add them on to the list (and do
+        same for the list of keywords corresponding to the next section) and then measure the count of shared words in
+        THESE expanded lists... that way, would hopefully see better correlation when the same keywords are NOT
+        explicitly used i.e. if section one keywords were ['child', 'person', 'travel', 'craziness', 'kid']
+        and then ['appreciate', 'baby', 'form', 'adult'] ... even though they dont share words, the lists are similar!
         so hopefully if i generated the 3 nearest words I'd get 'child' in both!
 
     Question 4:
