@@ -1361,10 +1361,19 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
 
     # Create dataframe with the information about the segments
     # if not use_saved_dfs:
-    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, folder_name,
+    #if use_combined_embed then want to create segments in one transcript, but gather keyword analysis using embeddings from COMBINED
+    #SO want to save this info in a subfolder in combined podcasts
+
+    if use_combined_embed:
+        sub_folder_name = folder_name + '/' + transcript_name
+    else:
+        sub_folder_name = transcript_name
+
+    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
                                             save_name=save_name, Info=True)
+
     # OR just load the dataframe
-    segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(folder_name, save_name), key='df')
+    segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
 
     # Topical Analysis section
     # Analysis.Analyse(transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
@@ -1386,7 +1395,7 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=folder_name,
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=sub_folder_name,
                                         Node_Position=node_location_method, save_name=save_name)
 
     ## Plot Quiver + Embedding
@@ -1399,7 +1408,7 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, folder_name, save_name=save_name,
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, sub_folder_name, save_name=save_name,
                                Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs)
 
     ## Plot 3D Quiver Plot
@@ -1412,7 +1421,7 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, folder_name,
+    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, sub_folder_name,
                                           Node_Position='total_average', save_fig=True)
 
     return
@@ -1420,7 +1429,7 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
 
 ## CODE...
 if __name__=='__main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt'
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
@@ -1430,11 +1439,11 @@ if __name__=='__main__':
     Even_number_of_segments = 200                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
-    put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
+    put_underscore_ngrams = True                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
     shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
-    saving_figs = False
+    saving_figs = True
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
@@ -1445,39 +1454,3 @@ if __name__=='__main__':
     Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
        just_analysis)
-
-    # # Both-Podcasts Analysis
-    # paths_to_transcripts = [Path('data/shorter_formatted_plain_labelled.txt'), Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt')]
-    #
-    # content_both = ''
-    # content_sentences_both = []
-    # for path_to_transcript in paths_to_transcripts:
-    #     # Extract name of transcript under investigation
-    #     transcript_name = Path(path_to_transcript).stem
-    #     print('Transcript: ', transcript_name)
-    #
-    #     # Extract names of speakers featured in transcript
-    #     names = Extract_Names(transcript_name)
-    #
-    #     ## Load + Pre-process Transcript
-    #     with open(path_to_transcript, 'r') as f:
-    #         content = f.read()
-    #         content_onestring = Process_Transcript(content, names)
-    #         content = Preprocess_Content(content_onestring)
-    #         content_sentences = sent_tokenize(content)
-    #
-    #     content_sentences_both += content_sentences
-    #     content_both += ' '
-    #     content_both += content
-    #
-    # Extract_Keyword_Embeddings(content_both, content_sentences_both, embedding_method, "combined_podcast",
-    #                            put_underscore_ngrams=True, shift_ngrams=True, return_all=False, Info=False)
-    # transcript_name = 'combined_podcast'
-    # keyword_vectors_df = pd.read_hdf('Saved_dfs/{0}/keyword_vectors_{1}_{2}_df.h5'.format(transcript_name, 'underscore',
-    #                                                                                       embedding_method), key='df')
-    #
-    # Plot_Embeddings(keyword_vectors_df, embedding_method, 'combined_podcast', shifted_ngrams=shift_ngrams,
-    #                 save_fig=saving_figs)
-    #
-    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_name, save_name=save_name,
-    #                            Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs)
