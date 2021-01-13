@@ -1289,9 +1289,10 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
                                                save_fig=saving_figs)
 
     ## Keyword Extraction
-    Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
-                               shift_ngrams=shift_ngrams, Info=True)
+    # Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
+    #                            shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
+    
     if put_underscore_ngrams:
         und = 'underscore'
     else:
@@ -1309,7 +1310,6 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     # Create dataframe with the information about the segments
     # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df,
     #                                      save_name=save_name, Info=True)
-
     # OR just load the dataframe
     segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
 
@@ -1317,45 +1317,45 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
 
-    # ## Plot Quiver Plot
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                             seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
-    #                                                                                   node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
-    #                                     save_name=save_name)
-    #
-    # ## Plot Quiver + Embedding
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                                 seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
-    #                                                                     InferSent_cos_sim_limit, node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
-    #                            only_nouns=True,
-    #                            save_fig=saving_figs, save_name=save_name)
-    #
-    # ## Plot 3D Quiver Plot
-    # if seg_method == 'Even':
-    #     save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
-    #                                                                             seg_method, node_location_method)
-    # if seg_method == 'InferSent':
-    #     save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
-    #                                                                     InferSent_cos_sim_limit, node_location_method)
-    # if seg_method == 'SliceCast':
-    #     save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
-    #
-    # Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
-    #                                       Node_Position='total_average', save_fig=True)
+    ## Plot Quiver Plot
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_Plot_With_{1}_NodePosition'.format(InferSent_cos_sim_limit,
+                                                                                      node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, Node_Position=node_location_method,
+                                        save_name=save_name)
+
+    ## Plot Quiver + Embedding
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                    seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_Quiver_and_Embeddings_Plot_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, Node_Position=node_location_method,
+                               only_nouns=True,
+                               save_fig=saving_figs, save_name=save_name)
+
+    ## Plot 3D Quiver Plot
+    if seg_method == 'Even':
+        save_name = '{0}_{1}_Segments_3D_Quiver_With_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    if seg_method == 'InferSent':
+        save_name = 'Infersent_{0}_Segments_3D_Quiver_With_{1}_NodePosition'.format(
+                                                                        InferSent_cos_sim_limit, node_location_method)
+    if seg_method == 'SliceCast':
+        save_name = 'SliceCast_Segments_3D_Quiver_With_{0}_NodePosition'.format(node_location_method)
+
+    Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name,
+                                          Node_Position='total_average', save_fig=True)
 
 
 ## CODE...
@@ -1367,7 +1367,7 @@ if __name__=='__main__':
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    Even_number_of_segments = 100                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
