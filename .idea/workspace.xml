@@ -25,10 +25,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Analysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/keyword_vectors_nounderscore_fasttext_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/keyword_vectors_nounderscore_fasttext_df.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FastText.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msci-project/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/msci-project/src/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,14 +235,7 @@
       <workItem from="1609019558656" duration="39000" />
       <workItem from="1609019654916" duration="19071000" />
       <workItem from="1609675898597" duration="777000" />
-      <workItem from="1610106788839" duration="67286000" />
-    </task>
-    <task id="LOCAL-00008" summary="-">
-      <created>1609071336693</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1609071336693</updated>
+      <workItem from="1610106788839" duration="68347000" />
     </task>
     <task id="LOCAL-00009" summary="Added notes on tasks">
       <created>1609072152165</created>
@@ -580,7 +573,14 @@
       <option name="project" value="LOCAL" />
       <updated>1610498353553</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="Now able to run on any given Joe Rogan - style podcast transcript!">
+      <created>1610501286735</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1610501286735</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -625,7 +625,8 @@
     <MESSAGE value="-" />
     <MESSAGE value="adding shift of ngrams" />
     <MESSAGE value="Added optional shift of ngram location" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added optional shift of ngram location" />
+    <MESSAGE value="Now able to run on any given Joe Rogan - style podcast transcript!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Now able to run on any given Joe Rogan - style podcast transcript!" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -636,10 +637,10 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1610498352023">
+    <state x="163" y="27" key="CommitChangelistDialog2" timestamp="1610501286176">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610498352023" />
+    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610501286176" />
     <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1610388613944" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1610211683036">
       <screen x="0" y="23" width="1440" height="820" />
@@ -685,10 +686,10 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1610275127471" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1610498354904">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1610501289614">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610498354904" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610501289614" />
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1610388615170" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />

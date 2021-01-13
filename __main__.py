@@ -50,7 +50,7 @@ from mpl_toolkits.mplot3d import proj3d
 from InferSent.models import InferSent
 import importlib
 topics = importlib.import_module("msci-project.src.topics")
-
+Analysis = importlib.import_module("Analysis")
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -1276,7 +1276,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 ## The main function putting it all together
 
 def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-       InferSent_cos_sim_limit, Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams):
+       InferSent_cos_sim_limit, Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams, just_analysis):
     """
     Mother Function.
     names = ['Joe Rogan', 'Jack Dorsey'] or names = ['Joe Rogan', 'Elon Musk']
@@ -1327,9 +1327,15 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
     # OR just load the dataframe
     segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(transcript_name, save_name), key='df')
 
-    # ## Plot Word Embedding
-    Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
+    # Topical Analysis section
+    Analysis.Analyse(transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+            InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
 
+    if just_analysis:               # not interested in plotting etc
+        return
+
+    ## Plot Word Embedding
+    Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
     ## Plot Quiver Plot
     if seg_method == 'Even':
@@ -1370,6 +1376,8 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
     Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, save_name, transcript_name,
                                           Node_Position='total_average', save_fig=True)
 
+    return
+
 
 ## CODE...
 if __name__=='__main__':
@@ -1392,4 +1400,5 @@ if __name__=='__main__':
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
     Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-       InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams)
+       InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
+       just_analysis)
