@@ -351,20 +351,19 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
 
         if embedding_method == 'fasttext':
             embedding_dict = {}
-            print(word)
-            if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word): #i.e. only perform this if the word is an ngram
-                    print('in shift_ngrams')
-                    word_to_use = get_word_from_ngram(word, nlp)
-                    if word_to_use == 'nan':# deal with un-useful keywords
+            for word in words_to_extract:
+                if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word): #i.e. only perform this if the word is an ngram
+                        word_to_use = get_word_from_ngram(word, nlp)
+                        if word_to_use == 'nan':# deal with un-useful keywords
+                            words_unplotted.append(word)
+                            continue
+                        else:
+                            embedding_dict[word] = fasttext_model.get_word_vector(word_to_use)
+                else:
+                    try:
+                        embedding_dict[word] = fasttext_model.get_word_vector(word)
+                    except:
                         words_unplotted.append(word)
-                        continue
-                    else:
-                        embedding_dict[word] = fasttext_model.get_word_vector(word_to_use)
-            else:
-                try:
-                    embedding_dict[word] = fasttext_model.get_word_vector(word)
-                except:
-                    words_unplotted.append(word)
 
             words, vectors = list(embedding_dict.keys()), list(embedding_dict.values())
 
@@ -498,10 +497,10 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
     if not put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_{0}_df.h5'.format(embedding_method), key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
     if put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_underscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
 
     if Info:
         print('-Created and saved keyword_vectors_df dataframe.')
@@ -510,39 +509,26 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
 def get_word_from_ngram(ngram, nlp):
     """
-    Function to relocate n_grams to coordinates by the noun they contain (if any)
-
+    Function to relocate n_grams to coordinates by the noun they contain.
     """
     # loop through pke keywords and look at the ngrams
     if '_' in ngram: #if joined by an undrscore replace it with a space so can use word_tokenize in next part...
         ngram = ngram.split("_")
         ngram = ' '.join(ngram)
 
-    print(ngram)
     pos_list = [word.pos_ for word in nlp(str(ngram))] # if word.pos_ in ['NOUN']]
-    print('pos_list', pos_list)
     if len(pos_list) > 1:
         counter = Counter(pos_list)
         words = word_tokenize(ngram)
         if 'NOUN' in counter:
             word_to_use = words[pos_list.index('NOUN')] # TO DO deal with case of two nouns
-            print('noun part: ', word_to_use)
 
         elif 'PROPN' in counter:
             word_to_use = words[pos_list.index('PROPN')]
-            print('propn part: ', word_to_use)
         else:
-            return 'nan' # if the phrase doesn't contain a noun OR pronoun, dont want it as a keyphrase
+            return 'nan'          # if the phrase doesn't contain a noun dont want it as a keyphrase at all
 
     return word_to_use
-
-
-            #if count of NOUN is none but there is 1 PROPN, use that one
-            #PROPN NOUN
-
-        # for i in word.split("_"):
-        #     new_word.append(i.title())
-        # capitalised_phrase = "_".join(new_word)
 
 
 def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
@@ -1017,14 +1003,13 @@ def Plot_Wordcloud(content_sentences, save=False):
         fig.savefig("Saved_Images/WordCloud.png", dpi=600)
     return
 
-def Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False, Info=False):
+def Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=False, save_fig=False):
     """
     Plots the layout of all the keywords from the podcast. Keywords include those extracted using TopicRank,
     all potentially-interesting nouns, and all extracted bigrams and trigrams. Includes colour coordination with respect
     to the type of keywords.
     """
-    if Info:
-        print('\n-Plotting Word Embedding for all Keywords...')
+    print('\n-Plotting Word Embedding for all Keywords...')
     keyword_types = ['noun', 'pke', 'bigram', 'trigram']
     colours = ['blue', 'green', 'orange', 'pink']
     labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
@@ -1046,8 +1031,10 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=False, Info=F
     plt.legend()
     embedding_method = embedding_method.title()
     plt.title('{0} Keywords Embedding'.format(embedding_method))
-    if save_fig:
+    if save_fig and not shift_ngrams:
         plt.savefig("Saved_Images/{}_WordEmbedding.png".format(embedding_method), dpi=600)
+    if save_fig and shift_ngrams:
+        plt.savefig("Saved_Images/{}_WordEmbedding_ShiftedNgrams.png".format(embedding_method), dpi=600)
     plt.show()
 
     return
@@ -1305,7 +1292,11 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
                                shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_df.h5'.format(embedding_method), key='df')
+    if put_underscore_ngrams:
+        und = 'underscore'
+    else:
+        und = 'nounderscore'
+    keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_{}_df.h5'.format(und, embedding_method), key='df')
 
     ## Segment-Wise Information Extraction
     if seg_method == 'Even':
@@ -1323,7 +1314,7 @@ def Go(path_to_transcript, embedding_method, seg_method, node_location_method, E
     segments_info_df = pd.read_hdf('Saved_dfs/{}.h5'.format(save_name), key='df')
 
     # ## Plot Word Embedding
-    Plot_Embeddings(keyword_vectors_df, embedding_method, save_fig=saving_figs)
+    Plot_Embeddings(keyword_vectors_df, embedding_method, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
 
     # ## Plot Quiver Plot
@@ -1379,8 +1370,8 @@ if __name__=='__main__':
     Even_number_of_segments = 20                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
-    put_underscore_ngrams = True                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
-    shift_ngrams = True                             #shift embedded position of ngrams to be the position of the composite noun or pronoun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
+    put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
+    shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
     saving_figs = True
