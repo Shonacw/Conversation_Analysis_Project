@@ -108,4 +108,4 @@ in each segment as the node location.
 to belong to the same section (and hence a new-section tag will be placed between them). Use when for when seg_method = 'InferSent'.
 
 - *Plotting_Segmentation*: True or False, whether you want to plot visualisation of the segmentation task.
-- *saving_figs*: True or False, whether you want to save figures produced on this run.
+- *saving_figs*: True or False, whether you want to save figures produced on this  run.
