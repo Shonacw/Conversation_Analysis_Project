@@ -220,84 +220,35 @@ def PKE_Keywords(content, number=30, put_underscore=True, Info=False):
 
     return top_keywords_final
 
-def Extract_Nouns(content_sentences, Info=False):
+def Extract_Nouns(content_sentences, Info=True):
     """
     Function to extract all potentially-interesting nouns from a given document. Used when plotting word embedding.
-
-    TODO: Somehow improve this.. both nltk and spacy are picking up a load of verbs and POS-tagging them as NOUNS..
-        this becomes annoying later on when trying to decipher the topics of conversation: verbs do not add any insight!
 
     Okay so the issue is that the spacy.nlp is rightly labelling some words which I think of as verbs as 'PROPN's given
     their position in the original text... i.e. "meet" when its tagged from the original transcript is
     -> ...('nice', 'PROPN'), ('meet', 'PROPN'), ('yeah', 'INTJ')....
-    but then once it's tagged from a string of reduced number of words (i.e. the words before and after it don't lead
-    spacy to believe it's a 'PROPN' anymore.. then
-    ->
 
-    SO I will run the nlp() tagger TWICE and hope that I will have caught any uninteresting verbs which slipped through
-    the first tagging round, in the second tagging round.
-    okay that didnt work, things must still be in funky order - going to try SHUFFLE list of words
-    as nlp('meet') alone does say that it's a verb, but all cases of 'meet' in the transcript are labelled as PROPN s
+    -> nlp('meet') alone does say that it's a verb, but all cases of 'meet' in the transcript are labelled as PROPN.
 
+    SO I will run the nlp() tagger on each unique word in the transcript individually, i.e. assign the tag with no
+    understanding of word context. This catches out more verbs.
     """
     nlp = spacy.load("en_core_web_sm")              #en_core_web_sm   #en_core_web_lg
 
     sents_preprocessed = Preprocess_Sentences(content_sentences)
     sents_preprocessed_flat_onestring = " ".join(sents_preprocessed)
     words = word_tokenize(sents_preprocessed_flat_onestring)
-    print('len(words) before duplicates removed:', len(words))
-    words_without_duplicates = nouns_to_plot = list(dict.fromkeys(words))
-    print('len(words) after duplicates removed:', len(words_without_duplicates))
+    words_without_duplicates  = list(dict.fromkeys(words))          # remove duplicate words
     tokens = [nlp(word)[0] for word in words_without_duplicates]    # tag INDIVIDUALLY
     all_pairs = [(token.text, token.pos_) for token in tokens]      # if interested later
     only_nouns = [token.text for token in tokens if token.pos_ in ['NOUN', 'PROPN']]
-    print('only nouns: ', only_nouns)
-
-    # First round of tagging
-    # word_objects = [word for word in nlp(sents_preprocessed_flat_onestring)]
-    # all_pairs = [(word.text, word.pos_) for word in word_objects]
-    # only_nouns = [pair for pair in all_pairs if pair[1] in ['NOUN', 'PROPN']]
-    # print('only_nouns', only_nouns)
-    # random.shuffle(only_nouns)
-    # print('shuffled_onlynouns', only_nouns)
-    # combined_nouns = " ".join([pair[0] for pair in only_nouns])
-    #
-    # # Second round of tagging to catch-out verbs which first round passed as 'PROPN' due to nearby words
-    # word_objects_2 = [word for word in nlp(combined_nouns)]
-    # filtered_pairs = [[word.text, word.pos_] for word in word_objects_2]
-    # print('filtered_pairs', filtered_pairs)
-    # # ('dude', 'PROPN'), ('start', 'PROPN'), ('company', 'NOUN'), ('start', 'VERB'), ('twitter', 'PROPN')
-    # # so want to collect all verbs and then remove all instances of the word
-    # verbs_1 = [pair[0] for pair in filtered_pairs if pair[1] == 'VERB']
-    # print('length of verbs before double check', len(verbs_1))
-    # print('verbs before', verbs_1)
-    # verbs_2 = [verb for verb in verbs_1 if nlp(verb)[0].pos_ == 'VERB']
-    # print('verbs after', verbs_2)
-    # print('\n verbs KEPT', [word for word in verbs_1 if word not in verbs_2])
-    # print('length of verbs after double check', len(verbs_2))
-    # words_without_verbs = [pair for pair in filtered_pairs if pair[0] not in verbs_2]
-    # print('words_without_verbs', words_without_verbs)
-    #
-    #                  # and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
-    #                  #                                   'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
-    #                  #                                   'shouldnt']
-    #                  # and len(word.text) != 1]
-    #
-    # POSs = [word.pos_ for word in nlp(sents_preprocessed_flat_onestring)
-    #                  if word.pos_ in ['NOUN']
-    #                  and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
-    #                                                    'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
-    #                                                    'shouldnt']
-    #                  and len(word.text) != 1]
 
     my_toremove_list = ['use', 'react', 'reply', 'emerge', 'roll', 'thing', 'way', 'lot', 'super']
     nouns_to_plot = [word for word in only_nouns if word not in my_toremove_list]
 
     if Info:
-        print('number of nouns extracted with en_core_web_sm (before removing duplicates): ', len(nouns_to_plot))
-        # print('\nExtracted Nouns and POSs: ')
-        # for i, j in zip(words_to_plot, POSs):
-        #     print(i,j)
+        print('-Number of unique nouns extracted with en_core_web_sm: ', len(nouns_to_plot))
+        print('-nouns_to_plot', nouns_to_plot)
 
     return nouns_to_plot
 
