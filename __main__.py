@@ -38,6 +38,7 @@ import sys
 import unicodedata
 from collections import defaultdict
 from pprint import pprint
+import random
 
 import networkx as nx
 from wordcloud import WordCloud
@@ -225,29 +226,75 @@ def Extract_Nouns(content_sentences, Info=False):
 
     TODO: Somehow improve this.. both nltk and spacy are picking up a load of verbs and POS-tagging them as NOUNS..
         this becomes annoying later on when trying to decipher the topics of conversation: verbs do not add any insight!
+
+    Okay so the issue is that the spacy.nlp is rightly labelling some words which I think of as verbs as 'PROPN's given
+    their position in the original text... i.e. "meet" when its tagged from the original transcript is
+    -> ...('nice', 'PROPN'), ('meet', 'PROPN'), ('yeah', 'INTJ')....
+    but then once it's tagged from a string of reduced number of words (i.e. the words before and after it don't lead
+    spacy to believe it's a 'PROPN' anymore.. then
+    ->
+
+    SO I will run the nlp() tagger TWICE and hope that I will have caught any uninteresting verbs which slipped through
+    the first tagging round, in the second tagging round.
+    okay that didnt work, things must still be in funky order - going to try SHUFFLE list of words
+    as nlp('meet') alone does say that it's a verb, but all cases of 'meet' in the transcript are labelled as PROPN s
+
     """
     nlp = spacy.load("en_core_web_sm")              #en_core_web_sm   #en_core_web_lg
 
     sents_preprocessed = Preprocess_Sentences(content_sentences)
-    sents_preprocessed_flat_onestring = ' '.join(sents_preprocessed)
-    words_to_plot = [word.text for word in nlp(sents_preprocessed_flat_onestring)
-                     if word.pos_ in ['NOUN']
-                     and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
-                                                       'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
-                                                       'shouldnt']
-                     and len(word.text) != 1]
+    sents_preprocessed_flat_onestring = " ".join(sents_preprocessed)
+    words = word_tokenize(sents_preprocessed_flat_onestring)
+    print('len(words) before duplicates removed:', len(words))
+    words_without_duplicates = nouns_to_plot = list(dict.fromkeys(words))
+    print('len(words) after duplicates removed:', len(words_without_duplicates))
+    tokens = [nlp(word)[0] for word in words_without_duplicates]    # tag INDIVIDUALLY
+    all_pairs = [(token.text, token.pos_) for token in tokens]      # if interested later
+    only_nouns = [token.text for token in tokens if token.pos_ in ['NOUN', 'PROPN']]
+    print('only nouns: ', only_nouns)
 
-    POSs = [word.pos_ for word in nlp(sents_preprocessed_flat_onestring)
-                     if word.pos_ in ['NOUN']
-                     and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
-                                                       'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
-                                                       'shouldnt']
-                     and len(word.text) != 1]
+    # First round of tagging
+    # word_objects = [word for word in nlp(sents_preprocessed_flat_onestring)]
+    # all_pairs = [(word.text, word.pos_) for word in word_objects]
+    # only_nouns = [pair for pair in all_pairs if pair[1] in ['NOUN', 'PROPN']]
+    # print('only_nouns', only_nouns)
+    # random.shuffle(only_nouns)
+    # print('shuffled_onlynouns', only_nouns)
+    # combined_nouns = " ".join([pair[0] for pair in only_nouns])
+    #
+    # # Second round of tagging to catch-out verbs which first round passed as 'PROPN' due to nearby words
+    # word_objects_2 = [word for word in nlp(combined_nouns)]
+    # filtered_pairs = [[word.text, word.pos_] for word in word_objects_2]
+    # print('filtered_pairs', filtered_pairs)
+    # # ('dude', 'PROPN'), ('start', 'PROPN'), ('company', 'NOUN'), ('start', 'VERB'), ('twitter', 'PROPN')
+    # # so want to collect all verbs and then remove all instances of the word
+    # verbs_1 = [pair[0] for pair in filtered_pairs if pair[1] == 'VERB']
+    # print('length of verbs before double check', len(verbs_1))
+    # print('verbs before', verbs_1)
+    # verbs_2 = [verb for verb in verbs_1 if nlp(verb)[0].pos_ == 'VERB']
+    # print('verbs after', verbs_2)
+    # print('\n verbs KEPT', [word for word in verbs_1 if word not in verbs_2])
+    # print('length of verbs after double check', len(verbs_2))
+    # words_without_verbs = [pair for pair in filtered_pairs if pair[0] not in verbs_2]
+    # print('words_without_verbs', words_without_verbs)
+    #
+    #                  # and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+    #                  #                                   'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
+    #                  #                                   'shouldnt']
+    #                  # and len(word.text) != 1]
+    #
+    # POSs = [word.pos_ for word in nlp(sents_preprocessed_flat_onestring)
+    #                  if word.pos_ in ['NOUN']
+    #                  and word.text not in ['yeah', 'yes', 'oh', 'i', 'im', 'id', 'thats', 'shes', 'dont',
+    #                                                    'youre', 'theyll', 'youve', 'whats', 'doesnt', 'hes', 'whos',
+    #                                                    'shouldnt']
+    #                  and len(word.text) != 1]
 
-    nouns_to_plot = list(dict.fromkeys(words_to_plot))  # Remove duplicate words
+    my_toremove_list = ['use', 'react', 'reply', 'emerge', 'roll', 'thing', 'way', 'lot', 'super']
+    nouns_to_plot = [word for word in only_nouns if word not in my_toremove_list]
 
     if Info:
-        print('number of nouns extracted with en_core_web_sm (before removing duplicates): ', len(words_to_plot))
+        print('number of nouns extracted with en_core_web_sm (before removing duplicates): ', len(nouns_to_plot))
         # print('\nExtracted Nouns and POSs: ')
         # for i, j in zip(words_to_plot, POSs):
         #     print(i,j)
@@ -322,20 +369,9 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
     words, vectors, words_unplotted = [], [], []
     nlp = spacy.load("en_core_web_sm")  # doing this out here so don't need to keep reloading
 
-    for word in words_to_extract:
-        if "_" in word:                                                      # Note A
-            new_word = []
-            for i in word.split("_"):
-                new_word.append(i.title())
-            capitalised_phrase = "_".join(new_word)
-            possible_versions_of_word = [word, capitalised_phrase, word.upper()]
-        else:
-            possible_versions_of_word = [word, word.title(), word.upper()]  # Note B
-
-        if Info:
-            print('possible_versions_of_word: ', possible_versions_of_word)
-
-        if embedding_method == 'word2vec':
+    # Word2Vec
+    if embedding_method == 'word2vec':
+        for word in words_to_extract:
             if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word):
                 if len(word_tokenize(word)) > 1 or '_' in word:
                     word_to_use = get_word_from_ngram(word, nlp)
@@ -345,6 +381,18 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
                     words.append(word) # save original version of ngram string... but altered version of embedding
                     vectors.append(word2vec_embeddings_dict[word_to_use])
             else:
+                if "_" in word:  # Note A
+                    new_word = []
+                    for i in word.split("_"):
+                        new_word.append(i.title())
+                    capitalised_phrase = "_".join(new_word)
+                    possible_versions_of_word = [word, capitalised_phrase, word.upper()]
+                else:
+                    possible_versions_of_word = [word, word.title(), word.upper()]  # Note B
+
+                if Info:
+                    print('possible_versions_of_word: ', possible_versions_of_word)
+
                 boolean = [x in word2vec_embeddings_dict for x in possible_versions_of_word]
                 if any(boolean):
                     idx = int(list(np.where(boolean)[0])[0])                        # Note C
@@ -354,23 +402,24 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
                 else:
                     words_unplotted.append(word)
 
-        if embedding_method == 'fasttext':
-            embedding_dict = {}
-            for word in words_to_extract:
-                if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word): #i.e. only perform this if the word is an ngram
-                        word_to_use = get_word_from_ngram(word, nlp)
-                        if word_to_use == 'nan':# deal with un-useful keywords
-                            words_unplotted.append(word)
-                            continue
-                        else:
-                            embedding_dict[word] = fasttext_model.get_word_vector(word_to_use)
-                else:
-                    try:
-                        embedding_dict[word] = fasttext_model.get_word_vector(word)
-                    except:
+    # FastText
+    if embedding_method == 'fasttext':
+        embedding_dict = {}
+        for word in words_to_extract:
+            # for word in words_to_extract:
+            if shift_ngrams and (len(word_tokenize(word)) > 1 or '_' in word): #i.e. only perform this if the word is an ngram
+                    word_to_use = get_word_from_ngram(word, nlp)
+                    if word_to_use == 'nan':# deal with un-useful keywords
                         words_unplotted.append(word)
-
-            words, vectors = list(embedding_dict.keys()), list(embedding_dict.values())
+                        continue
+                    else:
+                        embedding_dict[word] = fasttext_model.get_word_vector(word_to_use)
+            else:
+                try:
+                    embedding_dict[word] = fasttext_model.get_word_vector(word)
+                except:
+                    words_unplotted.append(word)
+        words, vectors = list(embedding_dict.keys()), list(embedding_dict.values())
 
     #if Info:
     #print('Number of Words from Document without an embedding: ', len(words_unplotted))
@@ -378,7 +427,7 @@ def Extract_Embeddings_For_Keywords(words_to_extract, word2vec_embeddings_dict, 
 
     return words, vectors, words_unplotted
 
-def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=True,
+def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, transcript_name, put_underscore_ngrams=True,
                                shift_ngrams=False, return_all=False, Info=False):
     """
     Function to extract all types of keywords from transcript + obtain their word embeddings. Only needs to be run once
@@ -448,11 +497,8 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
         # Extract words to plot
         nouns_set = Extract_Embeddings_For_Keywords(nouns_list, None, ft, embedding_method='fasttext')
-        print('=================pke_set')
         pke_set = Extract_Embeddings_For_Keywords(pke_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
-        print('=================bigram_set')
         bigram_set = Extract_Embeddings_For_Keywords(bigrams_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
-        print('================trigram_set')
         trigram_set = Extract_Embeddings_For_Keywords(trigrams_list, None, ft, embedding_method='fasttext', shift_ngrams=shift_ngrams)
 
     if Info:
@@ -502,10 +548,12 @@ def Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put
 
     if not put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_nounderscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/{0}/keyword_vectors_nounderscore_{1}_df.h5'.format(transcript_name,
+                                                                                                embedding_method), key='df', mode='w')
     if put_underscore_ngrams:
         # Store keywords + embeddings in a hd5 file for easy accessing in future tasks.
-        keyword_vectors_df.to_hdf('Saved_dfs/keyword_vectors_underscore_{0}_df.h5'.format(embedding_method), key='df', mode='w')
+        keyword_vectors_df.to_hdf('Saved_dfs/{0}/keyword_vectors_underscore_{1}_df.h5'.format(transcript_name,
+                                                                                              embedding_method), key='df', mode='w')
 
     if Info:
         print('-Created and saved keyword_vectors_df dataframe.')
@@ -1281,11 +1329,12 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
     Mother Function.
     names = ['Joe Rogan', 'Jack Dorsey'] or names = ['Joe Rogan', 'Elon Musk']
     """
+    # Extract name of transcript under investigation
     transcript_name = Path(path_to_transcript).stem
     print('Transcript: ', transcript_name)
 
+    # Extract names of speakers featured in transcript
     names = Extract_Names(transcript_name)
-    print('Names of speakers: ', names)
 
     ## Load + Pre-process Transcript
     with open(path_to_transcript, 'r') as f:
@@ -1307,8 +1356,8 @@ def Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_loc
 
     ## Keyword Extraction
     if not use_saved_dfs:
-        Extract_Keyword_Embeddings(content, content_sentences, embedding_method, put_underscore_ngrams=put_underscore_ngrams,
-                                    shift_ngrams=shift_ngrams, Info=True)
+        Extract_Keyword_Embeddings(content, content_sentences, embedding_method, transcript_name,
+                                   put_underscore_ngrams=put_underscore_ngrams, shift_ngrams=shift_ngrams, Info=True)
     # OR just load the dataframe
     keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_{}_df.h5'.format(und, embedding_method), key='df')
 
@@ -1388,7 +1437,7 @@ if __name__=='__main__':
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    Even_number_of_segments = 100                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
@@ -1397,7 +1446,9 @@ if __name__=='__main__':
     Plotting_Segmentation = True
     saving_figs = True
 
-    use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
+    use_saved_dfs = False                             # i.e. don't extract keywords/ their embeddings, just used saved df
+
+    just_analysis = False
 
     Go(path_to_transcript, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
