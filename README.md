@@ -66,10 +66,11 @@ How the thickness of the line is assigned (todo):
    Here the keywords are extracted from the given transcript using methods listed in 1) and are plotted
    in word-embedding space using the cc.en.300 FastText pretrained model.
   
-  <img src = "Saved_Images/Figure_1.png" width ="700" /> 
+  <img src = "Saved_Images/Fasttext_WordEmbedding_ShiftedNgrams_wide.png" width ="700" /> 
   And a zoomed-in version...
   <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED.png" width ="700" />
-    
+  And another...
+  <img src = "Saved_Images/FastText_WordEmbedding_ZOOMED_2.png" width ="700" />
    
 **Plotting of Trajectory Through Topic Space**
 
