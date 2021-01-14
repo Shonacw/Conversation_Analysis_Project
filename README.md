@@ -95,11 +95,13 @@ How the thickness of the line is assigned (todo):
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
 **Plotting of Speaker-Indepedent Trajectory Through Topic Space (for one Transcript)**
+
 Coming soon :-)
 
 
 
 # Analysis
+
 (rough notes for me)
 Question 1:
         - Where do most of the keywords get extracted from? Are the top PKE (TopicRank) keywords extracted in an evenly-
