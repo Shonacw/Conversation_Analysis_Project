@@ -1133,22 +1133,16 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_
         node_position = [pos for pos in node_position if str(pos[0]) != 'n']
         labels_text = [label for label in labels_text if str(label) != 'nan']
         labels = range(len(node_position))
-    print(list(segments_info_df['keyword_counts'].values))
-    # for x in list(segments_info_df['keyword_counts'].values)
-    # [int(num) for num in x]
+
+    # define colours for the segment
     number_keywords = [sum([int(num) for num in x]) for x in list(segments_info_df['keyword_counts'].values)]
-    print('number_keywords', number_keywords)
-
-    number_keywords_sorted = number_keywords #make a copy that we can rearrange
+    number_keywords_sorted = number_keywords # make a copy that we can rearrange
     number_keywords_sorted.sort()
-    print('number_keywords_sorted', number_keywords_sorted)
     groups = list(split(number_keywords_sorted, 3))
-    colours = [(255, 255, 0, 0.5), (255, 125, 0, 0.5), (255, 0, 0, 0.5)] #['y', 'orange', 'r'] #alpha channel - which specifies the opacity for a color.
-
+    colours = [(255/255, 255/255, 0), (255/255, 125/255, 0), (240/255, 0, 0)]
     idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
-    print('idxs', idxs)
     colour_for_segment = [colours[i] for i in idxs]
-    print('colour_for_segment: ', colour_for_segment)
+
 
     xs = [x[0] for x in node_position]
     ys = [x[1] for x in node_position]
@@ -1158,16 +1152,32 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_
 
     plt.figure()
     plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color= colour_for_segment, width=0.005)
+               angles='xy', scale=1, color = colour_for_segment, width=0.005)
 
-    # zip joins x and y coordinates in pairs
+
+    # To make sure labels are spread out well, going to mess around with xs and ys
+    xs_, ys_ = xs, ys
+    ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+    repeats = list(set(map(tuple, ppairs)))
+    repeat_num = [0 for i in range(len(repeats))]
+    plt.rc('font', size=8)
     for x, y, label in zip(xs, ys, labels):
-        plt.annotate(label+1, # this is the text
+        # first check location of annotation is unique
+        if (x, y) in repeats:
+            idx = repeats.index((x, y))
+            addition = repeat_num[idx]
+            x += addition
+            y -= 1
+            repeat_num[idx] += 3
+            pass
+
+        plt.annotate(str(label+1) + '.', # this is the text
                      (x, y), # this is the point to label
                      textcoords="offset points", # how to position the text
-                     xytext=(0,10), # distance from text to points (x,y)
+                     xytext=(0, 10), # distance from text to points (x,y)
                      ha='center') # horizontal alignment can be left, right or center
 
+    plt.rc('font', size=10)  # putting font back to normal
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
     plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
@@ -1194,18 +1204,17 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_
         number_types_toplot = [0]
 
     plt.figure()
-    plt.rc('font', size=8)
+    plt.rc('font', size=6)
     for i in number_types_toplot:
         type = keyword_types[i]
         words = keyword_vectors_df['{}_keyw'.format(type)]
         Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
         unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
 
-        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
+        plt.scatter(Xs, Ys, c=colours[i], label=labels[i], zorder=0)
         for label, x, y in zip(words, Xs, Ys):
-            plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points", color='darkgrey')
+            plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords="offset points", color='darkgrey', zorder=5)
 
-    plt.rc('font', size=10) # putting it back to normal
 
     # QUIVER PART
     if Node_Position == 'total_average':
@@ -1227,6 +1236,14 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_
         node_position = [pos for pos in node_position if str(pos[0]) != 'n']
         labels_text = [label for label in labels_text if str(label) != 'nan']
     labels = range(len(node_position))
+    # define colours for the segment
+    number_keywords = [sum([int(num) for num in x]) for x in list(segments_info_df['keyword_counts'].values)]
+    number_keywords_sorted = number_keywords # make a copy that we can rearrange
+    number_keywords_sorted.sort()
+    groups = list(split(number_keywords_sorted, 3))
+    colours = [(255/255, 255/255, 0), (255/255, 125/255, 0), (240/255, 0, 0)]
+    idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
+    colour_for_segment = [colours[i] for i in idxs]
 
     xs = [x[0] for x in node_position]
     ys = [x[1] for x in node_position]
@@ -1234,16 +1251,30 @@ def Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, transcript_
     u = [i-j for i, j in zip(xs[1:], xs[:-1])]
     v = [i-j for i, j in zip(ys[1:], ys[:-1])]
 
-    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color='b', width=0.005)
-
-    # zip joins x and y coordinates in pairs
+    # To make sure labels are spread out well, going to mess around with xs and ys
+    xs_, ys_ = xs, ys
+    ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+    repeats = list(set(map(tuple, ppairs)))
+    repeat_num = [0 for i in range(len(repeats))]
+    plt.rc('font', size=8)  # putting font back to normal
     for x, y, label in zip(xs, ys, labels):
-        plt.annotate(label+1, # this is the text
-                     (x, y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0, 10), # distance from text to points (x,y)
-                     ha='center') # horizontal alignment can be left, right or center
+        # first check location of annotation is unique
+        if (x, y) in repeats:
+            idx = repeats.index((x, y))
+            addition = repeat_num[idx]
+            x += addition
+            y -= 1
+            repeat_num[idx] += 3
+            pass
+
+        plt.annotate(str(label + 1) + '.',  # this is the text
+                     (x, y),  # this is the point to label
+                     textcoords="offset points",  # how to position the text
+                     xytext=(0, 10),  # distance from text to points (x,y)
+                     ha='center')  # horizontal alignment can be left, right or center
+    plt.rc('font', size=10)  # putting font back to normal
+    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+               angles='xy', scale=1, color= colour_for_segment, width=0.005, zorder=10)
 
     #plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
@@ -1479,9 +1510,6 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=sub_folder_name,
                                         Node_Position=node_location_method, save_name=save_name)
 
-    if just_analysis:               # not interested in plotting etc
-        return
-
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
         save_name = '{0}_{1}_Segments_Quiver_and_Embeddings_Plot_With_{2}_NodePosition'.format(Even_number_of_segments,
@@ -1494,6 +1522,9 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
     Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, sub_folder_name, save_name=save_name,
                                Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs)
+
+    if just_analysis:               # not interested in plotting etc
+        return
 
     ## Plot 3D Quiver Plot
     if seg_method == 'Even':
@@ -1518,9 +1549,9 @@ if __name__=='__main__':
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
-    node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
+    node_location_method = '1_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 20                       # for when seg_method = 'Even'
+    Even_number_of_segments = 100                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)

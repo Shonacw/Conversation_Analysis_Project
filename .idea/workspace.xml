@@ -24,13 +24,9 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="Added functionality for plots to have the Combined word embedding as background so that we can compare between transcripts">
+    <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/Analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_Images/joe_rogan_jack_dorsey/100_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_Images/joe_rogan_jack_dorsey/100_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/InferSent_cos_sim_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/InferSent_cos_sim_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/joe_rogan_jack_dorsey/100_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/joe_rogan_jack_dorsey/100_Even_segments_info_df.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Saved_dfs/joe_rogan_elon_musk/100_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/joe_rogan_elon_musk/100_Even_segments_info_df.h5" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -239,14 +235,7 @@
       <workItem from="1609019654916" duration="19071000" />
       <workItem from="1609675898597" duration="777000" />
       <workItem from="1610106788839" duration="91131000" />
-      <workItem from="1611072058704" duration="9891000" />
-    </task>
-    <task id="LOCAL-00015" summary="-">
-      <created>1610116050939</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1610116050939</updated>
+      <workItem from="1611072058704" duration="13173000" />
     </task>
     <task id="LOCAL-00016" summary="Piccies">
       <created>1610128131044</created>
@@ -584,7 +573,14 @@
       <option name="project" value="LOCAL" />
       <updated>1610557853166</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="-">
+      <created>1611083289415</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1611083289417</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -622,7 +618,6 @@
     <MESSAGE value="added rough FastText stuff" />
     <MESSAGE value="HALF added FastText Functionality" />
     <MESSAGE value="Added full FastText Functionality" />
-    <MESSAGE value="-" />
     <MESSAGE value="adding shift of ngrams" />
     <MESSAGE value="Added optional shift of ngram location" />
     <MESSAGE value="Now able to run on any given Joe Rogan - style podcast transcript!" />
@@ -631,7 +626,8 @@
     <MESSAGE value="fixed noun issue" />
     <MESSAGE value="keyword analysis" />
     <MESSAGE value="Added functionality for plots to have the Combined word embedding as background so that we can compare between transcripts" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added functionality for plots to have the Combined word embedding as background so that we can compare between transcripts" />
+    <MESSAGE value="-" />
+    <option name="LAST_COMMIT_MESSAGE" value="-" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -646,39 +642,39 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1610628622742">
+    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1611083288776">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610628622742" />
-    <state x="163" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1610557852982" />
+    <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611083288776" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1610211683036">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog/0.23.1440.820@0.23.1440.820" timestamp="1610211683036" />
-    <state width="1388" height="185" key="GridCell.Tab.0.bottom" timestamp="1611083266205">
+    <state width="1388" height="104" key="GridCell.Tab.0.bottom" timestamp="1611086972168">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151683" />
     <state width="1388" height="240" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878371" />
-    <state width="1388" height="185" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611083266205" />
-    <state width="1388" height="185" key="GridCell.Tab.0.center" timestamp="1611083266203">
+    <state width="1388" height="104" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611086972168" />
+    <state width="1388" height="104" key="GridCell.Tab.0.center" timestamp="1611086972167">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151682" />
     <state width="1388" height="240" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1388" height="185" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611083266203" />
-    <state width="1388" height="185" key="GridCell.Tab.0.left" timestamp="1611083266203">
+    <state width="1388" height="104" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611086972167" />
+    <state width="1388" height="104" key="GridCell.Tab.0.left" timestamp="1611086972166">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151681" />
     <state width="1388" height="240" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878369" />
-    <state width="1388" height="185" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611083266203" />
-    <state width="1388" height="185" key="GridCell.Tab.0.right" timestamp="1611083266204">
+    <state width="1388" height="104" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611086972166" />
+    <state width="1388" height="104" key="GridCell.Tab.0.right" timestamp="1611086972167">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151682" />
     <state width="1388" height="240" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1388" height="185" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611083266204" />
+    <state width="1388" height="104" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611086972167" />
     <state width="1386" height="263" key="GridCell.Tab.1.bottom" timestamp="1611072020148">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -731,7 +727,7 @@
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$predictDA.coverage" NAME="predictDA Coverage Results" MODIFIED="1610275202341" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/msci-project/src" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Keywords_sgcw.coverage" NAME="Keywords_sgcw Coverage Results" MODIFIED="1609026578184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SliceCast" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$covert_glove_to_word2vec.coverage" NAME="covert_glove_to_word2vec Coverage Results" MODIFIED="1609409151608" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1611083266194" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1611087041071" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent.coverage" NAME="InferSent Coverage Results" MODIFIED="1609676572164" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent_sgcw.coverage" NAME="InferSent_sgcw Coverage Results" MODIFIED="1610112016611" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Conversation_Analysis_Project.coverage" NAME="Conversation_Analysis_Project Coverage Results" MODIFIED="1608925685182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
