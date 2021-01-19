@@ -1,8 +1,25 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
+import re
 
-def Analyse():
+def colored(r, g, b, text):
+    """
+    Function to print coloured text.
+
+    yellow RGB = (255, 255, 0)
+    orange RGB = (255, 127, 0)
+    red RGB = (255, 0, 0)
+    """
+    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
+
+def create_heat_list():
+    """
+    Function to create
+    """
+
+def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
     """
     (transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
             InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, seg_save_name):
@@ -39,6 +56,9 @@ def Analyse():
 
     Question 4:
         Does the number of keywords contained in a section tell us about the richness of conversation? (?)
+        o	Which speaker ends most of their utterances with a question
+        o	Once defined what a topic is, see who is the person who first introduces a topic – is this the same person
+        as above?
 
 
     == ISSUES ==
@@ -57,7 +77,7 @@ def Analyse():
                  'top_3_counts_keywords': [], 'top_3_counts_wordvec': [],
                  'noun_list' : [], 'noun_counts' : [], 'top_3_counts_nouns':[], 'top_3_counts_nounwordvec':[]}
     """
-    desired_width = 320
+    desired_width = 600
 
     pd.set_option('display.width', desired_width)
 
@@ -65,10 +85,8 @@ def Analyse():
 
     pd.set_option('display.max_columns', 10)
 
-    #keyword_vectors_df = pd.read_hdf('Saved_dfs/keyword_vectors_{}_{}_df.h5'.format(und, embedding_method), key='df')
-    #segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(transcript_name, seg_save_name), key='df')
-    segments_info_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/200_Even_segments_info_df.h5', key='df')
-    keyword_vectors_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5', key='df')
+    # segments_info_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/200_Even_segments_info_df.h5', key='df')
+    # keyword_vectors_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5', key='df')
 
     # noun_list_section1 = list(segments_info_df['noun_list'][0].values)
     # noun_cnt_list_section1 = list(segments_info_df['noun_counts'][0].values)
@@ -76,18 +94,70 @@ def Analyse():
     #
     # idxs_of_top_3_keywords = sorted(range(len(noun_cnt_list_section1)), key=lambda i: noun_cnt_list_section1[i])[-3:]
     # top_3_keywords = noun_list_section1[idxs_of_top_3_keywords]
-    print(segments_info_df['noun_list'].values)
-    print('\n\n')
-    print(segments_info_df[['length_of_segment', 'top_3_counts_nouns', 'noun_list', 'top_3_counts_keywords']].head(20))
+    # print(segments_info_df['noun_list'].values)
+    # print('\n\n')
+    # print(segments_info_df[['length_of_segment', 'top_3_counts_nouns', 'noun_list', 'top_3_counts_keywords']].head(20))
 
 
-    # Question 1
+    '''Question 1'''
+    #make text lowercase to catch every example
+    content = content.lower()
+
+    #PKE first
+    counter_dict = {}
+    list_PKE_keywords = list(keyword_vectors_df['pke_keyw'].values)
+    list_PKE_keywords = [w for w in list_PKE_keywords if w != 'nan']
+    print('list_PKE_keywords: ', list_PKE_keywords)
+    for word in list_PKE_keywords:
+        count = len(re.findall(' ' + str(word) + ' ', content))
+        counter_dict[str(word)] = count
+    print('counter_dict:', counter_dict)
+
+    plt.figure()
+    ax = plt.axes()
+    plt.bar(list(counter_dict.keys()), list(counter_dict.values()))
+
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+    plt.xlabel('PKE Keyword')
+    plt.ylabel('Overall Count')
+    plt.show()
+
+    # Nouns
+    noun_counter_dict = {}
+    list_noun_keywords = list(keyword_vectors_df['noun_keyw'].values)
+    list_noun_counts = [len(re.findall(' ' + str(noun) + ' ', content)) for noun in list_noun_keywords]
+
+    full_dict = {}
+    for x, y in zip(list_noun_keywords, list_noun_counts):
+        full_dict[x] = y
+
+    ordered_full_dict = {k: v for k, v in sorted(full_dict.items(), key=lambda item: item[1])}
+
+
+    plt.figure()
+    ax = plt.axes()
+    print('Top n nouns in terms of usage: ', list(ordered_full_dict.items())[-20:])
+    plt.bar(list(full_dict.keys())[-20:], list(full_dict.values())[-20:])
+
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+    plt.xlabel('Noun Keyword')
+    plt.ylabel('Overall Count')
+    plt.show()
+
+    for sentence in content_sentences:
+        if ' y ' in sentence:
+            print(sentence)
+
+    # Then do this for each speaker
+
 
 
     return
 
 
-Analyse()
+# Analyse()
 
 
 

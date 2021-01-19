@@ -578,6 +578,9 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
     return keywords_contained_in_segment
 
 ## Functions for Segmentation...
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_Segs=10, cos_sim_limit=0.52, Plot=False, save_fig=False):
     """
@@ -614,10 +617,6 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
             first_sent_idxs_list.append(row['Sentence2_idx'])
 
     if segmentation_method == 'Even':
-        def split(a, n):
-            k, m = divmod(len(a), n)
-            return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
-
         num_sents = len(content_sentences)
         idx_split = split(range(num_sents), Num_Even_Segs)
         first_sent_idxs_list = [i[0] for i in idx_split][1:]
@@ -1075,6 +1074,38 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shift
     return
 
 
+def find_colour(numb_keyw, min_keyw, max_keyw):
+    # define 3 colours first
+    yellow = 'y' #(255, 255, 0)
+    orange = 'orange' #(255, 127, 0)
+    red = 'r' #(255, 0, 0)
+    # colours = [yellow, orange, red]
+    #
+    # colour = (0, 0, 0) #instantiate
+    #
+    # # define 3 keyword count
+    # counts = [i[0] for i in split(range(max_keyw), 3)][1:]
+    # counts.insert(0, 0)
+    # counts.insert(len(counts), 100000)
+    # print('counts: ', counts)
+    # print('numb_keyw: ', numb_keyw)
+    #
+    # for i in range(len(counts)):
+    #     if int(numb_keyw) >= counts[i] and int(numb_keyw) <= counts[i+1]:
+    #         colour = colours[i]
+    #         break
+    #     else:
+    #         continue
+    # print('colour: ', colour)
+    for i in range(len(counts)):
+        if counts[i] == i:
+                colour = colours[i]
+                break
+        else:
+            continue
+
+    return colour
+
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_name, Node_Position='total_average', save_fig=False):
     """
     Plots the 2D word embedding space with a Quiver arrow following the direction of the topics discussed in each
@@ -1102,6 +1133,22 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_
         node_position = [pos for pos in node_position if str(pos[0]) != 'n']
         labels_text = [label for label in labels_text if str(label) != 'nan']
         labels = range(len(node_position))
+    print(list(segments_info_df['keyword_counts'].values))
+    # for x in list(segments_info_df['keyword_counts'].values)
+    # [int(num) for num in x]
+    number_keywords = [sum([int(num) for num in x]) for x in list(segments_info_df['keyword_counts'].values)]
+    print('number_keywords', number_keywords)
+
+    number_keywords_sorted = number_keywords #make a copy that we can rearrange
+    number_keywords_sorted.sort()
+    print('number_keywords_sorted', number_keywords_sorted)
+    groups = list(split(number_keywords_sorted, 3))
+    colours = [(255, 255, 0, 0.5), (255, 125, 0, 0.5), (255, 0, 0, 0.5)] #['y', 'orange', 'r'] #alpha channel - which specifies the opacity for a color.
+
+    idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
+    print('idxs', idxs)
+    colour_for_segment = [colours[i] for i in idxs]
+    print('colour_for_segment: ', colour_for_segment)
 
     xs = [x[0] for x in node_position]
     ys = [x[1] for x in node_position]
@@ -1111,7 +1158,7 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_
 
     plt.figure()
     plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color='b', width=0.005)
+               angles='xy', scale=1, color= colour_for_segment, width=0.005)
 
     # zip joins x and y coordinates in pairs
     for x, y, label in zip(xs, ys, labels):
@@ -1305,8 +1352,39 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df, keyword_vectors_df, 
 
 ## The main function putting it all together
 
-def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, seg_method, node_location_method,
-       Even_number_of_segments,
+def Split_Transcript_By_Speaker(content, names):
+    """
+    Function to prepare transcript content for speaker-wise analysis.
+    """
+    # Get rid of the time marks
+    text = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", content)  # \w+\s\w+;
+
+    # Remove speaker names
+    codes = [123, 321]                  # Just two random codes for the speakers
+    for name, code in zip(names, codes):
+        text = re.sub(str(name + "\n"), str(code), text)
+
+    # Strip new-lines
+    content_2 = re.sub('\n', " ", text)
+    # Strip white spaces
+    content_2.strip()
+
+    # Create list of all sentences (utterances) in transcript
+    all_sentences = sent_tokenize(content_2)
+
+    # Split into two lists of sentences, one for each speaker
+    content_speaker_1 = [sent[3:] for sent in all_sentences if sent[:3] == '123']
+    content_speaker_2 = [sent[3:] for sent in all_sentences if sent[:3] == '321']
+
+    print('Number of utterances by speaker 1 (', names[0], ') : ', len(content_speaker_1), '. First few utterances:', content_speaker_1[:3])
+    print('Number of utterances by speaker 2 (', names[1], ') : ', len(content_speaker_2), '. First few utterances:', content_speaker_2[:3])
+
+    return [content_speaker_1, content_speaker_2]
+
+
+
+def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
+       node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams, just_analysis):
     """
     Mother Function.
@@ -1322,7 +1400,11 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
     ## Load + Pre-process Transcript
     with open(path_to_transcript, 'r') as f:
         content = f.read()
-        content_onestring = Process_Transcript(content, names)
+    if speakerwise:
+        content_speakerwise = Split_Transcript_By_Speaker(content, names)
+
+    if not speakerwise:
+        content_onestring = Process_Transcript(content, names, Info=False)
         content = Preprocess_Content(content_onestring)
         content_sentences = sent_tokenize(content)
 
@@ -1376,14 +1458,13 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
     segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
 
     # Topical Analysis section
-    # Analysis.Analyse(transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-    #         InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
+    # Analysis.Analyse(content, content_sentences, keyword_vectors_df, segments_info_df)
+    ## transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+    ## InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
 
-    if just_analysis:               # not interested in plotting etc
-        return
 
     ## Plot Word Embedding
-    Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
+    # Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
     ## Plot Quiver Plot
     if seg_method == 'Even':
@@ -1397,6 +1478,9 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
 
     Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=sub_folder_name,
                                         Node_Position=node_location_method, save_name=save_name)
+
+    if just_analysis:               # not interested in plotting etc
+        return
 
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
@@ -1429,28 +1513,29 @@ def Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, 
 
 ## CODE...
 if __name__=='__main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '3_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 200                       # for when seg_method = 'Even'
+    Even_number_of_segments = 20                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
-    put_underscore_ngrams = True                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
+    put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
     shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
-    saving_figs = True
+    saving_figs = False
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
-    just_analysis = False
+    just_analysis = True
 
-    use_combined_embed = True
+    use_combined_embed = False
+    speakerwise = False
 
-    Go(path_to_transcript, use_combined_embed, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+    Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
        just_analysis)
