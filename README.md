@@ -105,6 +105,10 @@ Added colour to the lines to reflect the number of keywords contained in each se
 'richer' conversation in this section, but also means there is a larger uncertainty on the topic of this segment in that 
 there were more keywords which could have been chosen to define the segment node position.
 
+Histogram for the number of keywords contained in each segment of the transcripts ... 
+
+<img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/histogram_of_keywords.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/histogram_of_keywords.png" width ="400" />
+
 Elon Musk interview...
 
 <img src = "Saved_Images/combined_podcast/Elon_Musk_100.png" width ="700" />
@@ -114,10 +118,6 @@ Jack Dorsey interview...
 <img src = "Saved_Images/combined_podcast/Jack_Dorsey_100.png" width ="700" />
 
 Both plotted on their shared word embedding space. 
-
-Histogram for the number of keywords contained in each segment of the transcripts ... 
-
-<img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/histogram_of_keywords.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/histogram_of_keywords.png" width ="400" />
 
 # Analysis
 
