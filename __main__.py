@@ -57,28 +57,28 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 ## Functions for pre-processing...
-def Process_Transcript(text, names, Info=False):
-    """
-    Function to remove names of speakers / times of Utterances from transcript, returning all spoken utterances as a
-    single string.
-    """
-    if Info:
-        print('Text format before preprocessing:\n', text[:300])
-
-    # Remove speaker names
-    for name in names:
-        text = re.sub(name, "", text)
-    # Get rid of the time marks
-    content_1 = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", text)  # \w+\s\w+;
-    # Strip new-lines
-    content_2 = re.sub('\n', " ", content_1)
-    # Strip white spaces
-    content_2.strip()
-
-    if Info:
-        print('\nText format after preprocessing:\n', content_2)
-
-    return content_2
+# def Process_Transcript(text, names, Info=False):
+#     """
+#     Function to remove names of speakers / times of Utterances from transcript, returning all spoken utterances as a
+#     single string.
+#     """
+#     if Info:
+#         print('Text format before preprocessing:\n', text[:300])
+#
+#     # Remove speaker names
+#     for name in names:
+#         text = re.sub(name, "", text)
+#     # Get rid of the time marks
+#     content_1 = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", text)  # \w+\s\w+;
+#     # Strip new-lines
+#     content_2 = re.sub('\n', " ", content_1)
+#     # Strip white spaces
+#     content_2.strip()
+#
+#     if Info:
+#         print('\nText format after preprocessing:\n', content_2)
+#
+#     return content_2
 
 
 def Extract_Names(transcript_name):
@@ -94,16 +94,20 @@ def Extract_Names(transcript_name):
 
     return [first_name, second_name]
 
-def Preprocess_Content(content):
+def Preprocess_Content(content_utterances):
     """
     Function to perform Lemmatization of the whole transcript when it is first imported.
     """
     nlp = spacy.load('en', disable=['parser', 'ner'])
-    doc = nlp(content)
-    content_lemma = " ".join([token.lemma_ for token in doc])
-    content_lemma = re.sub(r'-PRON-', "", content_lemma)
 
-    return content_lemma
+    content_utterances_cleaned = []
+    for utterance in content_utterances:
+        utt = nlp(utterance)
+        content_lemma = " ".join([token.lemma_ for token in utt])
+        content_lemma = re.sub(r'-PRON-', "", content_lemma)
+        content_utterances_cleaned.append(content_lemma)
+
+    return content_utterances_cleaned
 
 def Replace_ngrams_In_Text(content, bigrams_list, trigrams_list):
     """
@@ -1079,105 +1083,121 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shift
     return
 
 
-def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_name, transcript_name, Node_Position='total_average',
-                                        save_fig=False, plot_hist_too=True, colour_quiver_plots=True):
+def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcript_name, segments_info_df_2=pd.DataFrame(),
+                                        Node_Position='total_average', save_fig=False, plot_hist_too=True,
+                                        colour_quiver_plots=True, speakerwise_coloring=False):
     """
     Plots the 2D word embedding space with a Quiver arrow following the direction of the topics discussed in each
     segment of the transcript.
     """
-    if Node_Position == 'total_average':
-        node_position = segments_info_df['total_average_keywords_wordvec'].values
-        labels = range(len(node_position))  # numerical labels
-
-    if Node_Position == '1_max_count':
-        labels_text = segments_info_df['top_count_keyword'].values
-        node_position = segments_info_df['top_count_wordvec'].values
-
-        # Check the segments all had enough keywords to have taken max(count)...
-        node_position = [pos for pos in node_position if pos != None]
-        labels_text = [label for label in labels_text if label != None]
-        labels = range(len(node_position))
-
-    if Node_Position == '3_max_count':
-        labels_text = segments_info_df['top_3_counts_keywords'].values
-        node_position = segments_info_df['top_3_counts_wordvec'].values
-
-        # Check the segments all had enough keywords to have taken max(count)...
-        node_position = [pos for pos in node_position if str(pos[0]) != 'n']
-        labels_text = [label for label in labels_text if str(label) != 'nan']
-        labels = range(len(node_position))
-
-    if colour_quiver_plots or plot_hist_too:
-        # define colours for the segment
-        number_keywords = [sum([int(num) for num in x]) for x in list(segments_info_df['noun_counts'].values)] #careful whether I'm using noun_counts or keyword_counts !!
-        number_keywords_sorted = number_keywords.copy() # make a copy that we can rearrange
-        number_keywords_sorted.sort()
-        groups = list(split(number_keywords_sorted, 3))
-        colours = [(255/255, 255/255, 0), (255/255, 125/255, 0), (240/255, 0, 0)]
-        colour_info_dict = {k:[v[index] for index in [0, -1]] for k, v in zip(colours, groups)}
-        idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
-        colour_for_segment = [colours[i] for i in idxs]
-        print('colour and groups:', colour_info_dict)
-        save_name = save_name + '_Coloured'
-
-    if plot_hist_too:
-        # Plotting Histogram of keyword usage
-        plt.figure()
-        plt.bar(range(len(number_keywords)), number_keywords, color=colour_for_segment)
-        limits = list(colour_info_dict.values())
-        for limit in limits:
-            lower_lim = limit[0]
-            plt.plot([0, len(number_keywords)], [lower_lim, lower_lim], '--', color='k', linewidth=1)
-        legend_elements = [Line2D([0], [0], color=colours[0], lw=1, label='{0} - {1} Keywords'.format(limits[0][0], limits[0][1])),
-                           Line2D([0], [0], color=colours[1], lw=1, label='{0} - {1} Keywords'.format(limits[1][0], limits[1][1])),
-                           Line2D([0], [0], color=colours[2], lw=1, label='{0} - {1} Keywords'.format(limits[2][0], limits[2][1]))]
-        plt.title('Number of Keywords Contained in Each Segment \n(Each segment contains roughly {0} sentences)'.format(segments_info_df['length_of_segment'].values[0]))
-        plt.ylabel('Number of Keywords')
-        plt.xlabel('Segment Number')
-        plt.legend(handles=legend_elements)
-        if save_fig:
-            plt.savefig("Saved_Images/{0}/histogram_of_keywords.png".format(transcript_name, save_name), dpi=600)
-        plt.show()
-
-    if not colour_quiver_plots:
-        colour_for_segment = 'b'
-
-
-    xs = [x[0] for x in node_position]
-    ys = [x[1] for x in node_position]
-
-    u = [i-j for i, j in zip(xs[1:], xs[:-1])]
-    v = [i-j for i, j in zip(ys[1:], ys[:-1])]
-
+    speakerwise_colours = ['b', 'purple']
+    spkr_idx = 0
     plt.figure()
-    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', scale=1, color = colour_for_segment, width=0.002)
+    for segments_info_df in [segments_info_df_1, segments_info_df_2]:
+        if segments_info_df.empty: #i.e. if not speakerwise.
+            continue
 
-    # To make sure labels are spread out well, going to mess around with xs and ys
-    xs_, ys_ = xs, ys
-    ppairs = [(i, j) for i, j in zip(xs_, ys_)]
-    repeats = list(set(map(tuple, ppairs)))
-    repeat_num = [0 for i in range(len(repeats))]
-    plt.rc('font', size=8)
-    for x, y, label in zip(xs, ys, labels):
-        # first check location of annotation is unique
-        if (x, y) in repeats:
-            idx = repeats.index((x, y))
-            addition = repeat_num[idx]
-            x += addition
-            y -= 1
-            repeat_num[idx] += 3
-            pass
+        if Node_Position == 'total_average':
+            node_position = segments_info_df['total_average_keywords_wordvec'].values
+            labels = range(len(node_position))  # numerical labels
 
-        plt.annotate(str(label+1) + '.', # this is the text
-                     (x, y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0, 5), # distance from text to points (x,y)
-                     ha='center') # horizontal alignment can be left, right or center
-    plt.rc('font', size=10)  # putting font back to normal
-    #plot special colours for the first and last point
-    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
-    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+        if Node_Position == '1_max_count':
+            labels_text = segments_info_df['top_count_keyword'].values
+            node_position = segments_info_df['top_count_wordvec'].values
+
+            # Check the segments all had enough keywords to have taken max(count)...
+            node_position = [pos for pos in node_position if pos != None]
+            labels_text = [label for label in labels_text if label != None]
+            labels = range(len(node_position))
+
+        if Node_Position == '3_max_count':
+            labels_text = segments_info_df['top_3_counts_keywords'].values
+            node_position = segments_info_df['top_3_counts_wordvec'].values
+
+            # Check the segments all had enough keywords to have taken max(count)...
+            node_position = [pos for pos in node_position if str(pos[0]) != 'n']
+            labels_text = [label for label in labels_text if str(label) != 'nan']
+            labels = range(len(node_position))
+
+        if colour_quiver_plots or plot_hist_too:
+            # define colours for the segment
+            number_keywords = [sum([int(num) for num in x]) for x in list(segments_info_df['noun_counts'].values)] #careful whether I'm using noun_counts or keyword_counts !!
+            number_keywords_sorted = number_keywords.copy() # make a copy that we can rearrange
+            number_keywords_sorted.sort()
+            groups = list(split(number_keywords_sorted, 3))
+            colours = [(255/255, 255/255, 0), (255/255, 125/255, 0), (240/255, 0, 0)]
+            colour_info_dict = {k:[v[index] for index in [0, -1]] for k, v in zip(colours, groups)}
+            idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
+            colour_for_segment = [colours[i] for i in idxs]
+            print('colour and groups:', colour_info_dict)
+            save_name = save_name + '_Coloured'
+
+        # if plot_hist_too:
+        #     # Plotting Histogram of keyword usage
+        #     plt.figure(1)
+        #     plt.bar(range(len(number_keywords)), number_keywords, color=colour_for_segment)
+        #     limits = list(colour_info_dict.values())
+        #     for limit in limits:
+        #         lower_lim = limit[0]
+        #         plt.plot([0, len(number_keywords)], [lower_lim, lower_lim], '--', color='k', linewidth=1)
+        #     legend_elements = [Line2D([0], [0], color=colours[0], lw=1, label='{0} - {1} Keywords'.format(limits[0][0], limits[0][1])),
+        #                        Line2D([0], [0], color=colours[1], lw=1, label='{0} - {1} Keywords'.format(limits[1][0], limits[1][1])),
+        #                        Line2D([0], [0], color=colours[2], lw=1, label='{0} - {1} Keywords'.format(limits[2][0], limits[2][1]))]
+        #     plt.title('Number of Keywords Contained in Each Segment \n(Each segment contains roughly {0} sentences)'.format(segments_info_df['length_of_segment'].values[0]))
+        #     plt.ylabel('Number of Keywords')
+        #     plt.xlabel('Segment Number')
+        #     plt.legend(handles=legend_elements)
+        #     if save_fig:
+        #         plt.savefig("Saved_Images/{0}/histogram_of_keywords.png".format(transcript_name, save_name), dpi=600)
+        #     plt.show()
+
+        if not colour_quiver_plots:
+            colour_for_segment = 'b'
+
+        if speakerwise_coloring:
+            colour_for_segment = speakerwise_colours[spkr_idx]
+
+
+        xs = [x[0] for x in node_position]
+        ys = [x[1] for x in node_position]
+
+        u = [i-j for i, j in zip(xs[1:], xs[:-1])]
+        v = [i-j for i, j in zip(ys[1:], ys[:-1])]
+
+        # if spkr_idx==1:
+        #     plt.figure()
+
+        plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+                   angles='xy', scale=1, color = colour_for_segment, width=0.002)
+
+        # To make sure labels are spread out well, going to mess around with xs and ys
+        xs_, ys_ = xs, ys
+        ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+        repeats = list(set(map(tuple, ppairs)))
+        repeat_num = [0 for i in range(len(repeats))]
+        plt.rc('font', size=8)
+        for x, y, label in zip(xs, ys, labels):
+            # first check location of annotation is unique
+            if (x, y) in repeats:
+                idx = repeats.index((x, y))
+                addition = repeat_num[idx]
+                x += addition
+                y -= 1
+                repeat_num[idx] += 3
+                pass
+
+            plt.annotate(str(label+1) + '.', # this is the text
+                         (x, y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0, 5), # distance from text to points (x,y)
+                         ha='center') # horizontal alignment can be left, right or center
+        plt.rc('font', size=10)  # putting font back to normal
+        #plot special colours for the first and last point
+        plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10, label='Beginning of Conversation')
+        plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10, label='End of Conversation')
+
+        spkr_idx += 1
+
     plt.legend()
     plt.title(' '.join(save_name.split('_')))
     if save_fig:
@@ -1449,29 +1469,42 @@ def Split_Transcript_By_Speaker(content, names):
     Function to prepare transcript content for speaker-wise analysis.
     """
     # Get rid of the time marks
-    text = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", content)  # \w+\s\w+;
+    text_1 = re.sub('\([0-9]{2}:[0-9]{2}:[0-9]{2}\)', " ", content)  # \w+\s\w+;
+    text = re.sub('\([0-9]{2}:[0-9]{2}\)', " ", text_1)
+    # print('\n content without time marks', text[:300])
 
     # Remove speaker names
-    codes = [123, 321]                  # Just two random codes for the speakers
+    codes = [888123, 888321]                  # Just two random codes for the speakers
     for name, code in zip(names, codes):
-        text = re.sub(str(name + "\n"), str(code), text)
+        text = re.sub(str(name).title() + ":", str(code), text)
 
     # Strip new-lines
     content_2 = re.sub('\n', " ", text)
     # Strip white spaces
-    content_2.strip()
+    content_2 = content_2.strip()
 
-    # Create list of all sentences (utterances) in transcript
-    all_sentences = sent_tokenize(content_2)
+    # # Create list of all sentences (utterances) in transcript
+    # all_sentences = sent_tokenize(content_2)
+    # print('all_sentences', len(all_sentences), all_sentences)
+
+    # OR splitting it into utterances (i.e. even if one person says multiple sentences they'll be put together and counted as only 1 sentence (utterance)
+    utterances = content_2.split('888')
+    all_utterances = [utt for utt in utterances if utt !='']
+    # print('all_sentences', len(all_sentences), all_sentences)
 
     # Split into two lists of sentences, one for each speaker
-    content_speaker_1 = [sent[3:] for sent in all_sentences if sent[:3] == '123']
-    content_speaker_2 = [sent[3:] for sent in all_sentences if sent[:3] == '321']
+    content_speaker_1 = [utt[3:] for utt in all_utterances if utt[:3] == '123']
+    content_speaker_2 = [utt[3:] for utt in all_utterances if utt[:3] == '321']
 
     print('Number of utterances by speaker 1 (', names[0], ') : ', len(content_speaker_1), '. First few utterances:', content_speaker_1[:3])
     print('Number of utterances by speaker 2 (', names[1], ') : ', len(content_speaker_2), '. First few utterances:', content_speaker_2[:3])
+    print('total above:', len(content_speaker_1) + len(content_speaker_2))
+    print('\nall_utterances length:', len(all_utterances), 'Preview: ', all_utterances[:20])
 
-    return [content_speaker_1, content_speaker_2]
+    content_speaker_1 = [utt[3:-3] for utt in content_speaker_1]
+    content_speaker_2 = [utt[3:-3] for utt in content_speaker_2]
+
+    return all_utterances, [content_speaker_1, content_speaker_2]
 
 
 
@@ -1494,13 +1527,21 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     with open(path_to_transcript, 'r') as f:
         content = f.read()
 
-    if speakerwise:
-        content_speakerwise = Split_Transcript_By_Speaker(content, names)
 
-    if not speakerwise:
-        content_onestring = Process_Transcript(content, names, Info=False)
-        content = Preprocess_Content(content_onestring)
-        content_sentences = sent_tokenize(content)
+    all_utterances, utterances_speakerwise = Split_Transcript_By_Speaker(content, names)
+
+    # Lemmatize utterances (TODO: change name "content_sentences" to "content_utterances" to be more precise)
+    # content_sentences = Preprocess_Content(all_utterances)
+    # Remove tags
+    content_sentences = [utt[6:-3] for utt in all_utterances]
+
+
+    # if not speakerwise:
+    #     content_onestring = Process_Transcript(content, names, Info=False)
+    #     content = Preprocess_Content(content_onestring)
+    #     content_sentences = sent_tokenize(content)
+    #     print('number of sentences when not-split', len(content_sentences))
+
 
     if put_underscore_ngrams:
         und = 'underscore'
@@ -1514,10 +1555,23 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
         folder_name = transcript_name
 
     ## Segmentation
-    first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
-                                                Num_Even_Segs=Even_number_of_segments,
-                                                cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
-                                               save_fig=saving_figs)
+    if not speakerwise:
+        first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
+                                                    Num_Even_Segs=Even_number_of_segments,
+                                                    cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+                                                   save_fig=saving_figs)
+    if speakerwise:
+        first_sent_idxs_list_1 = Peform_Segmentation(utterances_speakerwise[0], segmentation_method=seg_method,
+                                                   Num_Even_Segs=Even_number_of_segments,
+                                                   cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+                                                   save_fig=saving_figs)
+        first_sent_idxs_list_2 = Peform_Segmentation(utterances_speakerwise[1], segmentation_method=seg_method,
+                                                     Num_Even_Segs=Even_number_of_segments,
+                                                     cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+                                                     save_fig=saving_figs)
+        print('first_sent_idxs_list_1', first_sent_idxs_list_1)
+        print('first_sent_idxs_list_2', first_sent_idxs_list_2)
+
 
     ## Keyword Extraction
     if not use_saved_dfs:
@@ -1545,11 +1599,21 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     else:
         sub_folder_name = transcript_name
 
-    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
-                                            save_name=save_name, Info=True)
 
-    # OR just load the dataframe
-    segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
+    if not speakerwise:
+        segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
+                                                save_name=save_name, Info=True)
+
+        # OR just load the dataframe
+        segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
+
+    if speakerwise:
+        for idx_list, utterances, name in zip([first_sent_idxs_list_1, first_sent_idxs_list_2], utterances_speakerwise, names):
+            get_segments_info(idx_list, utterances, keyword_vectors_df, sub_folder_name, save_name=save_name+name, Info=True)
+
+
+        segments_info_df_1 = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name + names[0]), key='df')
+        segments_info_df_2 = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name + names[1]), key='df')
 
     # Topical Analysis section
     # Analysis.Analyse(content, content_sentences, keyword_vectors_df, segments_info_df)
@@ -1570,9 +1634,20 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     if seg_method == 'SliceCast':
         save_name = 'SliceCast_Segments_Quiver_Plot_With_{0}_NodePosition'.format(node_location_method)
 
-    Plot_2D_Topic_Evolution_SegmentWise(segments_info_df, save_fig=saving_figs, transcript_name=sub_folder_name,
-                                        Node_Position=node_location_method, save_name=save_name, plot_hist_too=plot_hist_too,
-                                        colour_quiver_plots=colour_quiver_plots)
+    if not speakerwise:
+        Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1=segments_info_df, save_name=save_name, transcript_name=sub_folder_name,
+                                            Node_Position=node_location_method,  save_fig=saving_figs, plot_hist_too=plot_hist_too,
+                                            colour_quiver_plots=colour_quiver_plots, speakerwise_coloring = False)
+    if speakerwise:
+        # Plot 2D Topic Evolution for each speaker separately
+        save_name_spkrwise = save_name + '_SpeakerWise'
+        Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1=segments_info_df_1, save_name=save_name_spkrwise, transcript_name=sub_folder_name,
+                                            segments_info_df_2=segments_info_df_2,
+                                            Node_Position=node_location_method,  save_fig=saving_figs, plot_hist_too=plot_hist_too,
+                                            colour_quiver_plots=False, speakerwise_coloring = True)
+
+    if just_analysis:               # not interested in plotting etc
+        return
 
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
@@ -1587,9 +1662,6 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     Plot_Quiver_And_Embeddings(segments_info_df, keyword_vectors_df, sub_folder_name, save_name=save_name,
                                Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs,
                                colour_quiver_plots=colour_quiver_plots)
-
-    if just_analysis:               # not interested in plotting etc
-        return
 
     ## Plot 3D Quiver Plot
     if seg_method == 'Even':
@@ -1624,17 +1696,17 @@ if __name__ == '__main__':
     shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
-    saving_figs = True
+    saving_figs = False
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
     just_analysis = True
 
     use_combined_embed = True
-    speakerwise = False
+    speakerwise = True
 
     colour_quiver_plots = True
-    plot_hist_too = True                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
+    plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
 
     Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,

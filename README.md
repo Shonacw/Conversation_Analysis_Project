@@ -100,7 +100,7 @@ Coming soon :-)
 
 **UPDATED Version Plots**
 Added variable sizing for the text labels of Nodes with multiple connections, where the size of text reflects the number 
-of connections the node has / the size of the cluster.
+of connections the node has / the size of the cluster. Words in bold correspond to node locations visited more than once.
 Added colour to the lines to reflect the number of keywords contained in each segment. More keywords contained means 
 'richer' conversation in this section, but also means there is a larger uncertainty on the topic of this segment in that 
 there were more keywords which could have been chosen to define the segment node position.
