@@ -26,9 +26,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/200_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/200_Even_segments_info_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_jack_dorsey/200_Even_segments_info_df.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_jack_dorsey/200_Even_segments_info_df.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -236,14 +234,7 @@
       <workItem from="1609019654916" duration="19071000" />
       <workItem from="1609675898597" duration="777000" />
       <workItem from="1610106788839" duration="91131000" />
-      <workItem from="1611072058704" duration="26813000" />
-    </task>
-    <task id="LOCAL-00018" summary="added infersent plotting code">
-      <created>1610128495968</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1610128495968</updated>
+      <workItem from="1611072058704" duration="27694000" />
     </task>
     <task id="LOCAL-00019" summary="Cleaning Up">
       <created>1610128640506</created>
@@ -581,7 +572,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611146411383</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="Colour/ Histogram/ loudness of word embedding">
+      <created>1611147888323</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1611147888323</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -643,11 +641,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1611146411093">
+    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1611147887922">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610628622742" />
-    <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611146411093" />
+    <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611147887922" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1610211683036">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
