@@ -94,11 +94,8 @@ How the thickness of the line is assigned (todo):
       Word embedding extracted using FastText on the two transcript (Joe Rogan + Elon Musk, and Joe Rogan + Jack Dorsey).
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
-**Plotting of Speaker-Indepedent Trajectory Through Topic Space (for one Transcript)**
 
-Coming soon :-)
-
-**UPDATED Version Plots**
+**Version 2 Plots:**
 Added variable sizing for the text labels of Nodes with multiple connections, where the size of text reflects the number 
 of connections the node has / the size of the cluster. Words in bold correspond to node locations visited more than once.
 Added colour to the lines to reflect the number of keywords contained in each segment. More keywords contained means 
@@ -118,6 +115,13 @@ Jack Dorsey interview...
 <img src = "Saved_Images/combined_podcast/Jack_Dorsey_100.png" width ="900" />
 
 Both plotted on their shared word embedding space. 
+
+**Plotting of Speaker-Indepedent Trajectory Through Topic Space (for one Transcript)**
+
+Elon Musk interview...
+
+<img src = "Saved_Images/combined_podcast/SpeakerWise_Elon.png.png" width ="900" />
+
 
 # Analysis
 
