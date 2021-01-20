@@ -111,11 +111,11 @@ Histogram for the number of keywords contained in each segment of the transcript
 
 Elon Musk interview...
 
-<img src = "Saved_Images/combined_podcast/Elon_Musk_100.png" width ="700" />
+<img src = "Saved_Images/combined_podcast/Elon_Musk_100.png" width ="800" />
 
 Jack Dorsey interview...
 
-<img src = "Saved_Images/combined_podcast/Jack_Dorsey_100.png" width ="700" />
+<img src = "Saved_Images/combined_podcast/Jack_Dorsey_100.png" width ="800" />
 
 Both plotted on their shared word embedding space. 
 
