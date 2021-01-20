@@ -1545,8 +1545,8 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     else:
         sub_folder_name = transcript_name
 
-    # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
-    #                                         save_name=save_name, Info=True)
+    segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
+                                            save_name=save_name, Info=True)
 
     # OR just load the dataframe
     segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
@@ -1617,23 +1617,23 @@ if __name__ == '__main__':
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '1_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 200                       # for when seg_method = 'Even'
+    Even_number_of_segments = 100                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
     shift_ngrams = True                              # Shift embedded position of ngrams to be the position of the composite noun (makes more sense as the word embeddnigs don't recognise most ngrams and hence plot them all together in a messy cluster)
 
     Plotting_Segmentation = True
-    saving_figs = False
+    saving_figs = True
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
     just_analysis = True
 
-    use_combined_embed = False
+    use_combined_embed = True
     speakerwise = False
 
-    colour_quiver_plots = False
+    colour_quiver_plots = True
     plot_hist_too = True                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
 
     Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
