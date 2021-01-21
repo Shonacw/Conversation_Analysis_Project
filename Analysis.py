@@ -60,6 +60,10 @@ def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
         o	Once defined what a topic is, see who is the person who first introduces a topic – is this the same person
         as above?
 
+    Question 5:
+        Which keywords are only mentioned by one speaker? ( note this isn't thorough as the other speaker may talk about
+        it too but using pronouns like 'it' 'she' etc.
+
 
     == ISSUES ==
     Issue 1:

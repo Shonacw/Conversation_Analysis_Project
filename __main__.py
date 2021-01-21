@@ -14,6 +14,7 @@ from gensim.models import Phrases #Phraser
 from gensim.models import FastText as ft
 import fasttext
 import fasttext.util
+import pprint
 
 import re
 import spacy
@@ -1688,7 +1689,8 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     # content_sentences = Preprocess_Content(all_utterances)
     # Remove tags
     content_sentences = [utt[6:-3] for utt in all_utterances]
-    print('content_sentences', content_sentences[:20])
+    from pprintpp import pprint
+    pprint(content_sentences)
 
 
     # if not speakerwise:
@@ -1761,9 +1763,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
         #                                         save_name=save_name, Info=True)
 
         # OR just load the dataframe
-        print('loading segments_info_df in not pseakerwise')
         segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
-        print(segments_info_df.head().to_string())
 
     elif speakerwise:
         for idx_list, utterances, name in zip([first_sent_idxs_list_1, first_sent_idxs_list_1], utterances_speakerwise, names):
@@ -1876,7 +1876,7 @@ if __name__ == '__main__':
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
-    just_analysis = False
+    just_analysis = True
 
     use_combined_embed = True
     speakerwise = True
