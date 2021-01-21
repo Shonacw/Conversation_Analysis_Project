@@ -152,8 +152,6 @@ def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
 
     # Then do this for each speaker
 
-
-
     return
 
 

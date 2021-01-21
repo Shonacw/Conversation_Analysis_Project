@@ -1093,6 +1093,7 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcrip
     speakerwise_colours = ['b', 'purple']
     spkr_idx = 0
     plt.figure()
+
     for segments_info_df in [segments_info_df_1, segments_info_df_2]:
         if segments_info_df.empty: #i.e. if not speakerwise.
             continue
@@ -1126,12 +1127,13 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcrip
             number_keywords_sorted = number_keywords.copy() # make a copy that we can rearrange
             number_keywords_sorted.sort()
             groups = list(split(number_keywords_sorted, 3))
-            colours = [(255/255, 255/255, 0), (255/255, 125/255, 0), (240/255, 0, 0)]
+            colours = [(255/255, 255/255, 0), (255/255, round(125/255, 5), 0), (round(240/255, 5), 0, 0)]
             colour_info_dict = {k:[v[index] for index in [0, -1]] for k, v in zip(colours, groups)}
             idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in number_keywords]
             colour_for_segment = [colours[i] for i in idxs]
             print('colour and groups:', colour_info_dict)
             save_name = save_name + '_Coloured'
+
 
         # if plot_hist_too:
         #     # Plotting Histogram of keyword usage
@@ -1152,12 +1154,11 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcrip
         #         plt.savefig("Saved_Images/{0}/histogram_of_keywords.png".format(transcript_name, save_name), dpi=600)
         #     plt.show()
 
-        if not colour_quiver_plots:
-            colour_for_segment = 'b'
-
         if speakerwise_coloring:
             colour_for_segment = speakerwise_colours[spkr_idx]
 
+        else:
+            colour_for_segment = 'b'
 
         xs = [x[0] for x in node_position]
         ys = [x[1] for x in node_position]
@@ -1165,11 +1166,8 @@ def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcrip
         u = [i-j for i, j in zip(xs[1:], xs[:-1])]
         v = [i-j for i, j in zip(ys[1:], ys[:-1])]
 
-        # if spkr_idx==1:
-        #     plt.figure()
-
-        plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-                   angles='xy', scale=1, color = colour_for_segment, width=0.002)
+        plt.quiver(xs[:-1], ys[:-1], u, v, color=colour_for_segment, scale_units='xy',
+                   angles='xy', scale=1, width=0.002)
 
         # To make sure labels are spread out well, going to mess around with xs and ys
         xs_, ys_ = xs, ys
@@ -1221,7 +1219,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
     segment of the transcript.
     words_to_highlight_dict.values() [total count of non_unique keyword in nodes_list, normalised count, font size]
     """
-    speakerwise_colours = ['b', 'purple']
+    speakerwise_colours = ['cornflowerblue', 'darkorchid'] #['b', 'purple']
     spkr_idx = 0
     plt.figure()
     for segments_info_df in [segments_info_df_1, segments_info_df_2]:
@@ -1252,7 +1250,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
             words_to_highlight_dict = {k: [v,  v / max_count] for k, v in D.items()}
 
             # Decide on font
-            fonts_dict = {9: [0, 0.2], 10: [0.2, 0.4], 11: [0.4, 0.6], 12: [0.6, 0.8], 12: [0.8, 10]}
+            fonts_dict = {10: [0, 0.2], 11: [0.2, 0.4], 12: [0.4, 0.6], 13: [0.6, 0.8], 14: [0.8, 10]}
 
             fonts = []
             for v_norm in np.array(list(words_to_highlight_dict.values()))[:, 1]:
@@ -1283,7 +1281,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
             Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
             unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
 
-            plt.scatter(Xs, Ys, c=colours[i], label=labels[i], zorder=0)
+            plt.scatter(Xs, Ys, c=colours[i], label=labels[i], zorder=0, alpha=0.4)
             for label, x, y in zip(words, Xs, Ys):
 
                 # First check if label is in word_to_highlight (i.e. if it has a cluster of quiver arrow heads)
@@ -1298,16 +1296,17 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
                 elif label in labels_text:
                     plt.rc('font', size=8)
                     clr = 'k'
-                    zord = 90
-                    wght = 'normal'
+                    zord = 95
+                    wght = 'bold'
                     xypos = (-5, -5)
 
                 else:
-                    plt.rc('font', size=6)
-                    clr = 'darkgrey'
-                    zord = 5
-                    wght = 'normal'
-                    xypos = (-5, 0)
+                    continue
+                    # plt.rc('font', size=6)
+                    # clr = 'darkgrey'
+                    # zord = 5
+                    # wght = 'normal'
+                    # xypos = (-5, 0)
 
                 plt.annotate(label, xy=(x, y), xytext=xypos, textcoords="offset points", color=clr, zorder=zord, weight=wght)
 
@@ -1333,6 +1332,7 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
 
         if speakerwise_colouring:
             colour_for_segment = speakerwise_colours[spkr_idx]
+
 
         xs = [x[0] for x in node_position]
         ys = [x[1] for x in node_position]
@@ -1371,24 +1371,31 @@ def Plot_Quiver_And_Embeddings(segments_info_df_1, keyword_vectors_df, transcrip
             line_wdth = 0.002
 
         plt.rc('font', size=10)  # putting font back to normal
+
         plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-                   angles='xy', scale=1, color=colour_for_segment, width=line_wdth, zorder=10)
+                   angles='xy', scale=1, color=colour_for_segment, width=line_wdth, zorder=6)
 
         #plot special colours for the first and last point
-        plt.plot([xs[0]], [ys[0]], 'o', color=colour_for_segment, markersize=14)
-        plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=10)
-        plt.plot([xs[-1]], [ys[-1]], 'o', color=colour_for_segment, markersize=14)
-        plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=10)
+        if speakerwise_colouring:
+            plt.plot([xs[0]], [ys[0]], 'o', color=colour_for_segment, markersize=11)
+        plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+        if speakerwise_colouring:
+            plt.plot([xs[-1]], [ys[-1]], 'o', color=colour_for_segment, markersize=11)
+        plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
 
         spkr_idx += 1
 
     line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
     line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
-    line3 = Line2D([0], [0], color=speakerwise_colours[0], lw=1),
-    line4 = Line2D([0], [0], color=speakerwise_colours[1], lw=1),
+    if speakerwise_colouring:
+        line3 = Line2D([0], [0], color=speakerwise_colours[0], lw=1),
+        line4 = Line2D([0], [0], color=speakerwise_colours[1], lw=1),
 
-    plt.legend((line1, line2, line3, line4), ('Beginning of Conversation', 'End of Conversation',
-                                              names[0], names[1]), prop={'size': 7})
+        plt.legend((line1, line2, line3, line4), ('Beginning of Conversation', 'End of Conversation',
+                                                  names[0], names[1]), prop={'size': 7})
+    else:
+        plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
+
     plt.title(' '.join(save_name.split('_')))
     if save_fig:
         plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
@@ -1413,7 +1420,7 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df_1, keyword_vectors_df
     Note updated yet.
     Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
     """
-    speakerwise_colours = ['b', 'purple']
+    speakerwise_colours = ['cornflowerblue', 'darkorchid']
     spkr_idx = 0
     # set up a figure twice as wide as it is tall
     fig = plt.figure(figsize=(22, 11))  # figsize=(22, 11)
@@ -1681,6 +1688,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     # content_sentences = Preprocess_Content(all_utterances)
     # Remove tags
     content_sentences = [utt[6:-3] for utt in all_utterances]
+    print('content_sentences', content_sentences[:20])
 
 
     # if not speakerwise:
@@ -1707,7 +1715,9 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
                                                     Num_Even_Segs=Even_number_of_segments,
                                                     cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
                                                    save_fig=saving_figs)
-    if speakerwise:
+        print('first_sent_idxs_list', first_sent_idxs_list)
+
+    elif speakerwise:
         first_sent_idxs_list_1 = Peform_Segmentation(utterances_speakerwise[0], segmentation_method=seg_method,
                                                    Num_Even_Segs=Even_number_of_segments,
                                                    cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
@@ -1746,15 +1756,16 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     else:
         sub_folder_name = transcript_name
 
-
     if not speakerwise:
-        segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
-                                                save_name=save_name, Info=True)
+        # segments_info_df = get_segments_info(first_sent_idxs_list, content_sentences, keyword_vectors_df, sub_folder_name,
+        #                                         save_name=save_name, Info=True)
 
         # OR just load the dataframe
+        print('loading segments_info_df in not pseakerwise')
         segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
+        print(segments_info_df.head().to_string())
 
-    if speakerwise:
+    elif speakerwise:
         for idx_list, utterances, name in zip([first_sent_idxs_list_1, first_sent_idxs_list_1], utterances_speakerwise, names):
             get_segments_info(idx_list, utterances, keyword_vectors_df, sub_folder_name, save_name=save_name+name, Info=True)
 
@@ -1769,8 +1780,6 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
     if just_analysis:               # not interested in plotting etc
         return
-
-
     ## Plot Word Embedding
     # Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
@@ -1787,7 +1796,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     if not speakerwise:
         Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1=segments_info_df, save_name=save_name, transcript_name=sub_folder_name,
                                             Node_Position=node_location_method,  save_fig=saving_figs, plot_hist_too=plot_hist_too,
-                                            colour_quiver_plots=colour_quiver_plots, speakerwise_coloring = False, names=names)
+                                            colour_quiver_plots=True, speakerwise_coloring=False, names=names)
     if speakerwise:
         # Plot 2D Topic Evolution for each speaker separately
         save_name_spkrwise = save_name + '_SpeakerWise'
@@ -1795,6 +1804,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
                                             segments_info_df_2=segments_info_df_2, names=names,
                                             Node_Position=node_location_method,  save_fig=saving_figs, plot_hist_too=plot_hist_too,
                                             colour_quiver_plots=False, speakerwise_coloring=True)
+
 
     ## Plot Quiver + Embedding
     if seg_method == 'Even':
@@ -1807,10 +1817,11 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
         save_name = 'SliceCast_Segments_Quiver_and_Embeddings_Plot_With_{0}_NodePosition'.format(node_location_method)
 
     if not speakerwise:
+        print('Plot_Quiver_And_Embeddings', Plot_Quiver_And_Embeddings)
         Plot_Quiver_And_Embeddings(segments_info_df_1=segments_info_df, keyword_vectors_df=keyword_vectors_df, names=names,
                                    transcript_name= sub_folder_name, save_name=save_name,
                                    Node_Position=node_location_method, only_nouns=True, save_fig=saving_figs,
-                                   colour_quiver_plots=colour_quiver_plots, speakerwise_colouring=False)
+                                   colour_quiver_plots=True, speakerwise_colouring=False)
     if speakerwise:
         save_name_spkrwise = save_name + '_SpeakerWise'
         Plot_Quiver_And_Embeddings(segments_info_df_1=segments_info_df_1, segments_info_df_2=segments_info_df_2,
