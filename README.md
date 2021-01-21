@@ -120,8 +120,8 @@ Both plotted on their shared word embedding space.
 
 Elon Musk interview...
 
-<img src = "Saved_Images/combined_podcast/SpeakerWise_Elon.png" width ="900" />
-TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation
+<img src = "/Users/ShonaCW/Desktop/Screenshot 2021-01-21 at 09.57.23.png" width ="900" />
+TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation 
 
 # Analysis
 
