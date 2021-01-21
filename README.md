@@ -120,7 +120,7 @@ Both plotted on their shared word embedding space.
 
 Elon Musk interview...
 
-<img src = "/Users/ShonaCW/Desktop/Screenshot 2021-01-21 at 09.57.23.png" width ="900" />
+<img src = "Screenshots/Screenshot 2021-01-21 at 09.57.23.png" width ="900" />
 TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation 
 
 # Analysis
