@@ -26,10 +26,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/Analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/50_Even_segments_info_dfElon Musk.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/50_Even_segments_info_dfElon Musk.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/50_Even_segments_info_dfJoe Rogan.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Saved_dfs/combined_podcast/joe_rogan_elon_musk/50_Even_segments_info_dfJoe Rogan.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msci-project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msci-project/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -240,14 +237,9 @@
       <workItem from="1609019654916" duration="19071000" />
       <workItem from="1609675898597" duration="777000" />
       <workItem from="1610106788839" duration="91131000" />
-      <workItem from="1611072058704" duration="49749000" />
-    </task>
-    <task id="LOCAL-00031" summary="-">
-      <created>1610369300442</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1610369300442</updated>
+      <workItem from="1611072058704" duration="50505000" />
+      <workItem from="1611227614438" duration="60000" />
+      <workItem from="1611228664618" duration="274000" />
     </task>
     <task id="LOCAL-00032" summary="-">
       <created>1610369343719</created>
@@ -585,7 +577,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611223270533</updated>
     </task>
-    <option name="localTasksCounter" value="80" />
+    <task id="LOCAL-00080" summary="-">
+      <created>1611225264668</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1611225264668</updated>
+    </task>
+    <option name="localTasksCounter" value="81" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -626,14 +625,14 @@
     <MESSAGE value="fixed noun issue" />
     <MESSAGE value="keyword analysis" />
     <MESSAGE value="Added functionality for plots to have the Combined word embedding as background so that we can compare between transcripts" />
-    <MESSAGE value="-" />
     <MESSAGE value="added colour to quiver lines as a measure of segment 'richness'" />
     <MESSAGE value="Colour/ Histogram/ loudness of word embedding" />
     <MESSAGE value="updated README.md" />
     <MESSAGE value="halfway through speakerwise plotting" />
     <MESSAGE value="Added Speakerwise Plotting" />
     <MESSAGE value="Added Speakerwise Plotting to 3D plot + added word embedding in background (although not neatly)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Speakerwise Plotting to 3D plot + added word embedding in background (although not neatly)" />
+    <MESSAGE value="-" />
+    <option name="LAST_COMMIT_MESSAGE" value="-" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -648,39 +647,39 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1611223270437">
+    <state x="45" y="27" key="CommitChangelistDialog2" timestamp="1611225264473">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610628622742" />
-    <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611223270437" />
+    <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611225264473" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1610211683036">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog/0.23.1440.820@0.23.1440.820" timestamp="1610211683036" />
-    <state width="1398" height="239" key="GridCell.Tab.0.bottom" timestamp="1611224365858">
+    <state width="1398" height="95" key="GridCell.Tab.0.bottom" timestamp="1611227326434">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151683" />
     <state width="1388" height="240" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878371" />
-    <state width="1398" height="239" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611224365858" />
-    <state width="1398" height="239" key="GridCell.Tab.0.center" timestamp="1611224365857">
+    <state width="1398" height="95" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611227326434" />
+    <state width="1398" height="95" key="GridCell.Tab.0.center" timestamp="1611227326433">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151682" />
     <state width="1388" height="240" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1398" height="239" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611224365857" />
-    <state width="1398" height="239" key="GridCell.Tab.0.left" timestamp="1611224365856">
+    <state width="1398" height="95" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611227326433" />
+    <state width="1398" height="95" key="GridCell.Tab.0.left" timestamp="1611227326432">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151681" />
     <state width="1388" height="240" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878369" />
-    <state width="1398" height="239" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611224365856" />
-    <state width="1398" height="239" key="GridCell.Tab.0.right" timestamp="1611224365857">
+    <state width="1398" height="95" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611227326432" />
+    <state width="1398" height="95" key="GridCell.Tab.0.right" timestamp="1611227326434">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1388" height="240" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1610636151682" />
     <state width="1388" height="240" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1398" height="239" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611224365857" />
+    <state width="1398" height="95" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611227326434" />
     <state width="1386" height="263" key="GridCell.Tab.1.bottom" timestamp="1611072020148">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -710,14 +709,18 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog/0.23.1440.820@0.23.1440.820" timestamp="1609020322077" />
-    <state x="503" y="352" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1610390924861">
+    <state x="503" y="352" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1611229059537">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="503" y="352" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.820@0.23.1440.820" timestamp="1610390924861" />
-    <state x="459" y="309" key="git4idea.remote.GitConfigureRemotesDialog" timestamp="1609020736844">
+    <state x="503" y="352" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.820@0.23.1440.820" timestamp="1611229059536" />
+    <state x="299" y="228" key="git4idea.merge.GitPullDialog" timestamp="1611228986342">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
-    <state x="459" y="309" key="git4idea.remote.GitConfigureRemotesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609020736844" />
+    <state x="299" y="228" key="git4idea.merge.GitPullDialog/0.23.1440.820@0.23.1440.820" timestamp="1611228986342" />
+    <state x="459" y="309" key="git4idea.remote.GitConfigureRemotesDialog" timestamp="1611228799580">
+      <screen x="0" y="23" width="1440" height="820" />
+    </state>
+    <state x="459" y="309" key="git4idea.remote.GitConfigureRemotesDialog/0.23.1440.820@0.23.1440.820" timestamp="1611228799580" />
     <state x="377" y="167" width="670" height="676" key="search.everywhere.popup" timestamp="1610627330623">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
