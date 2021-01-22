@@ -1663,7 +1663,7 @@ def Split_Transcript_By_Speaker(content, names):
 
 
 
-def Simple_Line():
+def Simple_Line_DA():
     """
     Function to plot line
     black line moving between points
@@ -1688,20 +1688,19 @@ def Simple_Line():
     plt.title('Change of Direction when an Utterance contains a "Changer" DA')
     old_sent_coords = [0, 0]
     old_idx = 0
-    old_dir_x = 1
     for idx, row in file[1:200].iterrows():
         new_speaker = row['speaker_change']
         old_speaker = file.speaker[old_idx] #i.e. the speaker who said all utterances between old index and new index
+
         if not new_speaker:
             # Only want to plot line when the speaker has changed
             old_idx = idx
             continue
 
         colour = speakers_map[old_speaker]
-        # da_labels = row['da_label']
-        das_covered = list(file.da_label[old_idx:idx])
 
         # Check whether any change DAs between last node and now..
+        das_covered = list(file.da_label[old_idx:idx])
         tag_change = any(x in changer_DAs for x in das_covered)
 
         if not tag_change:
@@ -1744,8 +1743,82 @@ def Simple_Line():
     plt.show()
     return
 
+def Simple_Line_Topics():
+    """"Function """
+    from operator import add
+    changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
+    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+    step_size = 1
 
-Simple_Line()
+    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    print(file[:100].to_string())
+
+    plt.figure()
+    plt.title('Change of Direction when topic changes')
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    old_topics, most_recently_plotted = [], ''
+    for idx, row in file[1:200].iterrows():
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+        colour = speakers_map[old_speaker]
+        if str(file.topics[old_idx]) == 'nan':
+            old_idx = idx
+            continue
+        print('\nold_topics', old_topics)
+        current_topic = list(row['topics'])
+        print('current_topic', current_topic)
+        continued_topics = [x for x in old_topics if x in current_topic]
+        # if continued_topics != most_recently_plotted:
+        #     # i.e. yes we're carrying on topics from last utterance to this one, but it's not been plotted!
+        print('continued_topics', continued_topics)
+
+        continued_topic = False if len(continued_topics)==0 else True #new_topic != current_topic else False
+        print('continued_topic?', continued_topic)
+        if continued_topic:
+            new_dir_x = 1 # 1 bc x direction is for continuing on convo on current topic
+            change_in_coords = [step_size, 0]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-', color=colour)
+
+        if not continued_topic:
+            # print('\ntopic', row['topics'])
+            # print('words', row['key_words'])
+            new_topic = [x for x in current_topic if x in list(file.topics[idx+1])]
+
+            change_in_coords = [0, step_size]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.annotate(', '.join(new_topic), xy=(new_sent_coords[0]-15, new_sent_coords[1]+0.2), color='k',
+                         zorder=100),  # textcoords="offset points" #weight=)
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)  # plot line
+
+        old_topics = new_topic
+        old_sent_coords = new_sent_coords
+        old_idx = idx
+
+    # If want equal axis sizes
+    # largest_dim = max(old_sent_coords) + 5
+    # plt.xlim(0, largest_dim)
+    # plt.ylim(-10, largest_dim)
+    legend_handles = []
+    legend_labels = []
+    for i in range(len(list(speakers_map.keys()))):
+        legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
+        legend_labels.append(list(speakers_map.keys())[i])
+
+    # plt.xlabel('Only Statements in Utterance')
+    # plt.ylabel('Question in Utterance')
+    plt.legend(legend_handles, legend_labels)
+    plt.show()
+
+
+#Simple_Line_DA()
+Simple_Line_Topics()
+
 
 
 
@@ -1980,12 +2053,12 @@ if __name__ == '_/_main__':
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
-    just_analysis = True
+    just_analysis = False
 
     use_combined_embed = True
     speakerwise = True
 
-    colour_quiver_plots = True
+    colour_quiver_plots = False
     plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
 
     # Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,

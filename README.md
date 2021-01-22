@@ -124,9 +124,15 @@ Elon Musk interview...
 TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation 
 
 **For Meeting**
+Move in y direction when new speaker includes Question in theri Utterance...
+
 <img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="700" />
 <img src = "Screenshots/Screenshot 2021-01-22 at 13.49.30.png" width ="700" />
 
+Move in y direction when new topic detected...
+
+<img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="700" />
+~~~~
 # Analysis
 
 (rough notes for me)
