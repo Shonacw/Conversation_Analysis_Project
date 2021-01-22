@@ -61,7 +61,7 @@ def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
         as above?
 
     Question 5:
-        Which keywords are only mentioned by one speaker? ( note this isn't thorough as the other speaker may talk about
+        Which keywords are only directly mentioned by one speaker? ( note this isn't thorough as the other speaker may talk about
         it too but using pronouns like 'it' 'she' etc.
 
 
@@ -89,7 +89,7 @@ def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
 
     pd.set_option('display.max_columns', 10)
 
-    # segments_info_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/200_Even_segments_info_df.h5', key='df')
+    # segments_info_df = pd.read_hdf('Saved_dfs/combined_podcast/joe_rogan_elon_musk/50_Even_segments_info_dfElon Musk.h5', key='df')
     # keyword_vectors_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5', key='df')
 
     # noun_list_section1 = list(segments_info_df['noun_list'][0].values)

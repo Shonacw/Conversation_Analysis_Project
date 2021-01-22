@@ -52,7 +52,7 @@ from mpl_toolkits.mplot3d import proj3d
 
 from InferSent.models import InferSent
 import importlib
-topics = importlib.import_module("msci-project.src.topics")
+# topics = importlib.import_module("msci-project.src.topics")
 Analysis = importlib.import_module("Analysis")
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -1663,6 +1663,75 @@ def Split_Transcript_By_Speaker(content, names):
 
 
 
+def Simple_Line():
+    """
+    Function to plot line
+    black line moving between points
+
+    step size = 2
+
+    if two utterances in a row  both ave changer DAs but are spoken by the same speaker, only count that as one
+    or look at the second Q and check whether the NEXT sentence has a '1' for the speaker change?
+
+    or only add a node when the speaker has changed and check all labels that happened between this one and the last
+    node and if ANY of them are in change_DAs then change direction
+    """
+    from operator import add
+    changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
+    step_size = 2
+
+    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    print(file[:10].to_string())
+
+    plt.figure()
+    plt.title('Evolution of Joe Rogan and Elon Musk')
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    old_dir_x = 1
+    for idx, row in file[1:5].iterrows():
+        new_speaker = row['speaker_change']
+        if not new_speaker:
+            # Only want to plot line when the speaker has changed
+            old_idx = idx
+            continue
+
+        speaker = row['speaker']
+        # da_labels = row['da_label']
+        das_covered = list(file.da_label[old_idx:idx])
+
+        # Check whether any change DAs between last node and now..
+        tag_change = True if das_covered.any() in changer_DAs else False
+
+        if not tag_change:
+            new_dir_x = old_dir_x  # 1 if moving along x, 0 if moving along y
+            change_in_coords = [2, 0] if new_dir_x else [0, 2]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k') #plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]],[old_sent_coords[1], new_sent_coords[1]], '-',
+                     color='k')# plot line
+
+        if tag_change:
+            new_dir_x = not(old_dir_x)
+            change_in_coords = [2, 0] if new_dir_x else [0, 2]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k')  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color='k')  # plot line
+
+        old_sent_coords = new_sent_coords
+
+    plt.show()
+    return
+
+
+Simple_Line()
+
+
+
+
+
 def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
        node_location_method, Even_number_of_segments,
        InferSent_cos_sim_limit, Plot_Segmentation, saving_figs, put_underscore_grams, shift_ngrams, just_analysis,
@@ -1684,6 +1753,22 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 
     all_utterances, utterances_speakerwise = Split_Transcript_By_Speaker(content, names)
+
+    #save new utterances as txt
+
+    #combined_utts =
+    with open("txts/Joe_Rogan_Elon_Musk/all_utterances.txt", "w") as f:
+        for item in all_utterances:
+            f.write("%s\n" % item)
+
+
+    with open("txts/Joe_Rogan_Elon_Musk/utterances_speakerwise_Joe.txt", "w") as f:
+        for item in utterances_speakerwise[0]:
+            f.write("%s\n" % item)
+
+    with open("txts/Joe_Rogan_Elon_Musk/utterances_speakerwise_Elon.txt", "w") as f:
+        for item in utterances_speakerwise[1]:
+            f.write("%s\n" % item)
 
     # Lemmatize utterances (TODO: change name "content_sentences" to "content_utterances" to be more precise)
     # content_sentences = Preprocess_Content(all_utterances)
@@ -1857,7 +1942,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 
 ## CODE...
-if __name__ == '__main__':
+if __name__ == '_/_main__':
     path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
@@ -1884,6 +1969,6 @@ if __name__ == '__main__':
     colour_quiver_plots = True
     plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
 
-    Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-       InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
-       just_analysis, plot_hist_too, colour_quiver_plots)
+    # Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+    #    InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
+    #    just_analysis, plot_hist_too, colour_quiver_plots)
