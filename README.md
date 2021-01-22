@@ -123,6 +123,10 @@ Elon Musk interview...
 <img src = "Screenshots/Screenshot 2021-01-21 at 09.57.23.png" width ="900" />
 TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation 
 
+**For Meeting**
+<img src = "processed_transcripts/Screenshot 2021-01-22 at 13.47.44.png" width ="700" />
+<img src = "processed_transcripts/Screenshot 2021-01-22 at 13.49.30.png" width ="700" />
+
 # Analysis
 
 (rough notes for me)

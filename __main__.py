@@ -1678,50 +1678,69 @@ def Simple_Line():
     """
     from operator import add
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
-    step_size = 2
+    speakers_map = {'joe rogan': 'purple', 'elon musk' : 'blue'}
+    step_size = 1
 
     file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
-    print(file[:10].to_string())
+    print(file[:100].to_string())
 
     plt.figure()
-    plt.title('Evolution of Joe Rogan and Elon Musk')
+    plt.title('Change of Direction when an Utterance contains a "Changer" DA')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_dir_x = 1
-    for idx, row in file[1:5].iterrows():
+    for idx, row in file[1:200].iterrows():
         new_speaker = row['speaker_change']
+        old_speaker = file.speaker[old_idx] #i.e. the speaker who said all utterances between old index and new index
         if not new_speaker:
             # Only want to plot line when the speaker has changed
             old_idx = idx
             continue
 
-        speaker = row['speaker']
+        colour = speakers_map[old_speaker]
         # da_labels = row['da_label']
         das_covered = list(file.da_label[old_idx:idx])
 
         # Check whether any change DAs between last node and now..
-        tag_change = True if das_covered.any() in changer_DAs else False
+        tag_change = any(x in changer_DAs for x in das_covered)
 
         if not tag_change:
-            new_dir_x = old_dir_x  # 1 if moving along x, 0 if moving along y
-            change_in_coords = [2, 0] if new_dir_x else [0, 2]
+            new_dir_x = 1 # 1 bc x direction is for continuing on convo #old_dir_x  # 1 if moving along x, 0 if moving along y
+            change_in_coords = [step_size, 0] if new_dir_x else [0, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k') #plot node
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3) #plot node
             plt.plot([old_sent_coords[0], new_sent_coords[0]],[old_sent_coords[1], new_sent_coords[1]], '-',
-                     color='k')# plot line
+                     color=colour)# plot line
 
         if tag_change:
-            new_dir_x = not(old_dir_x)
-            change_in_coords = [2, 0] if new_dir_x else [0, 2]
+            print('\ntopic', row['topics'])
+            print('words', row['key_words'])
+            new_dir_x = 0 #not(old_dir_x)
+            change_in_coords = [step_size, 0] if new_dir_x else [0, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k')  # plot node
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.annotate(row['topics'][0], xy=(new_sent_coords[0]-10, new_sent_coords[1]+0.1), color='k', zorder=100), # textcoords="offset points" #weight=)
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color='k')  # plot line
+                     color=colour)  # plot line
 
         old_sent_coords = new_sent_coords
+        old_idx = idx
 
+    # If want equal axis sizes
+    # largest_dim = max(old_sent_coords) + 5
+    # plt.xlim(0, largest_dim)
+    # plt.ylim(-10, largest_dim)
+    legend_handles = []
+    legend_labels = []
+    for i in range(len(list(speakers_map.keys()))):
+        legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
+        legend_labels.append(list(speakers_map.keys())[i])
+
+    # plt.xlabel('Only Statements in Utterance')
+    # plt.ylabel('Question in Utterance')
+    plt.legend(legend_handles, legend_labels)
     plt.show()
     return
 
