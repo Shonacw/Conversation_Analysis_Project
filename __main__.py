@@ -1746,7 +1746,7 @@ def Simple_Line_DA():
 def Simple_Line_Topics():
     """"Function """
     from operator import add
-    import tables
+    import tabulate
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size = 1
@@ -1815,6 +1815,7 @@ def Simple_Line_Topics():
     # Save df
     topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
     print(topic_linegraph_df.to_string())
+    print(tabulate.tabulate(topic_linegraph_df.values, topic_linegraph_df.columns, tablefmt="pipe"))
     topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
 
     legend_handles = []
@@ -1827,6 +1828,8 @@ def Simple_Line_Topics():
     # plt.ylabel('Question in Utterance')
     plt.legend(legend_handles, legend_labels)
     plt.show()
+
+
 
 
 #Simple_Line_DA()
