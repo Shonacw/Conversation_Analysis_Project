@@ -140,29 +140,7 @@ Move in y direction when new topic detected... done for the first 200 utterances
 
 
 ~~~~
-# Analysis
 
-(rough notes for me)
-Question 1:
-        - Where do most of the keywords get extracted from? Are the top PKE (TopicRank) keywords extracted in an evenly-
-        distributed manner or are they mainly extracted from the beginning/middle/end of the transcript?
-        - What does that say about the focus of the convo in these sections? i.e. are less important topics typically
-        discussed at the same times (fraction-wise) during a conversation/ during a podcast?
-
-    Question 2:
-        - Find the top keywords revisited during the podcast, i.e. the top keywords in terms of a Counter for the
-        entire transcript. Then plot segment number vs. # uses of word (in that segment), to
-        show which parts of the convo they're brought up in most.
-
-    Question 3:
-        - Does the conversation jump around or do topics slowly change? [further notes in Analysis script]
-        
-     Question 4:
-        - Does the number of keywords contained in a section tell us about the richness of conversation? (?)
-        - o	Which speaker ends most of their utterances with a question
-        - o	Once defined what a topic is, see who is the person who first introduces a topic – is this the same person
-        as above?
-        
 # Code Usage 
 
 Run \_\_main__.py with the following params
