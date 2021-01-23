@@ -1869,11 +1869,248 @@ def Simple_Line_Topics():
     plt.show()
 
 
+def Shifting_Line_Topics():
+    """"Function """
+    from operator import add
+    import tabulate
+    import string
+    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+    step_size_x, step_size_y = 1, 1
 
+    topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
+                            'DA_Label': []}
+
+    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    print(file[:100].to_string())
+
+    plt.figure()
+    plt.title('Shifting Topic Line ')
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    old_topics, most_recently_plotted = [], ''
+    Dict_of_topics, Dict_of_topics_counts = {}, {}
+
+    for idx, row in file[1:400].iterrows():
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+        colour = speakers_map[old_speaker]
+        if str(file.topics[old_idx]) == 'nan':
+            old_idx = idx
+            continue
+
+        current_topics = list(row['topics'])
+        continued_topics = [x for x in old_topics if x in current_topics]
+        continued_topic = False if len(continued_topics) == 0 else True
+
+        if continued_topic:
+
+            change_in_coords = [0, step_size_y]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)
+
+        if not continued_topic:
+            new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
+            topic_linegraph_dict['Idx'].append(idx)
+            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
+            topic_linegraph_dict['New_Topic'].append(new_topic)
+            topic_linegraph_dict['Speaker'].append(row['speaker'])
+            topic_linegraph_dict['Sentence'].append(row['utterance'])
+            topic_linegraph_dict['DA_Label'].append(row['da_label'])
+
+            change_in_coords = [step_size_x, 0]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+
+            ## NOW CHECK FOR RETURNS...
+            print('new_topic', new_topic)
+            print(Dict_of_topics)
+            # Check if topic has already been visited.
+            the_topic = None
+            for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
+                if topic in Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[topic]
+                    the_topic = topic
+                else:
+                    continue
+
+
+            # check if X_pos has been assigned, if not, assign new position
+            if the_topic is None:
+                for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
+                    Dict_of_topics[topic] = new_sent_coords
+                    Dict_of_topics_counts[topic] = 1
+
+                # then plot…
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+                plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+0.1, new_sent_coords[1]), color='k',
+                             zorder=100),  # textcoords="offset points" #weight
+
+
+            else: # i.e. if we are jumping back to a previously mentioned topic
+                Dict_of_topics_counts[the_topic] += 1
+                step_size_x += 0.1  # also adjust step size so don't return to other topics
+                new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
+
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+                plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
+
+                plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                             zorder=100),  # textcoords="offset points" #weight=
+
+                # if Dict_of_topics_counts[topic] == 2:
+                #     # Annotate the line
+                #     plt.annotate(the_topic, xy=(Dict_of_topics[topic][0]-2, Dict_of_topics[topic][1]+2), color='k',
+                #                  zorder=100, rotation=90, weight='bold'),  # textcoords="offset points" #weight=)
+
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)  # plot line
+
+        old_topics = current_topics #new_topic
+        old_sent_coords = new_sent_coords
+        old_idx = idx
+
+
+    print(' the final index of row', idx)
+    print('the final y position', new_sent_coords[1])
+    # print('Dict_of_topics', Dict_of_topics)
+    # print('Dict_of_topics_counts', Dict_of_topics_counts)
+    legend_handles = []
+    legend_labels = []
+    for i in range(len(list(speakers_map.keys()))):
+        legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
+        legend_labels.append(list(speakers_map.keys())[i])
+
+    # plt.xlabel('Only Statements in Utterance')
+    # plt.ylabel('Question in Utterance')
+    plt.legend(legend_handles, legend_labels)
+    plt.show()
+    return
+
+def Shifting_Line_Topics_2():
+    """"Function """
+    from operator import add
+    import tabulate
+    import string
+    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+    step_size_x, step_size_y = 1, 1
+
+    topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
+                            'DA_Label': []}
+
+    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    print(file[:100].to_string())
+
+    plt.figure()
+    plt.title('Shifting Topic Line Simplified')
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    old_topics, most_recently_plotted = [], ''
+    Dict_of_topics, Dict_of_topics_counts = {}, {}
+
+    for idx, row in file[1:500].iterrows():
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+        colour = 'k' #speakers_map[old_speaker]
+        if str(file.topics[old_idx]) == 'nan':
+            old_idx = idx
+            continue
+
+        current_topics = list(row['topics'])
+        continued_topics = [x for x in old_topics if x in current_topics]
+        continued_topic = False if len(continued_topics) == 0 else True
+
+        if continued_topic:
+
+            change_in_coords = [0, step_size_y]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)
+
+        if not continued_topic:
+            new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
+            topic_linegraph_dict['Idx'].append(idx)
+            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
+            topic_linegraph_dict['New_Topic'].append(new_topic)
+            topic_linegraph_dict['Speaker'].append(row['speaker'])
+            topic_linegraph_dict['Sentence'].append(row['utterance'])
+            topic_linegraph_dict['DA_Label'].append(row['da_label'])
+
+            change_in_coords = [step_size_x, 0]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+
+            ## NOW CHECK FOR RETURNS...
+            print('new_topic', new_topic)
+            print(Dict_of_topics)
+            # Check if topic has already been visited.
+            the_topic = None
+            for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
+                if topic in Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[topic]
+                    the_topic = topic
+                else:
+                    continue
+
+
+            # check if X_pos has been assigned, if not, assign new position
+            if the_topic is None:
+                for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
+                    Dict_of_topics[topic] = new_sent_coords
+                    Dict_of_topics_counts[topic] = 1
+
+                # then plot…
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+0.1, new_sent_coords[1]), color='k',
+                #              zorder=100),  # textcoords="offset points" #weight
+
+
+            else: # i.e. if we are jumping back to a previously mentioned topic
+                Dict_of_topics_counts[the_topic] += 1
+                step_size_x += 0.1  # also adjust step size so don't return to other topics
+                new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
+
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
+
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                #              zorder=100),  # textcoords="offset points" #weight=
+
+                if Dict_of_topics_counts[the_topic] == 2:
+                    # Annotate the line
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+10), color='k',
+                                 zorder=100, rotation=90, weight='bold'),  # textcoords="offset points" #weight=)
+
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)  # plot line
+
+        old_topics = current_topics #new_topic
+        old_sent_coords = new_sent_coords
+        old_idx = idx
+
+
+    print(' the final index of row', idx)
+    print('the final y position', new_sent_coords[1])
+    # print('Dict_of_topics', Dict_of_topics)
+    # print('Dict_of_topics_counts', Dict_of_topics_counts)
+    # legend_handles = []
+    # legend_labels = []
+    # for i in range(len(list(speakers_map.keys()))):
+    #     legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
+    #     legend_labels.append(list(speakers_map.keys())[i])
+
+    # plt.xlabel('Only Statements in Utterance')
+    # plt.ylabel('Question in Utterance')
+    # plt.legend(legend_handles, legend_labels)
+    plt.show()
+    return
 
 #Simple_Line_DA()
-Simple_Line_Topics()
-
+#Simple_Line_Topics()
+#Shifting_Line_Topics()
+Shifting_Line_Topics_2()
 
 
 

@@ -138,6 +138,13 @@ Move in y direction when new topic detected... done for the first 200 utterances
 | Joe Rogan |                 854 |                      161 |                 519 |                            74 |                                50 |                               20 |
 | Elon Musk |                 847 |                       29 |                 591 |                            80 |                                64 |                                3 |
 
+Topic Line with a shift when previous topic detected...
+
+<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="700" />
+
+...and a simplified version...
+
+<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="700" />
 
 
 # Code Usage 
