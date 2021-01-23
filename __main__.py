@@ -1818,8 +1818,8 @@ def Simple_Line_Topics():
 
     # Mini df for printing
     mini_df = {'Speaker': [], 'Total #Utterances': [], 'Total #Questions Asked': [], 'Total #Statements': [],
-               'Number of Topics Introduced': [], 'Topics Introduced': [],
-               '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]}
+               'Number of Topics Introduced': [],
+               '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]} #'Topics Introduced': [],
 
     mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
     joe_total_df = file[file['speaker'] == 'joe rogan']
@@ -1842,7 +1842,7 @@ def Simple_Line_Topics():
     topics_introduced_elon = ', '.join(list(itertools.chain.from_iterable(list(elon_df.New_Topic))))
     print('topics_introduced_joe', topics_introduced_joe)
     print('topics_introduced_elon', topics_introduced_elon)
-    mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
+    #mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
     mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in joe_df.iterrows() if 'Statement' in row['DA_Label']]))
     mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in elon_df.iterrows() if 'Statement' in row['DA_Label']]))
     mini_df['#Topics introduced by Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
