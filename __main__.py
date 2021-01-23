@@ -1746,9 +1746,14 @@ def Simple_Line_DA():
 def Simple_Line_Topics():
     """"Function """
     from operator import add
+    import tables
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size = 1
+
+    topic_linegraph_dict = {'Idx' :[], 'All_Current_Topics' :[], 'New_Topic':[], 'Speaker':[], 'Sentence':[],
+                            'DA_Label': []}
+
 
     file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
     print(file[:100].to_string())
@@ -1765,9 +1770,10 @@ def Simple_Line_Topics():
             old_idx = idx
             continue
         print('\nold_topics', old_topics)
-        current_topic = list(row['topics'])
-        print('current_topic', current_topic)
-        continued_topics = [x for x in old_topics if x in current_topic]
+        current_topics = list(row['topics'])
+
+        print('current_topic', current_topics)
+        continued_topics = [x for x in old_topics if x in current_topics]
         # if continued_topics != most_recently_plotted:
         #     # i.e. yes we're carrying on topics from last utterance to this one, but it's not been plotted!
         print('continued_topics', continued_topics)
@@ -1785,7 +1791,13 @@ def Simple_Line_Topics():
         if not continued_topic:
             # print('\ntopic', row['topics'])
             # print('words', row['key_words'])
-            new_topic = [x for x in current_topic if x in list(file.topics[idx+1])]
+            new_topic = [x for x in current_topics if x in list(file.topics[idx+1])]
+            topic_linegraph_dict['Idx'].append(idx)
+            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
+            topic_linegraph_dict['New_Topic'].append(new_topic)
+            topic_linegraph_dict['Speaker'].append(row['speaker'])
+            topic_linegraph_dict['Sentence'].append(row['utterance'])
+            topic_linegraph_dict['DA_Label'].append(row['da_label'])
 
             change_in_coords = [0, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
@@ -1800,10 +1812,11 @@ def Simple_Line_Topics():
         old_sent_coords = new_sent_coords
         old_idx = idx
 
-    # If want equal axis sizes
-    # largest_dim = max(old_sent_coords) + 5
-    # plt.xlim(0, largest_dim)
-    # plt.ylim(-10, largest_dim)
+    # Save df
+    topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
+    print(topic_linegraph_df.to_string())
+    topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
+
     legend_handles = []
     legend_labels = []
     for i in range(len(list(speakers_map.keys()))):
