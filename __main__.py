@@ -1747,6 +1747,7 @@ def Simple_Line_Topics():
     """"Function """
     from operator import add
     import tabulate
+    import string
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size = 1
@@ -1816,7 +1817,7 @@ def Simple_Line_Topics():
     topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
 
     # Mini df for printing
-    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': []}
+    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': [], 'Number introduced using a Statement' :[], 'Number introduced using a Question':[]}
     mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
     joe_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'joe rogan']
     elon_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'elon musk']
@@ -1827,6 +1828,11 @@ def Simple_Line_Topics():
     print('topics_introduced_joe', topics_introduced_joe)
     print('topics_introduced_elon', topics_introduced_elon)
     mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
+    mini_df['Number introduced using a Statement'].append(len([idx for idx, row in joe_df.iterrows() if 'Statement' in row['DA_Label']]))
+    mini_df['Number introduced using a Statement'].append(len([idx for idx, row in elon_df.iterrows() if 'Statement' in row['DA_Label']]))
+    mini_df['Number introduced using a Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
+    mini_df['Number introduced using a Question'].append(len([idx for idx, row in elon_df.iterrows() if 'Question' in row['DA_Label']]))
+
     mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
 
     print(topic_linegraph_df.to_string())
