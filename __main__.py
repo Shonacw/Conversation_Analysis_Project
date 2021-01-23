@@ -1817,7 +1817,7 @@ def Simple_Line_Topics():
     topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
 
     # Mini df for printing
-    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': [], 'Number introduced using a Statement' :[], 'Number introduced using a Question':[]}
+    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': [], '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]}
     mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
     joe_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'joe rogan']
     elon_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'elon musk']
@@ -1828,10 +1828,10 @@ def Simple_Line_Topics():
     print('topics_introduced_joe', topics_introduced_joe)
     print('topics_introduced_elon', topics_introduced_elon)
     mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
-    mini_df['Number introduced using a Statement'].append(len([idx for idx, row in joe_df.iterrows() if 'Statement' in row['DA_Label']]))
-    mini_df['Number introduced using a Statement'].append(len([idx for idx, row in elon_df.iterrows() if 'Statement' in row['DA_Label']]))
-    mini_df['Number introduced using a Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
-    mini_df['Number introduced using a Question'].append(len([idx for idx, row in elon_df.iterrows() if 'Question' in row['DA_Label']]))
+    mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in joe_df.iterrows() if 'Statement' in row['DA_Label']]))
+    mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in elon_df.iterrows() if 'Statement' in row['DA_Label']]))
+    mini_df['#Topics introduced by Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
+    mini_df['#Topics introduced by Question'].append(len([idx for idx, row in elon_df.iterrows() if 'Question' in row['DA_Label']]))
 
     mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
 

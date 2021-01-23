@@ -133,10 +133,12 @@ Move in y direction when new topic detected...
 
 <img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="700" />
 
-| Speaker   |   Number of Topics Introduced | Topics Introduced                                                                                                                                                      |   Number introduced using a Statement |   Number introduced using a Question |
-|:----------|------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------:|-------------------------------------:|
-| Joe Rogan |                             7 | child, name, child, neural_net, brain, people, requirement, house                                                                                                      |                                     3 |                                    4 |
-| Elon Musk |                             9 | sr71, plane, neuron, layer, bird, attack, vector, product, company, capital, service, allocation, the_united_states, finance, law, state, united_states, people, house |                                     9 |                                    0 |
+| Speaker   |   Number of Topics Introduced | Topics Introduced                                                                                                                                                      |   #Topics introduced by Statement |   #Topics introduced by Question |
+|:----------|------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------:|---------------------------------:|
+| Joe Rogan |                             7 | child, name, child, neural_net, brain, people, requirement, house                                                                                                      |                                 3 |                                4 |
+| Elon Musk |                             9 | sr71, plane, neuron, layer, bird, attack, vector, product, company, capital, service, allocation, the_united_states, finance, law, state, united_states, people, house |                                 9 |                                0 |
+
+
 ~~~~
 # Analysis
 
