@@ -1764,7 +1764,7 @@ def Simple_Line_Topics():
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
-    for idx, row in file[1:200].iterrows():
+    for idx, row in file[1:].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = speakers_map[old_speaker]
         if str(file.topics[old_idx]) == 'nan':
@@ -1813,12 +1813,27 @@ def Simple_Line_Topics():
         old_sent_coords = new_sent_coords
         old_idx = idx
 
-    # Save df
+    # Create df
     topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
 
     # Mini df for printing
-    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': [], '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]}
+    mini_df = {'Speaker': [], 'Total #Utterances': [], 'Total #Questions Asked': [], 'Total #Statements': [],
+               'Number of Topics Introduced': [], 'Topics Introduced': [],
+               '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]}
+
     mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
+    joe_total_df = file[file['speaker'] == 'joe rogan']
+    elon_total_df = file[file['speaker'] == 'elon musk']
+    joe_total_utts = len(joe_total_df)
+    elon_total_utts = len(elon_total_df)
+    mini_df['Total #Utterances'] = [joe_total_utts, elon_total_utts]
+    joe_total_Qs = len([idx for idx, row in joe_total_df.iterrows() if 'Question' in row['da_label']])
+    elon_total_Qs = len([idx for idx, row in elon_total_df.iterrows() if 'Question' in row['da_label']])
+    joe_total_Ss = len([idx for idx, row in joe_total_df.iterrows() if 'Statement' in row['da_label']])
+    elon_total_Ss = len([idx for idx, row in elon_total_df.iterrows() if 'Statement' in row['da_label']])
+    mini_df['Total #Questions Asked'] = [joe_total_Qs, elon_total_Qs]
+    mini_df['Total #Statements'] = [joe_total_Ss, elon_total_Ss]
+
     joe_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'joe rogan']
     elon_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'elon musk']
     mini_df['Number of Topics Introduced'].append(len(joe_df))
@@ -1833,14 +1848,14 @@ def Simple_Line_Topics():
     mini_df['#Topics introduced by Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
     mini_df['#Topics introduced by Question'].append(len([idx for idx, row in elon_df.iterrows() if 'Question' in row['DA_Label']]))
 
+    # Create df
     mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
 
-    print(topic_linegraph_df.to_string())
     print(tabulate.tabulate(topic_linegraph_df.values, topic_linegraph_df.columns, tablefmt="pipe"))
-    topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
-
-    print(mini_df.to_string())
     print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
+    topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
+    mini_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/mini_df.h5', key='df', mode='w')
+
 
     legend_handles = []
     legend_labels = []
