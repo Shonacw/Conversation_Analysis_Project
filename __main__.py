@@ -1814,9 +1814,27 @@ def Simple_Line_Topics():
 
     # Save df
     topic_linegraph_df = pd.DataFrame({k: pd.Series(l) for k, l in topic_linegraph_dict.items()})
+
+    # Mini df for printing
+    mini_df = {'Speaker': [], 'Number of Topics Introduced': [], 'Topics Introduced': []}
+    mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
+    joe_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'joe rogan']
+    elon_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'elon musk']
+    mini_df['Number of Topics Introduced'].append(len(joe_df))
+    mini_df['Number of Topics Introduced'].append(len(elon_df))
+    topics_introduced_joe = ', '.join(list(itertools.chain.from_iterable(list(joe_df.New_Topic))))
+    topics_introduced_elon = ', '.join(list(itertools.chain.from_iterable(list(elon_df.New_Topic))))
+    print('topics_introduced_joe', topics_introduced_joe)
+    print('topics_introduced_elon', topics_introduced_elon)
+    mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
+    mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
+
     print(topic_linegraph_df.to_string())
     print(tabulate.tabulate(topic_linegraph_df.values, topic_linegraph_df.columns, tablefmt="pipe"))
     topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
+
+    print(mini_df.to_string())
+    print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
 
     legend_handles = []
     legend_labels = []
