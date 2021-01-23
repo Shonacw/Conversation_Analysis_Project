@@ -132,6 +132,7 @@ Move in y direction when new speaker includes Question in theri Utterance...
 Move in y direction when new topic detected...
 
 <img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="700" />
+
 | Speaker   |   Number of Topics Introduced | Topics Introduced                                                                                                                                                      |
 |:----------|------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Joe Rogan |                             7 | child, name, child, neural_net, brain, people, requirement, house                                                                                                      |
