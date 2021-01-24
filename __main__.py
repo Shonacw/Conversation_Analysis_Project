@@ -1999,17 +1999,17 @@ def Shifting_Line_Topics_2():
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
-    print(file[:100].to_string())
+    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl") #elon_musk #kanye_west # jack_dorsey
+    print(file[:10000].to_string())
 
     plt.figure()
-    plt.title('Shifting Topic Line Simplified')
+    plt.title('Shifting Topic Line Elon Musk')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
     Dict_of_topics, Dict_of_topics_counts = {}, {}
 
-    for idx, row in file[1:500].iterrows():
+    for idx, row in file[1:].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = 'k' #speakers_map[old_speaker]
         if str(file.topics[old_idx]) == 'nan':
@@ -2043,8 +2043,8 @@ def Shifting_Line_Topics_2():
 
 
             ## NOW CHECK FOR RETURNS...
-            print('new_topic', new_topic)
-            print(Dict_of_topics)
+            #print('new_topic', new_topic)
+            #print(Dict_of_topics)
             # Check if topic has already been visited.
             the_topic = None
             for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
@@ -2063,13 +2063,14 @@ def Shifting_Line_Topics_2():
 
                 # then plot…
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
-                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+0.1, new_sent_coords[1]), color='k',
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+1, new_sent_coords[1]), color='k',
                 #              zorder=100),  # textcoords="offset points" #weight
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
 
 
             else: # i.e. if we are jumping back to a previously mentioned topic
                 Dict_of_topics_counts[the_topic] += 1
-                step_size_x += 0.1  # also adjust step size so don't return to other topics
+                step_size_x += 0.5  # also adjust step size so don't return to other topics
                 new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
 
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
@@ -2077,10 +2078,11 @@ def Shifting_Line_Topics_2():
 
                 # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
                 #              zorder=100),  # textcoords="offset points" #weight=
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
 
                 if Dict_of_topics_counts[the_topic] == 2:
                     # Annotate the line
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+10), color='k',
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-5, Dict_of_topics[the_topic][1]+10), color='darkred',
                                  zorder=100, rotation=90, weight='bold'),  # textcoords="offset points" #weight=)
 
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
