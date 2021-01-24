@@ -1999,11 +1999,11 @@ def Shifting_Line_Topics_2():
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl") #elon_musk #kanye_west # jack_dorsey
+    file = pd.read_pickle("processed_transcripts/joe_rogan_jack_dorsey.pkl") #elon_musk #kanye_west # jack_dorsey
     print(file[:10000].to_string())
 
     plt.figure()
-    plt.title('Shifting Topic Line Elon Musk')
+    plt.title('Shifting Topic Line Jack Dorsey LOGx')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
@@ -2082,7 +2082,7 @@ def Shifting_Line_Topics_2():
 
                 if Dict_of_topics_counts[the_topic] == 2:
                     # Annotate the line
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-5, Dict_of_topics[the_topic][1]+10), color='darkred',
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-3, Dict_of_topics[the_topic][1]+10), color='darkred',
                                  zorder=100, rotation=90, weight='bold'),  # textcoords="offset points" #weight=)
 
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
@@ -2106,6 +2106,7 @@ def Shifting_Line_Topics_2():
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
     # plt.legend(legend_handles, legend_labels)
+    plt.xscale('log')
     plt.show()
     return
 

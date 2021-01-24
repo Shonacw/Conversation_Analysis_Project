@@ -150,6 +150,11 @@ And now similar but for the ENTIRE conversations between a) Joe Rogan and Jack D
 
 <img src = "Screenshots/Screenshot 2021-01-24 at 17.40.16.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.44.46.png" width ="400" />
 
+Now introducing a logarithmic x-axis scale so can view the dense information on the LHS of the above graphs better....
+
+<img src = "Screenshots/Screenshot 2021-01-24 at 17.53.44.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.51.51.png" width ="400" />
+
+
 # Code Usage 
 
 Run \_\_main__.py with the following params
