@@ -50,7 +50,7 @@ Questions to answer:
 - From the conversation visualisations can we detect a set of common trajectories taken by conversations of similar styles?
 
 
-## Notes on, and examples of, Visualisation methods attempted so far...
+## Word Embedding-based Visualisation methods attempted so far...
 ***Please note that these are my ROUGH NOTES, this is a work in progress :-)***
 
 How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
@@ -96,41 +96,57 @@ How the thickness of the line is assigned (todo):
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
 
-**Version 2 Plots:**
+**Conversation Trajectory with 'Richness' of Segment**
+
 Added variable sizing for the text labels of Nodes with multiple connections, where the size of text reflects the number 
 of connections the node has / the size of the cluster. Words in bold correspond to node locations visited more than once.
 Added colour to the lines to reflect the number of keywords contained in each segment. More keywords contained means 
 'richer' conversation in this section, but also means there is a larger uncertainty on the topic of this segment in that 
-there were more keywords which could have been chosen to define the segment node position.
+there were more keywords which could have been chosen to define the segment node position. Both plotted on their shared
+ word embedding space. 
 
-Histogram for the number of keywords contained in each segment of the transcripts ... 
+Corresponding histograms for the number of keywords contained in each segment of the transcripts ... 
+a) Joe Rogan & Elon Musk                                         b) Joe Rogan & Jack Dorsey
 
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/histogram_of_keywords.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/histogram_of_keywords.png" width ="400" />
 
-Elon Musk interview...
+Elon Musk Trajectory...
 
 <img src = "Saved_Images/combined_podcast/Elon_Musk_100.png" width ="900" />
 
-Jack Dorsey interview...
+Jack Dorsey Trajectory...
 
 <img src = "Saved_Images/combined_podcast/Jack_Dorsey_100.png" width ="900" />
 
-Both plotted on their shared word embedding space. 
+**Plotting of Speaker-Indepedent Trajectory Through Topic Space**
 
-**Plotting of Speaker-Indepedent Trajectory Through Topic Space (for one Transcript)**
-
-Elon Musk interview...
+Separated the utterances spoken by each member of the conversation and plotted their independent topical trajectories. Example
+given here is for the Joe Rogan & Elon Musk interview.
 
 <img src = "Screenshots/Screenshot 2021-01-21 at 09.57.23.png" width ="900" />
-TODO: evaluate similarity in trajectory once improved how reflective the trajectory is of the real conversation 
 
-**For Meeting**
-Move in y direction when new speaker includes Question in theri Utterance...
+
+## A Second method of Visualisation: Back to Basics
+*Dialogue Act Simple Line*
+
+Testing basic hypothesis that Questions indicate a topic change in the conversation. Here, I plot a node every time the speaker changes.
+ I check through all dialogue acts used by a speaker in their set of consecutive utterances and if they used a Question 
+ ("Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question")
+I shift the trajectory one step in the y direction and annotate the node with the Topic currently being discussed. If no
+questions were asked then I assume the overall topic being discussed has not changed and continue plotting the nodes
+along the horizontal axis. Here only the first 200 utterances in the transript are considered. I also
+colour the lines to reflect the current speaker -> from this we can see that all of the Questions asked in the first
+200 lines of the transcript are spoken by Joe Rogan (and hence maybe he introduces all new topics as he is leading
+the conversation?).
 
 <img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="700" />
-<img src = "Screenshots/Screenshot 2021-01-22 at 13.49.30.png" width ="700" />
 
-Move in y direction when new topic detected... done for the first 200 utterances in the conversation. 
+*Topic Changes Simple Line*
+
+Here I instead shift the line up when we detect the topic of conversation has changed. We can see that although 
+Elon Musk does not ask many questions, he DOES lead the conversation in terms of its topical evolution (all the blue lines
+ on the steps). Data presented in table format below on the number of Topics introduced by each speaker in the conversetion
+ as a whole.
 
 <img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="700" />
 
@@ -139,13 +155,17 @@ Move in y direction when new topic detected... done for the first 200 utterances
 | Joe Rogan |                 854 |                      161 |                 519 |                            74 |                                50 |                               20 |
 | Elon Musk |                 847 |                       29 |                 591 |                            80 |                                64 |                                3 |
 
-Topic Line with a shift when previous topic detected...
+*Topic Changes Line with Shift*
+
+Take the simple line plot above and introduce a horizontal shift when a previous topic is detected. 
 
 <img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="700" />
 
 ...and a simplified version...
 
 <img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="700" />
+
+*Topic Changes Line with Shift - Comparison between different interviews*
 
 And now similar but for the ENTIRE conversations between a) Joe Rogan and Jack Dorsey, b) Joe Rogan and Elon Musk
 
@@ -155,9 +175,10 @@ Now introducing a logarithmic x-axis scale so can view the dense information on 
 
 <img src = "Screenshots/Screenshot 2021-01-24 at 17.53.44.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.51.51.png" width ="400" />
 
-Unreadable, but see the difference between the above two conversations, and the interview between Joe Rogan and Kanye West...
+Unreadable graph, but noticing the difference in pattern between that of above two conversations, 
+and the interview between Joe Rogan and Kanye West...
 
-<img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="800" />
+<img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="600" />
 
 # Code Usage 
 
