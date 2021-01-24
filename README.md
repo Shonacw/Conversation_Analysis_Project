@@ -140,7 +140,7 @@ colour the lines to reflect the current speaker -> from this we can see that all
 200 lines of the transcript are spoken by Joe Rogan (and hence maybe he introduces all new topics as he is leading
 the conversation?).
 
-<img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="600" />
+<img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="500" />
 
 *Topic Changes Simple Line*
 
@@ -149,7 +149,7 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
  on the steps). Data presented in table format below on the number of Topics introduced by each speaker in the conversetion
  as a whole.
 
-<img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="700" />
+<img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="500" />
 
 | Speaker   |   Total #Utterances |   Total #Questions Asked |   Total #Statements |   Number of Topics Introduced |   #Topics introduced by Statement |   #Topics introduced by Question |
 |:----------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
@@ -160,11 +160,11 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
 
 Take the simple line plot above and introduce a horizontal shift when a previous topic is detected. 
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="600" />
+<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="500" />
 
 ...and a simplified version...
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="600" />
+<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="500" />
 
 *Topic Changes Line with Shift - Comparison between different interviews*
 
@@ -179,7 +179,7 @@ Now introducing a logarithmic x-axis scale so can view the dense information on 
 Unreadable graph, but noticing the difference in pattern between that of above two conversations, 
 and the interview between Joe Rogan and Kanye West...
 
-<img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="600" />
+<img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="500" />
 
 # Code Usage 
 
