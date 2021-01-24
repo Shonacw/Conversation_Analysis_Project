@@ -148,7 +148,7 @@ Topic Line with a shift when previous topic detected...
 
 And now similar but for the ENTIRE conversations between a) Joe Rogan and Jack Dorsey, b) Joe Rogan and Elon Musk
 
-<img src = "Screenshots/Screenshot 2021-01-24 at 17.40.16.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.40.16.png" width ="400" />
+<img src = "Screenshots/Screenshot 2021-01-24 at 17.40.16.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.44.46.png" width ="400" />
 
 # Code Usage 
 
