@@ -92,7 +92,8 @@ How the thickness of the line is assigned (todo):
 <img src = "Saved_Images/20_Even_Segments_3D_Quiver_With_3_max_count_NodePosition.png" width ="400" />
 
 **Plotting of Trajectory Through Topic Space for two Transcripts on the same background word embedding**
-      Word embedding extracted using FastText on the two transcript (Joe Rogan + Elon Musk, and Joe Rogan + Jack Dorsey).
+
+Word embedding background created using FastText on the two transcript (Joe Rogan + Elon Musk, and Joe Rogan + Jack Dorsey).
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
 
@@ -139,7 +140,7 @@ colour the lines to reflect the current speaker -> from this we can see that all
 200 lines of the transcript are spoken by Joe Rogan (and hence maybe he introduces all new topics as he is leading
 the conversation?).
 
-<img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="700" />
+<img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="600" />
 
 *Topic Changes Simple Line*
 
@@ -159,11 +160,11 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
 
 Take the simple line plot above and introduce a horizontal shift when a previous topic is detected. 
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="700" />
+<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="600" />
 
 ...and a simplified version...
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="700" />
+<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="600" />
 
 *Topic Changes Line with Shift - Comparison between different interviews*
 
