@@ -51,6 +51,7 @@ Questions to answer:
 
 
 ## Notes on, and examples of, Visualisation methods attempted so far...
+*Please note these are my ROUGH NOTES, this is a work in progress :-)*
 
 How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
 - Average of all the word-vectors of the keywords present in the given segment
