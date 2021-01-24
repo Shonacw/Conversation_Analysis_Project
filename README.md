@@ -154,6 +154,9 @@ Now introducing a logarithmic x-axis scale so can view the dense information on 
 
 <img src = "Screenshots/Screenshot 2021-01-24 at 17.53.44.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.51.51.png" width ="400" />
 
+Unreadable, but see the difference between the above two conversations, and the interview between Joe Rogan and Kanye West...
+
+<img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="800" />
 
 # Code Usage 
 

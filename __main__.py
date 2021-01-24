@@ -1999,11 +1999,11 @@ def Shifting_Line_Topics_2():
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_jack_dorsey.pkl") #elon_musk #kanye_west # jack_dorsey
+    file = pd.read_pickle("processed_transcripts/joe_rogan_kanye_west.pkl") #elon_musk #kanye_west # jack_dorsey
     print(file[:10000].to_string())
 
     plt.figure()
-    plt.title('Shifting Topic Line Jack Dorsey LOGx')
+    plt.title('Shifting Topic Line Kanye West LOGx')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
