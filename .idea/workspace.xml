@@ -25,7 +25,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -251,14 +250,7 @@
       <workItem from="1611236731045" duration="3107000" />
       <workItem from="1611311645126" duration="14587000" />
       <workItem from="1611404854442" duration="2293000" />
-      <workItem from="1611407459183" duration="16018000" />
-    </task>
-    <task id="LOCAL-00055" summary="Added optional shift of ngram location">
-      <created>1610498011564</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1610498011564</updated>
+      <workItem from="1611407459183" duration="16423000" />
     </task>
     <task id="LOCAL-00056" summary="Added optional shift of ngram location">
       <created>1610498353553</created>
@@ -596,7 +588,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611511463589</updated>
     </task>
-    <option name="localTasksCounter" value="104" />
+    <task id="LOCAL-00104" summary="cleaning up ReadME">
+      <created>1611512938867</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1611512938867</updated>
+    </task>
+    <option name="localTasksCounter" value="105" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -619,7 +618,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/RAKE-tutorial" />
     </ignored-roots>
-    <MESSAGE value="Added full 3D plot functionality" />
     <MESSAGE value="updated .gitignore" />
     <MESSAGE value="updated dpis to reasonable value" />
     <MESSAGE value="halfway through getting DA classifier going" />
@@ -644,7 +642,8 @@
     <MESSAGE value="struggling with requirements as per" />
     <MESSAGE value="added info about topical line plot" />
     <MESSAGE value="-" />
-    <option name="LAST_COMMIT_MESSAGE" value="-" />
+    <MESSAGE value="cleaning up ReadME" />
+    <option name="LAST_COMMIT_MESSAGE" value="cleaning up ReadME" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -659,11 +658,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611511463514">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611512938766">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323505734" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611511463514" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611512938766" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -716,11 +715,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611511464903">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611512940822">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323507347" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611511464903" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611512940822" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>

@@ -51,7 +51,7 @@ Questions to answer:
 
 
 ## Word Embedding-based Visualisation methods attempted so far...
-***Please note that these are my ROUGH NOTES, this is a work in progress :-)***
+***Please note that this is a work in progress!***
 
 How the location of a node representing a segment of the transcript is assigned for plots modelling topic evolution:
 - Average of all the word-vectors of the keywords present in the given segment
@@ -82,7 +82,7 @@ How the thickness of the line is assigned (todo):
 
    The same trajectory plotted in Word2Vec word-embedding space with key nouns labelled. Here we have (left image) 20- and (right image) 100-even segments using average of 3 top keyword word-vectors as the node position for each segment. 
     
-   xf
+   <img src = "Saved_Images/20_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "   Saved_Images/100_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
     
     
 **Plotting of Trajectory Through 3D Topic Space**
