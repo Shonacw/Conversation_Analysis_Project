@@ -2319,6 +2319,7 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
         plt.xlabel('Utterance Number')
 
     plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
+
     plt.show()
     return
 
