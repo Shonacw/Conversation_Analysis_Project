@@ -187,8 +187,8 @@ and the interview between Joe Rogan and Kanye West...
 - Snappyness of conversation (other word needed): basic illustration using utterance lengths 
 <img src = "Saved_Images/Stuff/elon_musk_n:100_normalised:False.png" width ="350" /> <img src = "Saved_Images/Stuff/jack_dorsey_n:100_normalised:False.png" width ="350" />
 
-- Learning how to create Quiver animations....
-<img src = "Animations/myAnimation.gif" width ="350" />
+- Learning how to create Quiver animations...
+<img src = "Animations/myAnimation.gif" width ="600" />
 
 
 # Code Usage 
