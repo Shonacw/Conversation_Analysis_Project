@@ -2304,7 +2304,6 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
         plt.bar(range(len(average_utts_length)), average_utts_length)
         plt.ylabel('Utterance length')
         plt.xlabel('Utterance Number')
-        plt.show()
 
     if normalised:
         max_y = max(average_utts_length)
@@ -2318,10 +2317,9 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
         plt.bar(xs, list1_normalised)
         plt.ylabel('Normalised Utterance Length')
         plt.xlabel('Utterance Number')
-        plt.show()
 
     plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
-
+    plt.show()
     return
 
 #Interupption_Analysis()
