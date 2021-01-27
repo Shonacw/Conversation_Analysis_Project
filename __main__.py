@@ -2214,11 +2214,14 @@ def Snappyness(name, n_average=True, n = 5, normalised=False):
             plt.show()
         if normalised:
             max_y = max(length_of_utts)
+            num_utts = len(length_of_utts)
+            xs = range(len(length_of_utts))
+            xs_normalised = [val/ num_utts for val in xs]
             length_of_utts_normalised = [val / max_y for val in length_of_utts]
 
             plt.figure()
             plt.title(f'{name.title()} interview: Normalised Utterances Lengths')
-            plt.bar(range(len(length_of_utts_normalised)), length_of_utts_normalised)
+            plt.bar(xs, length_of_utts_normalised)
             plt.ylabel('Utterance length')
             plt.xlabel('Utterance Number')
             plt.show()
@@ -2234,18 +2237,99 @@ def Snappyness(name, n_average=True, n = 5, normalised=False):
             plt.show()
         if normalised:
             max_y = max(list1)
+            num_utts = len(list1)
+            xs = range(len(list1))
+            xs_normalised = [val / num_utts for val in xs]
             list1_normalised = [val/max_y for val in list1]
+
             plt.figure()
             plt.title(f'{name.title()} interview: Normalised Utterance Lengths\n(averaged every {n})')
-            plt.bar(range(len(list1_normalised)), list1_normalised)
+            plt.bar(xs, list1_normalised)
             plt.ylabel('Normalised Utterance Length')
             plt.xlabel('Utterance Number')
             plt.show()
 
     return
 
+def Snappyness_EvenSegs(name, n=200, normalised=False):
+    """
+    Split into n even segments and find utterance lengths + normalise
+    """
+
+    import string
+    import statistics
+    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
+    print(file[:100].to_string())
+
+    length_of_utts = []
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    for idx, row in file.iterrows():
+        new_speaker = row['speaker_change']
+        old_speaker = file.speaker[
+            old_idx]  # i.e. the speaker who said all utterances between old index and new index
+
+        if not new_speaker:
+            # Only want to plot line when the speaker has changed
+            old_idx = idx
+            continue
+
+        # collect utterances from old_idx to new_idx-1
+        utt = ' '.join(list(file.utterance[old_idx:idx]))
+        words_in_utt = utt.split(' ')
+        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
+        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
+        words_in_utt = [word for word in words_in_utt if len(word) > 1 or word.lower() == 'i']
+        num_words_in_utt = len(words_in_utt)
+
+        length_of_utts.append(num_words_in_utt)
+
+        #list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
+
+    num_utts = len(length_of_utts)
+    print('length_of_utts: ', num_utts, length_of_utts)
+    idxs_split = split(range(num_utts), n)
+    first_sent_idxs_list = [i[0] for i in idxs_split]
+    first_sent_idxs_list.insert(-1, num_utts)
+    print('first_sent_idxs_list', len(first_sent_idxs_list), first_sent_idxs_list)
+    utt_lengths_split = [length_of_utts[i1:i2] for i1, i2 in zip(first_sent_idxs_list, first_sent_idxs_list[1:])]
+
+    print('utt_lengths_split: ', len(utt_lengths_split), utt_lengths_split)
+    average_utts_length = [np.average(sublist) for sublist in utt_lengths_split]
+    print('average_utts_length', len(average_utts_length), average_utts_length)
+
+    if not normalised:
+        plt.figure()
+        plt.title(f'{name.title()} interview: Average Length of Utterances ({n} Even Segments)')
+        plt.bar(range(len(average_utts_length)), average_utts_length)
+        plt.ylabel('Utterance length')
+        plt.xlabel('Utterance Number')
+        plt.show()
+
+    if normalised:
+        max_y = max(average_utts_length)
+        num_utts = len(average_utts_length)
+        xs = range(n)
+        list1_normalised = [val/max_y for val in average_utts_length]
+        print('list1_normalised', len(list1_normalised), list1_normalised)
+
+        plt.figure()
+        plt.title(f'{name.title()} interview: Normalised Average Length of Utterances ({n} Even Segments)')
+        plt.bar(xs, list1_normalised)
+        plt.ylabel('Normalised Utterance Length')
+        plt.xlabel('Utterance Number')
+        plt.show()
+
+    plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
+
+    return
+
 #Interupption_Analysis()
-Snappyness('jack_dorsey', n_average=True, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
+#Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
+Snappyness_EvenSegs('elon_musk', n=100, normalised=False)
+Snappyness_EvenSegs('jack_dorsey', n=100, normalised=False)
+
+
 
 def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
        node_location_method, Even_number_of_segments,
