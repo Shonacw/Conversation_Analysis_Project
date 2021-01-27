@@ -2095,11 +2095,11 @@ def Animate_3D(segments_info_df_1, keyword_vectors_df, save_name, transcript_nam
     anim = FuncAnimation(fig, animate, frames=len(xs_1)-1, interval=1, repeat=False)  # 1000 ms delay
 
     # configure full path for ImageMagick
-    #rcParams['animation.convert_path'] = r'/Users/ShonaCW/Downloads/ImageMagick-7.0.10/bin/convert'
+    rcParams['animation.convert_path'] = r'/Users/ShonaCW/Downloads/ImageMagick-7.0.10/bin/convert'
 
-    anim.save("Animations/example.mp4", fps=1, dpi=150)
+    #anim.save("Animations/example.mp4", fps=1, dpi=150)
     # save animation at 30 frames per second
-    # anim.save('Animations/myAnimation.gif', writer='imagemagick', fps=5)
+    anim.save('Animations/myAnimation_4S.gif', writer='imagemagick', fps=5)
     # plt.close()
 
     if speakerwise_colouring:
