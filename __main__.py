@@ -1852,15 +1852,287 @@ def Animate(segments_info_df_1, keyword_vectors_df, transcript_name, save_name, 
 
     return
 
-# segments_info_df_1 = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/20_Even_segments_info_df.h5', key='df')
-# keyword_vectors_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5', key='df')
-# transcript_name =
-# save_name =
-# names = ['']
-# Animate(segments_info_df_1, keyword_vectors_df, transcript_name, save_name, names,
-#                                    segments_info_df_2=pd.DataFrame(), Node_Position='total_average',
-#                                    only_nouns=True, save_fig=False, colour_quiver_plots=True,
-#                                    speakerwise_colouring=False)
+def Animate_3D(segments_info_df_1, keyword_vectors_df, save_name, transcript_name, names,
+                                          segments_info_df_2=pd.DataFrame(),
+                                          Node_Position='total_average', only_nouns=True, save_fig=False,
+                                          speakerwise_colouring=False):
+    """
+    Note updated yet.
+    Taken from my messy code in Inference. Here ready for when I have segmentation info from Jonas' method.
+    """
+    from matplotlib.animation import FuncAnimation
+    from matplotlib import rcParams
+
+    speakerwise_colours = ['cornflowerblue', 'darkorchid']
+    spkr_idx = 0
+    # set up a figure twice as wide as it is tall
+    fig = plt.figure()  # figsize=(22, 11)
+    fig.suptitle('Movement of Conversation through Topic Space over Time')
+
+    # set up the axes for the first plot
+    ax1 = fig.add_subplot(111, projection='3d')  # ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+    dict_list = []
+    first_sents_list = []
+    node_pos_list = []
+    labels_list = []
+    for segments_info_df in [segments_info_df_1, segments_info_df_2]:
+        if segments_info_df.empty: #i.e. if not speakerwise.
+            continue
+
+        print(segments_info_df.head().to_string())
+        if Node_Position == 'total_average':
+            node_position = segments_info_df['total_average_keywords_wordvec'].values
+            first_sents = segments_info_df['first_sent_numbers'].values
+
+        if Node_Position == '1_max_count':
+            labels_text = segments_info_df['top_count_keyword'].values
+            node_position = segments_info_df['top_count_wordvec'].values
+            first_sents = segments_info_df['first_sent_numbers'].values
+
+            # Check the segments all had enough keywords to have taken max(count)...
+            first_sents = [i for idx, i in enumerate(first_sents) if node_position[idx]!=None]
+            node_position = [pos for pos in node_position if pos != None]
+            labels_text = [label for label in labels_text if label != None]
+            first_sents_list.append(first_sents)
+            node_pos_list.append(node_position)
+            labels_list.append(labels_text)
+
+            # now check for any keywords that have >1 connection.. clusters!
+            D = defaultdict(list)
+            for i, item in enumerate(labels_text):
+                D[item].append(i)
+            print('D', D) #are these the indices of the node pos for words
+
+            D = {k: len(v) for k, v in D.items() if len(v) > 1}
+            print('D', D) #and now just a count of the indices ============== WANT TO PLOT DASHED LINE BETWEEN THEM IN 3D
+
+            max_count = max(D.values())
+            print('max count', max_count)
+
+            # Normalise counts
+            words_to_highlight_dict = {k: [v, v / max_count] for k, v in D.items()}
+
+            # Decide on font
+            fonts_dict = {9: [0, 0.2], 10: [0.2, 0.4], 11: [0.4, 0.6], 12: [0.6, 0.8], 12: [0.8, 10]}
+
+            fonts = []
+            for v_norm in np.array(list(words_to_highlight_dict.values()))[:, 1]:
+                for key, list_norms in fonts_dict.items():
+                    if float(v_norm) >= float(list_norms[0]) and float(v_norm) <= float(list_norms[1]):
+                        fonts.append(key)
+                    else:
+                        continue
+
+            for idx, key in enumerate(words_to_highlight_dict.keys()):
+                words_to_highlight_dict[key].append(fonts[idx])
+            print('words_to_highlight_dict', words_to_highlight_dict)
+            dict_list.append(words_to_highlight_dict)
+
+        if Node_Position == '3_max_count':
+            labels_text = segments_info_df['top_3_counts_keywords'].values
+            node_position = segments_info_df['top_3_counts_wordvec'].values
+            first_sents = segments_info_df['first_sent_numbers'].values
+
+            # Check the segments all had enough keywords to have taken max(count)...
+            first_sents = [i for idx, i in enumerate(first_sents) if node_position[idx]!=None]
+            node_position = [pos for pos in node_position if str(pos[0]) != 'n']
+            labels_text = [label for label in labels_text if str(label) != 'nan']
+
+    # EMBEDDING PART
+    keyword_types = ['noun', 'pke', 'bigram', 'trigram']
+    colours = ['pink', 'green', 'orange', 'blue']
+    labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
+
+    number_types_toplot = range(len(keyword_types))
+    if only_nouns:
+        number_types_toplot = [0]
+
+    plt.rc('font', size=6)
+    # for words_to_highlight_dict in dict_list:
+    #     type = 'noun'
+    #     words = keyword_vectors_df['{}_keyw'.format(type)]
+    #     Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
+    #     unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
+    #
+    #     ax1.scatter([0 for i in range(len(Xs))], Xs, Ys, c=colours[i], label=labels[i])
+    #
+    #     for label, x, y in zip(words, Xs, Ys):
+    #
+    #         # First check if label is in word_to_highlight (i.e. if it has a cluster of quiver arrow heads)
+    #         if label in words_to_highlight_dict.keys():
+    #             font = words_to_highlight_dict[label][2]
+    #             plt.rc('font', size=font)
+    #             clr = 'k'
+    #             zord = 100
+    #             wght = 'heavy'
+    #             xypos = (-8, -10)
+    #             # label = label.title()
+    #         elif label in labels_text:
+    #             plt.rc('font', size=8)
+    #             clr = 'k'
+    #             zord = 90
+    #             wght = 'normal'
+    #             xypos = (-5, -5)
+    #
+    #         else:
+    #             continue
+    #             # plt.rc('font', size=6)
+    #             # clr = 'darkgrey'
+    #             # zord = 5
+    #             # wght = 'normal'
+    #             # xypos = (-5, 0)
+    #
+    #
+    #         #plt.annotate(label, xy=(x, y), xytext=xypos, textcoords="offset points", color=clr, zorder=zord, weight=wght)
+    #         ax1.text(0, x+xypos[0], y+xypos[1], label, size=10, color=clr, zorder=zord, weight=wght, zdir='x') labels_list
+
+    labels = range(len(node_position))
+
+    # Data for a three-dimensional line
+    xs_1 = [x[0] for x in node_pos_list[0]]
+    ys_1 = [x[1] for x in node_pos_list[0]]
+
+    xs_2 = [x[0] for x in node_pos_list[1]]
+    ys_2 = [x[1] for x in node_pos_list[1]]
+
+    # w = [i - j for i, j in zip(labels[1:], labels[:-1])]
+    # u = [i - j for i, j in zip(xs[1:], xs[:-1])]
+    # v = [i - j for i, j in zip(ys[1:], ys[:-1])]
+
+    #ax.plot3D(xs, segment_numbers, ys, 'bo-')
+    ax1.set_xlabel('$Sentence Number$', fontsize=13)
+    ax1.set_ylabel('$X$', fontsize=20, rotation=0)
+    ax1.set_zlabel('$Y$', fontsize=20)
+    ax1.zaxis.set_rotate_label(False)
+    #ax1.set_title('Manual')
+
+    # To make sure labels are spread out well, going to mess around with xs and ys
+    # xs_, ys_ = xs, ys
+    # ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+    # repeats = list(set(map(tuple, ppairs)))
+    # repeat_num = [0 for i in range(len(repeats))]
+
+    cnt = 0
+    if not speakerwise_colouring:
+        speaker_colour = 'b'
+    if speakerwise_colouring:
+        speaker_colour = speakerwise_colours[spkr_idx]
+    # (old_x, old_y, old_z) = (0, 0, 0)
+
+    #Plot Embedding on Sentence_Number = 0 plane
+
+    # for x, y, z, label in zip(first_sents, xs, ys, labels):
+    #       cnt +=1
+    #       ax1.plot([x], [y], [z],'o', markersize=2, alpha=0.2) #markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6) # MAYBE REMOVE node so can clear up appearance
+    #
+    #       # first check location of annotation is unique - if not, update location for the sentence number
+    #       if (y, z) in repeats:
+    #           idx = repeats.index((y, z))
+    #           addition = repeat_num[idx]
+    #           y_txt = y + addition
+    #           z_txt = z - 1
+    #           repeat_num[idx] += 3
+    #           pass
+    #       else:
+    #           y_txt = y
+    #           z_txt = z
+    #
+    #       ax1.text(x, y_txt, z_txt, label+1, size=10)
+    #       if cnt ==1:
+    #         (old_x, old_y, old_z) = (x, y, z)
+    #         continue
+    #
+    #
+    #       a = Arrow3D([old_x, x], [old_y, y], [old_z, z], mutation_scale=10, lw=1, arrowstyle="-|>", color=speaker_colour)
+    #       ax1.add_artist(a)
+    #
+    #       (old_x, old_y, old_z) = (x, y, z)
+    #
+    # spkr_idx += 1
+
+    def animate(i):
+        # x, y, z = first_sents[i], xs[i], ys[i]
+        # ax.plot([x], [y], [z], 'o', markersize=2,
+        #         alpha=0.2)  # markerfacecolor='k', markeredgecolor='k', marker='o', markersize=5, alpha=0.6) # MAYBE REMOVE node so can clear up appearance
+        #
+        # # first check location of annotation is unique - if not, update location for the sentence number
+        # if (y, z) in repeats:
+        #       idx = repeats.index((y, z))
+        #       addition = repeat_num[idx]
+        #       y_txt = y + addition
+        #       z_txt = z - 1
+        #       repeat_num[idx] += 3
+        #       pass
+        # else:
+        #       y_txt = y
+        #       z_txt = z
+        #
+        # ax1.text(x, y_txt, z_txt, label+1, size=10)
+        # if cnt ==1:
+        #     (old_x, old_y, old_z) = (x, y, z)
+        #     continue
+
+        # if i == 0:
+        #     ax1.plot(first_sents[0], xs[0], ys[0], 'o', color='green', markersize=8, zorder=20)
+        # # # ax.cla()  # clear the previous image
+        # print(colour_for_segment[i])
+        # print('i', i)
+        # print('first_sents[:i], xs[:i], ys[:i]', first_sents[:i], xs[:i], ys[:i])
+        # if i>0:
+        #     a = Arrow3D(first_sents[:i], xs[:i], ys[:i], mutation_scale=10, lw=1, arrowstyle="-|>", color=speaker_colour)
+        #     ax1.add_artist(a)
+
+        #ax1.text(0, x + xypos[0], y + xypos[1], label, size=10, color=clr, zorder=zord, weight=wght, zdir='x')
+        ax1.text(first_sents_list[0][i], xs_1[i], ys_1[i], labels_list[0][i], size=7, color='k', zorder=100, zdir='x')
+        ax1.plot(first_sents_list[0][i - 2:i], xs_1[i - 2:i], ys_1[i - 2:i], color=speakerwise_colours[0], lw=1)  # colour_for_segment[i])  # plot the line
+        ax1.plot(first_sents_list[1][i - 2:i], xs_2[i - 2:i], ys_2[i - 2:i], color=speakerwise_colours[1], lw=1)  # colour_for_segment[i])  # plot the line
+        ax1.text(first_sents_list[1][i], xs_2[i], ys_2[i], labels_list[1][i], size=7, color='k', zorder=100, zdir='x')
+        #ax1.set_xlim([first_sents_list[0][0], first_sents_list[0][-1]])  # fix the x axis
+        # ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])  # fix the y axis
+        # if i == len(xs) - 1:
+        #     ax.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    anim = FuncAnimation(fig, animate, frames=len(xs_1)-1, interval=1, repeat=False)  # 1000 ms delay
+
+    # configure full path for ImageMagick
+    #rcParams['animation.convert_path'] = r'/Users/ShonaCW/Downloads/ImageMagick-7.0.10/bin/convert'
+
+    anim.save("Animations/example.mp4", fps=1, dpi=150)
+    # save animation at 30 frames per second
+    # anim.save('Animations/myAnimation.gif', writer='imagemagick', fps=5)
+    # plt.close()
+
+    if speakerwise_colouring:
+        # line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
+        # line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+        line3 = Line2D([0], [0], color=speakerwise_colours[0], lw=1),
+        line4 = Line2D([0], [0], color=speakerwise_colours[1], lw=1),
+
+        plt.legend((line3, line4), (names[0], names[1]), prop={'size': 7})
+
+    # AXIS STUFF
+    ax1.dist = 13
+    ax1 = plt.gca()
+    # ax.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels([])
+    ax1.zaxis.set_ticklabels([])
+
+    # for line in ax.xaxis.get_ticklines():
+    #     line.set_visible(False)
+    for line in ax1.yaxis.get_ticklines():
+        line.set_visible(False)
+    for line in ax1.zaxis.get_ticklines():
+        line.set_visible(False)
+
+    # if save_fig:
+    #     plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
+
+    # plt.show()
+    anim.save('Animations/myAnimation_3D.gif', writer='imagemagick', fps=5)
+    plt.close()
+
+    return
+
 
 
 ## The main function putting it all together
@@ -2708,8 +2980,8 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
         segments_info_df = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name), key='df')
 
     elif speakerwise:
-        for idx_list, utterances, name in zip([first_sent_idxs_list_1, first_sent_idxs_list_1], utterances_speakerwise, names):
-            get_segments_info(idx_list, utterances, keyword_vectors_df, sub_folder_name, save_name=save_name+name, Info=True)
+        # for idx_list, utterances, name in zip([first_sent_idxs_list_1, first_sent_idxs_list_1], utterances_speakerwise, names):
+        #     get_segments_info(idx_list, utterances, keyword_vectors_df, sub_folder_name, save_name=save_name+name, Info=True)
 
 
         segments_info_df_1 = pd.read_hdf('Saved_dfs/{0}/{1}.h5'.format(sub_folder_name, save_name + names[0]), key='df')
@@ -2721,9 +2993,12 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     ## InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
     save_name = 'ANIMATION_{0}_{1}_Segments_{2}_NodePosition'.format(Even_number_of_segments,
                                                                                 seg_method, node_location_method)
-    Animate(segments_info_df, keyword_vectors_df, transcript_name = sub_folder_name, save_name = save_name,  names = names,
-            Node_Position = node_location_method, only_nouns=True, save_fig = saving_figs,
-            colour_quiver_plots = True) #, speakerwise_coloring = False)
+    # Animate(segments_info_df, keyword_vectors_df, transcript_name = sub_folder_name, save_name = save_name,  names = names,
+    #         Node_Position = node_location_method, only_nouns=True, save_fig = saving_figs,
+    #         colour_quiver_plots = True) #, speakerwise_coloring = False)
+    Animate_3D(segments_info_df_1, keyword_vectors_df, segments_info_df_2=segments_info_df_2, save_name = save_name,
+               transcript_name = sub_folder_name, names = names, Node_Position = node_location_method, only_nouns=True,
+               save_fig = saving_figs, speakerwise_colouring=True)
 
     if just_analysis:  # not interested in plotting etc
         return
@@ -2806,14 +3081,14 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 ## CODE...
 if __name__ == '__main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '1_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 100                       # for when seg_method = 'Even'
+    Even_number_of_segments = 50                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
@@ -2827,7 +3102,7 @@ if __name__ == '__main__':
     just_analysis = True
 
     use_combined_embed = True
-    speakerwise = False
+    speakerwise = True
 
     colour_quiver_plots = False
     plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for

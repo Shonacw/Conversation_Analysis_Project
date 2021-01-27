@@ -189,6 +189,7 @@ and the interview between Joe Rogan and Kanye West...
 
 - Learning how to create Quiver animations...
 <img src = "Animations/myAnimation.gif" width ="600" />
+<img src = "AAnimations/myAnimation_3D.gif" width ="600" />
 
 
 # Code Usage 
