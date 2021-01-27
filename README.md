@@ -181,6 +181,14 @@ and the interview between Joe Rogan and Kanye West...
 
 <img src = "Screenshots/Screenshot 2021-01-24 at 17.57.22.png" width ="500" />
 
+
+
+# Other Stuff
+- Snappyness of conversation (other word needed): basic illustration using utterance lengths 
+<img src = "Screenshots/Screenshot 2021-01-27 at 10.34.53.png" width ="300" /> <img src = "Screenshots/Screenshot 2021-01-27 at 10.35.20.png" width ="300" />
+
+
+
 # Code Usage 
 
 Run \_\_main__.py with the following params

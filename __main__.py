@@ -1619,6 +1619,36 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df_1, keyword_vectors_df
 
 ## The main function putting it all together
 
+def Convert_PDF_to_txt(path_to_pdf):
+    """
+    Function to convert a saved PDF document to a txt file.
+
+    i.e. used for..
+    path_to_pdf = Path('msci-project/transcripts/joe_rogan_kanye_west_2.pdf')
+    Convert_PDF_to_txt(path_to_pdf)
+    """
+    import PyPDF2
+
+    # mypdf = open(path_to_pdf, mode='rb')
+    # pdf_document = PyPDF2.PdfFileReader(mypdf)
+    # text = pdf_document.extractText()
+    #
+    # with open("msci-project/transcripts/joe_rogan_kanye_west.txt", "w") as f:
+    #     #for item in utterances_speakerwise[1]:
+    #     f.write("%s\n" % text)
+    # print('extracted text preview: ', text[:200])
+
+    with open(path_to_pdf, 'rb') as pdf_file, open('msci-project/transcripts/joe_rogan_kanye_west.txt', 'w') as text_file:
+        read_pdf = PyPDF2.PdfFileReader(pdf_file)
+        number_of_pages = read_pdf.getNumPages()
+        for page_number in range(number_of_pages):  # use xrange in Py2
+            page = read_pdf.getPage(page_number)
+            page_content = page.extractText()
+            text_file.write(page_content)
+
+    return
+
+
 def Split_Transcript_By_Speaker(content, names):
     """
     Function to prepare transcript content for speaker-wise analysis.
@@ -1756,7 +1786,7 @@ def Simple_Line_Topics():
                             'DA_Label': []}
 
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    file = pd.read_pickle("processed_transcripts/joe_rogan_kanye_west.pkl")
     print(file[:100].to_string())
 
     plt.figure()
@@ -1988,7 +2018,7 @@ def Shifting_Line_Topics():
     plt.show()
     return
 
-def Shifting_Line_Topics_2():
+def Shifting_Line_Topics_2(name):
     """"Function """
     from operator import add
     import tabulate
@@ -1999,11 +2029,11 @@ def Shifting_Line_Topics_2():
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_kanye_west.pkl") #elon_musk #kanye_west # jack_dorsey
+    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name)) #elon_musk #kanye_west # jack_dorsey
     print(file[:10000].to_string())
 
     plt.figure()
-    plt.title('Shifting Topic Line Kanye West LOGx')
+    plt.title('Shifting Topic Line {0} LOGx'.format(' '.join(name.split('_')).title()))
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
@@ -2113,11 +2143,109 @@ def Shifting_Line_Topics_2():
 #Simple_Line_DA()
 #Simple_Line_Topics()
 #Shifting_Line_Topics()
-Shifting_Line_Topics_2()
+#Shifting_Line_Topics_2('elon_musk')
 
 
+def Interupption_Analysis():
+    """
+    Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
+    vs how many Questions they ask/ topics they introduce/ time spoken
+    """
+    names = ['Joe', 'Rogan', 'Jack', 'Dorsey']
+    with open('txts/Joe_Rogan_{0}/utterances_speakerwise_{1}.txt'.format('_'.join(names[2:4]), names[2]), 'r') as f:
+        utts_spkr1 = f.read()
+
+    with open('txts/Joe_Rogan_{0}/utterances_speakerwise_Joe.txt'.format('_'.join(names[2:4])), 'r') as f:
+        utts_spkr2 = f.read()
+
+    with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
+        all_utts = f.read()
 
 
+    print('\nutts_spkr1:\n', utts_spkr1[:500])
+    print('\nutts_spkr2:\n', utts_spkr2[:500])
+    print('\nAll_Utts:\n', all_utts[2000:10000])
+
+    return
+
+
+def Snappyness(name, n_average=True, n = 5, normalised=False):
+    """Not sure how I'll define this property of conversation but for now just plot length of speaker turn"""
+
+    import string
+    import statistics
+    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
+    print(file[:100].to_string())
+
+    length_of_utts = []
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    for idx, row in file.iterrows():
+        new_speaker = row['speaker_change']
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+
+        if not new_speaker:
+            # Only want to plot line when the speaker has changed
+            old_idx = idx
+            continue
+
+        # collect utterances from old_idx to new_idx-1
+        utt = ' '.join(list(file.utterance[old_idx:idx]))
+        words_in_utt = utt.split(' ')
+        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
+        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
+        words_in_utt = [word for word in words_in_utt if len(word)>1 or word.lower()=='i']
+        num_words_in_utt = len(words_in_utt)
+
+        length_of_utts.append(num_words_in_utt)
+        # colour = speakers_map[old_speaker]
+
+        # # Collect Utterances of this speaker
+        # Utts = list(file.da_label[old_idx:idx])
+        # tag_change = any(x in changer_DAs for x in das_covered)
+    if not n_average:
+        #plotting all
+        if not normalised:
+            plt.figure()
+            plt.title(f'{name.title()} interview: Length of Utterances')
+            plt.bar(range(len(length_of_utts)), length_of_utts)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+        if normalised:
+            max_y = max(length_of_utts)
+            length_of_utts_normalised = [val / max_y for val in length_of_utts]
+
+            plt.figure()
+            plt.title(f'{name.title()} interview: Normalised Utterances Lengths')
+            plt.bar(range(len(length_of_utts_normalised)), length_of_utts_normalised)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+
+    if n_average:
+        list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
+        if not normalised:
+            plt.figure()
+            plt.title(f'{name.title()} interview: Length of Utterances (averaging every {n} utt lengths)')
+            plt.bar(range(len(list1)), list1)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+        if normalised:
+            max_y = max(list1)
+            list1_normalised = [val/max_y for val in list1]
+            plt.figure()
+            plt.title(f'{name.title()} interview: Normalised Utterance Lengths\n(averaged every {n})')
+            plt.bar(range(len(list1_normalised)), list1_normalised)
+            plt.ylabel('Normalised Utterance Length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+
+    return
+
+#Interupption_Analysis()
+Snappyness('jack_dorsey', n_average=True, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
 
 def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
        node_location_method, Even_number_of_segments,
@@ -2138,24 +2266,24 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     with open(path_to_transcript, 'r') as f:
         content = f.read()
 
-
     all_utterances, utterances_speakerwise = Split_Transcript_By_Speaker(content, names)
 
-    #save new utterances as txt
-
-    #combined_utts =
-    with open("txts/Joe_Rogan_Elon_Musk/all_utterances.txt", "w") as f:
+    # If want to save speaker-split utterances
+    with open("txts/Joe_Rogan_Jack_Dorsey/all_utterances.txt", "w") as f:
         for item in all_utterances:
             f.write("%s\n" % item)
 
 
-    with open("txts/Joe_Rogan_Elon_Musk/utterances_speakerwise_Joe.txt", "w") as f:
+    with open("txts/Joe_Rogan_Jack_Dorsey/utterances_speakerwise_Joe.txt", "w") as f:
         for item in utterances_speakerwise[0]:
             f.write("%s\n" % item)
 
-    with open("txts/Joe_Rogan_Elon_Musk/utterances_speakerwise_Elon.txt", "w") as f:
+    with open("txts/Joe_Rogan_Jack_Dorsey/utterances_speakerwise_Jack.txt", "w") as f:
         for item in utterances_speakerwise[1]:
             f.write("%s\n" % item)
+
+    if just_analysis:  # not interested in plotting etc
+        return
 
     # Lemmatize utterances (TODO: change name "content_sentences" to "content_utterances" to be more precise)
     # content_sentences = Preprocess_Content(all_utterances)
@@ -2250,8 +2378,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     ## transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
     ## InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
 
-    if just_analysis:               # not interested in plotting etc
-        return
+
     ## Plot Word Embedding
     # Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
 
@@ -2330,7 +2457,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 ## CODE...
 if __name__ == '_/_main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
@@ -2348,7 +2475,7 @@ if __name__ == '_/_main__':
 
     use_saved_dfs = True                             # i.e. don't extract keywords/ their embeddings, just used saved df
 
-    just_analysis = False
+    just_analysis = True
 
     use_combined_embed = True
     speakerwise = True
@@ -2356,6 +2483,6 @@ if __name__ == '_/_main__':
     colour_quiver_plots = False
     plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
 
-    # Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
-    #    InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
-    #    just_analysis, plot_hist_too, colour_quiver_plots)
+    Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method, node_location_method, Even_number_of_segments,
+       InferSent_cos_sim_limit, Plotting_Segmentation, saving_figs, put_underscore_ngrams, shift_ngrams,
+       just_analysis, plot_hist_too, colour_quiver_plots)
