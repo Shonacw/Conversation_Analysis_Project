@@ -188,9 +188,14 @@ and the interview between Joe Rogan and Kanye West...
 <img src = "Saved_Images/Stuff/elon_musk_n:100_normalised:False.png" width ="350" /> <img src = "Saved_Images/Stuff/jack_dorsey_n:100_normalised:False.png" width ="350" />
 
 - Learning how to create Quiver animations... 
+
 (note VERY MESSY- not final versions in any way)
+
 <img src = "Animations/myAnimation.gif" width ="600" />
+
 <img src = "Animations/myAnimation_4S.gif" width ="600" />
+
+^speaker-wise trajectories 
 
 
 # Code Usage 
