@@ -1617,6 +1617,252 @@ def Plot_3D_Trajectory_through_TopicSpace(segments_info_df_1, keyword_vectors_df
     plt.show()
     return
 
+
+def Animate(segments_info_df_1, keyword_vectors_df, transcript_name, save_name, names,
+                                   segments_info_df_2=pd.DataFrame(), Node_Position='total_average',
+                                   only_nouns=True, save_fig=False, colour_quiver_plots=True,
+                                   speakerwise_colouring=False):
+    """
+    Function to create Animation of topical evolution through word embedding space
+
+    Plots BOTH a background of keywords + the 2D quiver arrow following the direction of the topics discussed in each
+    segment of the transcript.
+    words_to_highlight_dict.values() [total count of non_unique keyword in nodes_list, normalised count, font size]
+    """
+    from matplotlib.animation import FuncAnimation
+    from matplotlib import rcParams
+
+    speakerwise_colours = ['cornflowerblue', 'darkorchid']  # ['b', 'purple']
+    spkr_idx = 0
+    # plt.figure()
+    fig, ax = plt.subplots()
+    for segments_info_df in [segments_info_df_1, segments_info_df_2]:
+        if segments_info_df.empty:  # i.e. if not speakerwise.
+            continue
+        # QUIVER PART  1
+        if Node_Position == 'total_average':
+            node_position = segments_info_df['total_average_keywords_wordvec'].values
+
+        if Node_Position == '1_max_count':
+            labels_text = segments_info_df['top_count_keyword'].values
+            node_position = segments_info_df['top_count_wordvec'].values
+
+            # Check the segments all had enough keywords to have taken max(count)...
+            node_position = [pos for pos in node_position if pos != None]
+            labels_text = [label for label in labels_text if label != None]
+
+            # now check for any keywords that have >1 connection.. clusters!
+            D = defaultdict(list)
+            for i, item in enumerate(labels_text):
+                D[item].append(i)
+
+            D = {k: len(v) for k, v in D.items() if len(v) > 1}
+            max_count = max(D.values())
+            print('max count', max_count)
+
+            # Normalise counts
+            words_to_highlight_dict = {k: [v, v / max_count] for k, v in D.items()}
+
+            # Decide on font
+            fonts_dict = {10: [0, 0.2], 11: [0.2, 0.4], 12: [0.4, 0.6], 13: [0.6, 0.8], 14: [0.8, 10]}
+
+            fonts = []
+            for v_norm in np.array(list(words_to_highlight_dict.values()))[:, 1]:
+                for key, list_norms in fonts_dict.items():
+                    if float(v_norm) >= float(list_norms[0]) and float(v_norm) <= float(list_norms[1]):
+                        fonts.append(key)
+                    else:
+                        continue
+
+            for idx, key in enumerate(words_to_highlight_dict.keys()):
+                words_to_highlight_dict[key].append(fonts[idx])
+            print('words_to_highlight_dict', words_to_highlight_dict)
+
+        # EMBEDDING PART
+        keyword_types = ['noun', 'pke', 'bigram', 'trigram']
+        colours = ['pink', 'green', 'orange', 'blue']
+        labels = ['Nouns', 'PKE Keywords', 'Bigrams', 'Trigrams']
+
+        number_types_toplot = range(len(keyword_types))
+        if only_nouns:
+            number_types_toplot = [0]
+
+        plt.rc('font', size=6)
+        for i in number_types_toplot:
+            type = keyword_types[i]
+            words = keyword_vectors_df['{}_keyw'.format(type)]
+            Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
+            unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
+
+            plt.scatter(Xs, Ys, c=colours[i], label=labels[i], zorder=0, alpha=0.4)
+            for label, x, y in zip(words, Xs, Ys):
+
+                # First check if label is in word_to_highlight (i.e. if it has a cluster of quiver arrow heads)
+                if label in words_to_highlight_dict.keys():
+                    font = words_to_highlight_dict[label][2]
+                    plt.rc('font', size=font)
+                    clr = 'k'
+                    zord = 100
+                    wght = 'heavy'
+                    xypos = (-8, -10)
+                    # label = label.title()
+                elif label in labels_text:
+                    plt.rc('font', size=8)
+                    clr = 'k'
+                    zord = 95
+                    wght = 'bold'
+                    xypos = (-5, -5)
+
+                else:
+                    continue
+                    # plt.rc('font', size=6)
+                    # clr = 'darkgrey'
+                    # zord = 5
+                    # wght = 'normal'
+                    # xypos = (-5, 0)
+
+                plt.annotate(label, xy=(x, y), xytext=xypos, textcoords="offset points", color=clr, zorder=zord,
+                             weight=wght)
+
+        # Back to QUIVER part
+        labels = range(len(node_position))
+
+        if colour_quiver_plots:
+            # define colours for the segment
+            number_keywords = [sum([int(num) for num in x]) for x in list(
+                segments_info_df[
+                    'noun_counts'].values)]  # careful whether I'm using noun_counts or keyword_counts !!
+            number_keywords_sorted = number_keywords.copy()  # make a copy that we can rearrange
+            number_keywords_sorted.sort()
+            groups = list(split(number_keywords_sorted, 3))
+            colours = [(255 / 255, 255 / 255, 0), (255 / 255, 125 / 255, 0), (240 / 255, 0, 0)]
+            colour_info_dict = {k: [v[index] for index in [0, -1]] for k, v in zip(colours, groups)}
+            idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in
+                    number_keywords]
+            colour_for_segment = [colours[i] for i in idxs]
+            print('colour and groups:', colour_info_dict)
+            save_name = save_name + '_Coloured'
+
+        if not colour_quiver_plots:
+            colour_for_segment = 'b'
+
+        if speakerwise_colouring:
+            colour_for_segment = speakerwise_colours[spkr_idx]
+
+        xs = [x[0] for x in node_position]
+        ys = [x[1] for x in node_position]
+
+        u = [i - j for i, j in zip(xs[1:], xs[:-1])]
+        v = [i - j for i, j in zip(ys[1:], ys[:-1])]
+
+        # To make sure labels are spread out well, going to mess around with xs and ys
+        xs_, ys_ = xs, ys
+        ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+        repeats = list(set(map(tuple, ppairs)))
+        repeat_num = [0 for i in range(len(repeats))]
+        # plt.rc('font', size=8)  # putting font back to normal
+        for x, y, label in zip(xs, ys, labels):
+            # first check location of annotation is unique - if not, update location for the sentence number
+            if (x, y) in repeats:
+                idx = repeats.index((x, y))
+                addition = repeat_num[idx]
+                x += addition
+                y -= 1
+                repeat_num[idx] += 3
+                pass
+
+            plt.annotate(str(label + 1) + '.',  # this is the text
+                         (x, y),  # this is the point to label
+                         textcoords="offset points",  # how to position the text
+                         xytext=(0, 5),  # distance from text to points (x,y)
+                         ha='center',
+                         zorder=100)  # horizontal alignment can be left, right or center
+
+        # Make Quiver Line very thin if using a large number of segments
+        num_segs = len(colour_for_segment)
+        if num_segs == 200:
+            line_wdth = 0.001
+        else:
+            line_wdth = 0.002
+
+        plt.rc('font', size=10)  # putting font back to normal
+
+        # plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+        #            angles='xy', scale=1, color=colour_for_segment, width=line_wdth, zorder=6)
+
+        # -- Quiver -- #
+
+
+        #players = ax.quiver(positions[0][:, 0], positions[0][:, 1], np.cos(angles[0]), np.sin(angles[0]), scale=20)
+        players = ax.quiver(xs[0], ys[0], u[0], v[0]) #, scale_units='xy', angles='xy', scale=1, color='k', width=line_wdth, zorder=6)
+
+        # def animate(idx_timestamp):
+        #     print('idx_timestamp', idx_timestamp)
+        #     print('xs[idx_timestamp], ys[idx_timestamp]', xs[idx_timestamp], ys[idx_timestamp])
+        #     players.set_offsets([xs[idx_timestamp], ys[idx_timestamp]]) #positions[idx_timestamp])
+        #     players.set_UVC(u[idx_timestamp], v[idx_timestamp])
+        #         return (players)
+
+        def animate(i):
+            if i==0:
+                ax.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+            #ax.cla()  # clear the previous image
+            print(colour_for_segment[i])
+            ax.plot(xs[i-2:i], ys[i-2:i], '->', color=colour_for_segment[i])#colour_for_segment[i])  # plot the line
+            # ax.set_xlim([x0, tfinal])  # fix the x axis
+            # ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])  # fix the y axis
+            if i== len(xs)-1:
+                ax.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+        anim = FuncAnimation(fig, animate, frames=len(xs)-1, interval=2, repeat=False) #1000 ms delay
+
+        # configure full path for ImageMagick
+        rcParams['animation.convert_path'] = r'/Users/ShonaCW/Downloads/ImageMagick-7.0.10/bin/convert'
+
+        # anim.save("Animations/example.mp4", fps=1, dpi=150)
+        # save animation at 30 frames per second
+        anim.save('Animations/myAnimation.gif', writer='imagemagick', fps=5)
+        plt.close()
+
+        # # plot special colours for the first and last point
+        # if speakerwise_colouring:
+        #     plt.plot([xs[0]], [ys[0]], 'o', color=colour_for_segment, markersize=11)
+        # plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+        # if speakerwise_colouring:
+        #     plt.plot([xs[-1]], [ys[-1]], 'o', color=colour_for_segment, markersize=11)
+        # plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+        spkr_idx += 1
+
+    # line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
+    # line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+    # if speakerwise_colouring:
+    #     line3 = Line2D([0], [0], color=speakerwise_colours[0], lw=1),
+    #     line4 = Line2D([0], [0], color=speakerwise_colours[1], lw=1),
+    #
+    #     plt.legend((line1, line2, line3, line4), ('Beginning of Conversation', 'End of Conversation',
+    #                                               names[0], names[1]), prop={'size': 7})
+    # else:
+    #     plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
+
+    # plt.title(' '.join(save_name.split('_')))
+    # if save_fig:
+    #     plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
+    # plt.show()
+
+    return
+
+# segments_info_df_1 = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/20_Even_segments_info_df.h5', key='df')
+# keyword_vectors_df = pd.read_hdf('Saved_dfs/joe_rogan_elon_musk/keyword_vectors_nounderscore_fasttext_df.h5', key='df')
+# transcript_name =
+# save_name =
+# names = ['']
+# Animate(segments_info_df_1, keyword_vectors_df, transcript_name, save_name, names,
+#                                    segments_info_df_2=pd.DataFrame(), Node_Position='total_average',
+#                                    only_nouns=True, save_fig=False, colour_quiver_plots=True,
+#                                    speakerwise_colouring=False)
+
+
 ## The main function putting it all together
 
 def Convert_PDF_to_txt(path_to_pdf):
@@ -1681,10 +1927,10 @@ def Split_Transcript_By_Speaker(content, names):
     content_speaker_1 = [utt[3:] for utt in all_utterances if utt[:3] == '123']
     content_speaker_2 = [utt[3:] for utt in all_utterances if utt[:3] == '321']
 
-    print('Number of utterances by speaker 1 (', names[0], ') : ', len(content_speaker_1), '. First few utterances:', content_speaker_1[:3])
-    print('Number of utterances by speaker 2 (', names[1], ') : ', len(content_speaker_2), '. First few utterances:', content_speaker_2[:3])
-    print('total above:', len(content_speaker_1) + len(content_speaker_2))
-    print('\nall_utterances length:', len(all_utterances), 'Preview: ', all_utterances[:20])
+    # print('Number of utterances by speaker 1 (', names[0], ') : ', len(content_speaker_1), '. First few utterances:', content_speaker_1[:3])
+    # print('Number of utterances by speaker 2 (', names[1], ') : ', len(content_speaker_2), '. First few utterances:', content_speaker_2[:3])
+    # print('total above:', len(content_speaker_1) + len(content_speaker_2))
+    # print('\nall_utterances length:', len(all_utterances), 'Preview: ', all_utterances[:20])
 
     content_speaker_1 = [utt[3:-3] for utt in content_speaker_1]
     content_speaker_2 = [utt[3:-3] for utt in content_speaker_2]
@@ -2315,18 +2561,34 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
         plt.figure()
         plt.title(f'{name.title()} interview: Normalised Average Length of Utterances ({n} Even Segments)')
         plt.bar(xs, list1_normalised)
+
+        # create nth degree polynomial fit
+        # n = 1
+        # zn = np.polyfit(xs[::2], list1_normalised[::2], n)
+        # pn = np.poly1d(zn)  # construct polynomial
+
+        # create qth degree polynomial fit
+        q = 10
+        zq = np.polyfit(xs[::2], list1_normalised[::2], q)
+        pq = np.poly1d(zq)
+
+        # plot data and fit
+        xx = np.linspace(0, max(xs), 50)
+        # plt.plot(xx, pn(xx), color='g')
+        plt.plot(xx, pq(xx), color='k')
+        #plt.plot(xs, list1_normalised, '-')
+
         plt.ylabel('Normalised Utterance Length')
         plt.xlabel('Utterance Number')
 
-    plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
+    #plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
 
     plt.show()
     return
 
 #Interupption_Analysis()
 #Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
-Snappyness_EvenSegs('elon_musk', n=100, normalised=False)
-Snappyness_EvenSegs('jack_dorsey', n=100, normalised=False)
+#Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
 
 
 
@@ -2365,9 +2627,6 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
         for item in utterances_speakerwise[1]:
             f.write("%s\n" % item)
 
-    if just_analysis:  # not interested in plotting etc
-        return
-
     # Lemmatize utterances (TODO: change name "content_sentences" to "content_utterances" to be more precise)
     # content_sentences = Preprocess_Content(all_utterances)
     # Remove tags
@@ -2394,25 +2653,25 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     else:
         folder_name = transcript_name
 
-    ## Segmentation
-    if not speakerwise:
-        first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
-                                                    Num_Even_Segs=Even_number_of_segments,
-                                                    cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
-                                                   save_fig=saving_figs)
-        print('first_sent_idxs_list', first_sent_idxs_list)
-
-    elif speakerwise:
-        first_sent_idxs_list_1 = Peform_Segmentation(utterances_speakerwise[0], segmentation_method=seg_method,
-                                                   Num_Even_Segs=Even_number_of_segments,
-                                                   cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
-                                                   save_fig=saving_figs)
-        first_sent_idxs_list_2 = Peform_Segmentation(utterances_speakerwise[1], segmentation_method=seg_method,
-                                                     Num_Even_Segs=Even_number_of_segments,
-                                                     cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
-                                                     save_fig=saving_figs)
-        print('first_sent_idxs_list_1', first_sent_idxs_list_1)
-        print('first_sent_idxs_list_2', first_sent_idxs_list_2)
+    # ## Segmentation
+    # if not speakerwise:
+    #     first_sent_idxs_list = Peform_Segmentation(content_sentences, segmentation_method=seg_method,
+    #                                                 Num_Even_Segs=Even_number_of_segments,
+    #                                                 cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+    #                                                save_fig=saving_figs)
+    #     print('first_sent_idxs_list', first_sent_idxs_list)
+    #
+    # elif speakerwise:
+    #     first_sent_idxs_list_1 = Peform_Segmentation(utterances_speakerwise[0], segmentation_method=seg_method,
+    #                                                Num_Even_Segs=Even_number_of_segments,
+    #                                                cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+    #                                                save_fig=saving_figs)
+    #     first_sent_idxs_list_2 = Peform_Segmentation(utterances_speakerwise[1], segmentation_method=seg_method,
+    #                                                  Num_Even_Segs=Even_number_of_segments,
+    #                                                  cos_sim_limit=InferSent_cos_sim_limit, Plot=Plot_Segmentation,
+    #                                                  save_fig=saving_figs)
+    #     print('first_sent_idxs_list_1', first_sent_idxs_list_1)
+    #     print('first_sent_idxs_list_2', first_sent_idxs_list_2)
 
 
     ## Keyword Extraction
@@ -2460,7 +2719,14 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     # Analysis.Analyse(content, content_sentences, keyword_vectors_df, segments_info_df)
     ## transcript_name, embedding_method, seg_method, node_location_method, Even_number_of_segments,
     ## InferSent_cos_sim_limit, saving_figs, und, shift_ngrams, save_name)
+    save_name = 'ANIMATION_{0}_{1}_Segments_{2}_NodePosition'.format(Even_number_of_segments,
+                                                                                seg_method, node_location_method)
+    Animate(segments_info_df, keyword_vectors_df, transcript_name = sub_folder_name, save_name = save_name,  names = names,
+            Node_Position = node_location_method, only_nouns=True, save_fig = saving_figs,
+            colour_quiver_plots = True) #, speakerwise_coloring = False)
 
+    if just_analysis:  # not interested in plotting etc
+        return
 
     ## Plot Word Embedding
     # Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
@@ -2539,7 +2805,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 
 ## CODE...
-if __name__ == '_/_main__':
+if __name__ == '__main__':
     path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
@@ -2547,7 +2813,7 @@ if __name__ == '_/_main__':
     seg_method = 'Even'                            #'Even'      # 'InferSent'       #'SliceCast'
     node_location_method = '1_max_count'                # 'total_average'    # '1_max_count'     # '3_max_count'
 
-    Even_number_of_segments = 50                       # for when seg_method = 'Even'
+    Even_number_of_segments = 100                       # for when seg_method = 'Even'
     InferSent_cos_sim_limit = 0.52                      # for when seg_method = 'InferSent' 52
 
     put_underscore_ngrams = False                    # For keywords consisting of >1 word present them with '_' between (did this bc was investigating whether any of the embeddings would recognise key phrases like 'United States' better in that form or 'United_States' form)
@@ -2561,7 +2827,7 @@ if __name__ == '_/_main__':
     just_analysis = True
 
     use_combined_embed = True
-    speakerwise = True
+    speakerwise = False
 
     colour_quiver_plots = False
     plot_hist_too = False                            # Plot a histogram indicating the number of keywords contained in each segment (and defined colour schemes for
