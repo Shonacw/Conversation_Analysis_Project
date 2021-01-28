@@ -201,6 +201,10 @@ and the interview between Joe Rogan and Kanye West...
 
 **Discussion Trees - Rearranging the Simple Shift Visualisation**
 
+Take the Simple Shifting 600-sentence Jack Dorsey diagram...
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.30.23.png" width ="400" />
+
 Rather than *shifting* to an old topics position when it is returned to, we start a new branch from 
 its last position... (branch numbers annotated in the orange circles)
 

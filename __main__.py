@@ -3118,10 +3118,10 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 #Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
 
 #Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
-#Shifting_Line_Topics_2(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
+Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
-DT_First_Draft(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
+#DT_First_Draft(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 
 
 def Interupption_Analysis(save_fig=False):
