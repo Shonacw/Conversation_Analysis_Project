@@ -188,15 +188,24 @@ and the interview between Joe Rogan and Kanye West...
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Interruptions_Jack.png" width ="350" />
 
-| Speaker     |   Total #Interruptions |
-|:------------|-----------------------:|
-| Joe Rogan   |                     53 |
-| Jack Dorsey |                     58 |
+<table>
+<tr><th>Interruptions Elon Interview</th><th>Interruptions Jack Interview</th></tr>
+<tr><td>
 
 | Speaker   |   Total #Interruptions |
 |:----------|-----------------------:|
 | Joe Rogan |                      4 |
 | Elon Musk |                      4 |
+
+</td><td>
+
+| Speaker     |   Total #Interruptions |
+|:------------|-----------------------:|
+| Joe Rogan   |                     53 |
+| Jack Dorsey |                     58 |
+
+</td></tr> </table>
+
 
 - Snappyness of conversation (other word needed): basic illustration using utterance lengths 
 

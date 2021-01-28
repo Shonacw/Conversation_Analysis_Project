@@ -2720,7 +2720,6 @@ def Interupption_Analysis(save_fig=False):
     plt.ylim([0, 1.2])
     if save_fig:
         plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
-
     plt.show()
 
     # Info on interruptions
