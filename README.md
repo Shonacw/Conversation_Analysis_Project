@@ -140,7 +140,7 @@ colour the lines to reflect the current speaker -> from this we can see that all
 200 lines of the transcript are spoken by Joe Rogan (and hence maybe he introduces all new topics as he is leading
 the conversation?).
 
-<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_DA.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_DA.png" width ="700" />
 
 **Topic Changes Simple Line**
 
