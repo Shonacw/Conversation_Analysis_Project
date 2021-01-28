@@ -176,12 +176,11 @@ Take the simple line plot above and introduce a horizontal shift when a previous
 
 ...and a simplified version...
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="500" />
-
+<img src = "Saved_Images/joe_rogan_elon_musk/Simpler_Shifting_Line_Topics.png" width ="500" />
 
 and now same for the Jack Dorsey interview
 
-<img src = "Saved_Images/joe_rogan_jack_dorsey/Shifting_Line_Topics.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Shifting_Line_Topics.png" width ="400" />
+<img src = "Saved_Images/joe_rogan_jack_dorsey/Shifting_Line_Topics.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Simpler_Shifting_Line_Topics.png" width ="400" />
 
 *Topic Changes Line with Shift - Comparison between different interviews*
 
