@@ -26,7 +26,6 @@
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -251,14 +250,7 @@
       <workItem from="1611236731045" duration="3107000" />
       <workItem from="1611311645126" duration="14587000" />
       <workItem from="1611404854442" duration="2293000" />
-      <workItem from="1611407459183" duration="50448000" />
-    </task>
-    <task id="LOCAL-00075" summary="Added Speakerwise Plotting">
-      <created>1611162811793</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1611162811793</updated>
+      <workItem from="1611407459183" duration="50846000" />
     </task>
     <task id="LOCAL-00076" summary="Added Speakerwise Plotting">
       <created>1611162871198</created>
@@ -596,7 +588,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611830330306</updated>
     </task>
-    <option name="localTasksCounter" value="124" />
+    <task id="LOCAL-00124" summary="pics">
+      <created>1611830603991</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1611830603991</updated>
+    </task>
+    <option name="localTasksCounter" value="125" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -663,11 +662,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611830330110">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611830603892">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323505734" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611830330110" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611830603892" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -720,11 +719,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611830332416">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611830605282">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323507347" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611830332416" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611830605282" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
