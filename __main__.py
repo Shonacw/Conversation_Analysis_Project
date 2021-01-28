@@ -2994,7 +2994,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
-    Dict_of_topics, Dict_of_topics_counts = {}, {}
+    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
     branch_number = 0
 
     for idx, row in file[1:cutoff_sent].iterrows():
@@ -3019,7 +3019,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
                      color=colour)  # plot line
 
-        if not continued_topic:
+        elif not continued_topic:
             # DIFFERENT TOPIC FROM PREVIOUS. Now we decide if it's a topic we have seen before, or a brand new one.
             new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
             topic_linegraph_dict['Idx'].append(idx)
@@ -3038,6 +3038,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
             for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
                 if topic in Dict_of_topics:
                     X_pos, Y_pos = Dict_of_topics[topic]
+                    topic_direction = Dict_of_topics_direction[topic]
                     the_topic = topic
                 else:
                     continue
@@ -3047,6 +3048,11 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                 for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
                     Dict_of_topics[topic] = new_sent_coords
                     Dict_of_topics_counts[topic] = 1
+                    if step_size_x < 0:
+                        current_direction = -1
+                    else:
+                         current_direction = 1
+                    Dict_of_topics_direction[topic] = current_direction
 
                 # then plot…
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)  # plot node
@@ -3059,22 +3065,30 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
 
             else: # i.e. if we are jumping back to a previously mentioned topic
+
                 plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=10)
                 plt.rc('font', size=6)
                 plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='darkred', zorder=100,
                              weight='bold')
                 plt.rc('font', size=8)
-                # Update branch number
-                branch_number += 1
-                step_size_y += 50
 
+                # New branch, and update step sizes
+                branch_number += 1
+                step_size_y += 5
                 Dict_of_topics_counts[the_topic] += 1
 
-                step_size_x *= -1
-                if step_size_x < 0:
-                    step_size_x -= 0.5
-                else:
-                    step_size_x += 0.5  # also adjust step size so don't return to other topics
+
+                if topic_direction > 0: # if the branch was moving positively last time, we want to go negative
+                    step_size_x *= -1 # make it negative
+                    step_size_x -= 0.5 # increase incrememnt
+                    topic_direction_updated = -1
+                elif topic_direction < 0:
+                    step_size_x *= -1 # make it positive
+                    step_size_x += 0.5 # increase incrememnt
+                    topic_direction_updated = 1
+
+                Dict_of_topics_direction[the_topic] = topic_direction_updated
+
                 new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
 
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
@@ -3094,7 +3108,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
         old_idx = idx
 
 
-    print(' the final index of row', idx)
+    print('the final index of row', idx)
     print('the final y position', new_sent_coords[1])
     # print('Dict_of_topics', Dict_of_topics)
     # print('Dict_of_topics_counts', Dict_of_topics_counts)
@@ -3118,10 +3132,10 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 #Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
 
 #Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
-Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
+#Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
-#DT_First_Draft(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
+DT_First_Draft(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 
 
 def Interupption_Analysis(save_fig=False):

@@ -94,6 +94,7 @@ How the thickness of the line is assigned (todo):
 **Plotting of Trajectory Through Topic Space for two Transcripts on the same background word embedding**
 
 Word embedding background created using FastText on the two transcript (Joe Rogan + Elon Musk, and Joe Rogan + Jack Dorsey).
+
 <img src = "Saved_Images/combined_podcast/joe_rogan_elon_musk/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" /> <img src = "Saved_Images/combined_podcast/joe_rogan_jack_dorsey/200_Even_Segments_Quiver_and_Embeddings_Plot_With_3_max_count_NodePosition.png" width ="400" />
 
 
