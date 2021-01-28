@@ -41,6 +41,9 @@ from collections import defaultdict
 from pprint import pprint
 import random
 from matplotlib.lines import Line2D
+from operator import add
+import tabulate
+import string
 
 import networkx as nx
 from wordcloud import WordCloud
@@ -2310,9 +2313,7 @@ def Simple_Line_DA():
 
 def Simple_Line_Topics():
     """"Function """
-    from operator import add
-    import tabulate
-    import string
+
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size = 1
@@ -2555,9 +2556,6 @@ def Shifting_Line_Topics():
 
 def Shifting_Line_Topics_2(name):
     """"Function """
-    from operator import add
-    import tabulate
-    import string
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size_x, step_size_y = 1, 1
 
@@ -2681,12 +2679,12 @@ def Shifting_Line_Topics_2(name):
 #Shifting_Line_Topics_2('elon_musk')
 
 
-def Interupption_Analysis():
+def Interupption_Analysis(save_fig=False):
     """
     Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
     vs how many Questions they ask/ topics they introduce/ time spoken
     """
-    names = ['Joe', 'Rogan', 'Jack', 'Dorsey'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
+    names = ['Joe', 'Rogan', 'Elon', 'Musk'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
 
     with open('txts/Joe_Rogan_{0}/utterances_speakerwise_{1}.txt'.format('_'.join(names[2:4]), names[2]), 'r') as f:
         utts_spkr1 = f.read()
@@ -2697,19 +2695,17 @@ def Interupption_Analysis():
     with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
         all_utts = f.read()
 
-
-    # print('\nutts_spkr1:\n', utts_spkr1[:500])
-    # print('\nutts_spkr2:\n', utts_spkr2[:500])
-    # print('\nAll_Utts:\n', all_utts[2000:10000])
     names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
     sents = all_utts.split('\n')
-    print('sents: ', len(sents), sents)
-    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
-    pprint(np.array(sents)[idxs_sents_with_cutoff])
-    # if names[2]=='Jack':
-    #     idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '…  ' in sent]
 
-    print(idxs_sents_with_cutoff)
+    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
+    print('', len(idxs_sents_with_cutoff))
+    # number of times speaker 123 was interrupted by 321
+    idxs_123 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '123']
+    # number of times speaker 123 was interrupted by 123
+    idxs_321 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '321']
+    pprint(np.array(sents)[idxs_sents_with_cutoff])
+
     idxs = np.zeros(len(sents))
     colours = ['k' for i in idxs]
     for i in idxs_sents_with_cutoff:
@@ -2729,6 +2725,23 @@ def Interupption_Analysis():
     plt.legend(handles=legend_elements)
     plt.ylim([0, 1.2])
     plt.show()
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
+    plt.show()
+
+    # Info on interruptions
+    mini_df = {'Speaker': [], 'Total #Interruptions': []}
+
+    mini_df['Speaker'] = ['Joe Rogan', ' '.join(names[2:4])]
+    mini_df['Total #Interruptions'] = [len(idxs_321), len(idxs_123)]
+    # NOTE the above ^ 'len's are swapped around as we want to know how many times the speaker interrupted the other,
+    # not how many times they themselves were interupptrd
+
+    # Create df and save / print in xml
+    mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
+
+    print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
+    mini_df.to_hdf('Saved_dfs/joe_rogan_{}/interruptions_df.h5'.format('_'.join([n.lower() for n in names[2:4]])), key='df', mode='w')
 
     return
 
@@ -2904,10 +2917,9 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
     plt.show()
     return
 
-Interupption_Analysis()
+Interupption_Analysis(save_fig=True)
 #Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
 #Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
-
 
 
 def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
@@ -3128,7 +3140,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 ## CODE...
 if __name__ == '_/_main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 

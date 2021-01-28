@@ -186,8 +186,16 @@ and the interview between Joe Rogan and Kanye West...
 # Other Stuff
 - Interruptions... when one speaker cuts the other off
 
-<img src = "Saved_Images/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/Interruptions_Jack.png" width ="350" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Interruptions_Jack.png" width ="350" />
+| Speaker     |   Total #Interruptions |
+|:------------|-----------------------:|
+| Joe Rogan   |                     53 |
+| Jack Dorsey |                     58 |
 
+| Speaker   |   Total #Interruptions |
+|:----------|-----------------------:|
+| Joe Rogan |                      4 |
+| Elon Musk |                      4 |
 
 - Snappyness of conversation (other word needed): basic illustration using utterance lengths 
 
