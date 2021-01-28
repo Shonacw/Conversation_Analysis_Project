@@ -3031,8 +3031,8 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
             change_in_coords = [step_size_x, step_size_y] # step_size_y starts at zero (horizontal) then increases for later branches
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
-
-
+            print(Dict_of_topics_direction)
+            print('step_size_x', step_size_x)
             ## NOW, Check if this new topic has been visited before during this DT...
             the_topic = None
             for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
@@ -3058,7 +3058,8 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)  # plot node
                 # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+1, new_sent_coords[1]), color='k',
                 #              zorder=100),  # textcoords="offset points" #weight
-                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
+
+                #print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
 
                 plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
                          color=colour)  # plot line
@@ -3074,33 +3075,31 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
                 # New branch, and update step sizes
                 branch_number += 1
-                step_size_y += 5
+                step_size_y += 1
                 Dict_of_topics_counts[the_topic] += 1
 
-
                 if topic_direction > 0: # if the branch was moving positively last time, we want to go negative
-                    step_size_x *= -1 # make it negative
-                    step_size_x -= 0.5 # increase incrememnt
+                    step_size_x = -1 # make it negative
+                    step_size_x -= 0.5*branch_number # increase incrememnt
                     topic_direction_updated = -1
                 elif topic_direction < 0:
-                    step_size_x *= -1 # make it positive
-                    step_size_x += 0.5 # increase incrememnt
+                    step_size_x = 1 # make it positive
+                    step_size_x += 0.5*branch_number # increase incrememnt
                     topic_direction_updated = 1
 
                 Dict_of_topics_direction[the_topic] = topic_direction_updated
 
-                new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
+                new_sent_coords = [X_pos, Y_pos] #new_sent_coords[1]]  #Y_pos] # keep y position but change x.
 
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
                 plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
 
-                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                # plt.annotate(', '.join(current_topics) + str(topic_direction_updated), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
                 #              zorder=100),  # textcoords="offset points" #weight=
-                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
 
                 if Dict_of_topics_counts[the_topic] == 2:
                     # Annotate the line
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+9),
+                    plt.annotate(the_topic , xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+9),
                                  color='k', zorder=100, rotation=90, weight='bold')
 
         old_topics = current_topics #new_topic
@@ -3108,8 +3107,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
         old_idx = idx
 
 
-    print('the final index of row', idx)
-    print('the final y position', new_sent_coords[1])
+
     # print('Dict_of_topics', Dict_of_topics)
     # print('Dict_of_topics_counts', Dict_of_topics_counts)
     # legend_handles = []

@@ -224,8 +224,14 @@ Also add a slight colour map to help differentiate them...
 
 <img src = "Screenshots/Screenshot 2021-01-28 at 14.27.41.png" width ="400" />
 
-And now shift down...
+--- FIXED BUGS ----
 
+<img src = "Screenshots/Screenshot 2021-01-28 at 21.33.50.png" width ="400" />
+
+and shift down...
+(error-full..)
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 21.35.13.png" width ="400" />
 
 
 
