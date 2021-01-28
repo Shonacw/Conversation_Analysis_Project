@@ -176,7 +176,7 @@ Take the simple line plot above and introduce a horizontal shift when a previous
 
 ...and a simplified version...
 
-<img src = "Saved_Images/joe_rogan_elon_musk/Simpler_Shifting_Line_Topics.png" width ="700" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Simpler_Shifting_Line_Topics.png" width ="650" />
 
 and now same for the Jack Dorsey interview
 
