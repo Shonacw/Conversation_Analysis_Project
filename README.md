@@ -184,7 +184,13 @@ and the interview between Joe Rogan and Kanye West...
 
 
 # Other Stuff
+- Interruptions... when one speaker cuts the other off
+
+<img src = "Saved_Images/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/Interruptions_Jack.png" width ="350" />
+
+
 - Snappyness of conversation (other word needed): basic illustration using utterance lengths 
+
 <img src = "Saved_Images/Stuff/elon_musk_n:100_normalised:False.png" width ="350" /> <img src = "Saved_Images/Stuff/jack_dorsey_n:100_normalised:False.png" width ="350" />
 
 - Learning how to create Quiver animations... 

@@ -2171,16 +2171,33 @@ def Split_Transcript_By_Speaker(content, names):
     """
     Function to prepare transcript content for speaker-wise analysis.
     """
-    # Get rid of the time marks
-    text_1 = re.sub('\([0-9]{2}:[0-9]{2}:[0-9]{2}\)', " ", content)  # \w+\s\w+;
-    text = re.sub('\([0-9]{2}:[0-9]{2}\)', " ", text_1)
-    # print('\n content without time marks', text[:300])
+    if names[1] =='Elon Musk':
+        # Get rid of the time marks
+        text_1 = re.sub('\([0-9]{2}:[0-9]{2}:[0-9]{2}\)', " ", content)  # \w+\s\w+;
+        text_2 = re.sub('\([0-9]{2}:[0-9]{2}\)', " ", text_1)
+        text = re.sub('…', "...", text_2)
+        # print('\n content without time marks', text[:300])
 
-    # Remove speaker names
-    codes = [888123, 888321]                  # Just two random codes for the speakers
-    for name, code in zip(names, codes):
-        text = re.sub(str(name).title() + ":", str(code), text)
+        # Remove speaker names
+        codes = [888123, 888321]  # Just two random codes for the speakers
+        for name, code in zip(names, codes):
+            text = re.sub(str(name).title() + ':', str(code), text)
 
+    if names[1] =='Jack Dorsey':
+        # Change dashes to ...'s when speaker is cut off
+        content = re.sub('-\s\s', "...", content)
+        # Get rid of the time marks
+        text_1 = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", content)  # \w+\s\w+;
+        text = re.sub('\([0-9]{2}:[0-9]{2}\)', " ", text_1)
+
+        print('\n content without time marks', text[:300])
+
+        # Remove speaker names
+        codes = [888123, 888321]  # Just two random codes for the speakers
+        for name, code in zip(names, codes):
+            text = re.sub(str(name).title(), str(code), text)
+
+    print('text', text[:500])
     # Strip new-lines
     content_2 = re.sub('\n', " ", text)
     # Strip white spaces
@@ -2669,7 +2686,8 @@ def Interupption_Analysis():
     Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
     vs how many Questions they ask/ topics they introduce/ time spoken
     """
-    names = ['Joe', 'Rogan', 'Jack', 'Dorsey']
+    names = ['Joe', 'Rogan', 'Jack', 'Dorsey'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
+
     with open('txts/Joe_Rogan_{0}/utterances_speakerwise_{1}.txt'.format('_'.join(names[2:4]), names[2]), 'r') as f:
         utts_spkr1 = f.read()
 
@@ -2680,9 +2698,37 @@ def Interupption_Analysis():
         all_utts = f.read()
 
 
-    print('\nutts_spkr1:\n', utts_spkr1[:500])
-    print('\nutts_spkr2:\n', utts_spkr2[:500])
-    print('\nAll_Utts:\n', all_utts[2000:10000])
+    # print('\nutts_spkr1:\n', utts_spkr1[:500])
+    # print('\nutts_spkr2:\n', utts_spkr2[:500])
+    # print('\nAll_Utts:\n', all_utts[2000:10000])
+    names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
+    sents = all_utts.split('\n')
+    print('sents: ', len(sents), sents)
+    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
+    pprint(np.array(sents)[idxs_sents_with_cutoff])
+    # if names[2]=='Jack':
+    #     idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '…  ' in sent]
+
+    print(idxs_sents_with_cutoff)
+    idxs = np.zeros(len(sents))
+    colours = ['k' for i in idxs]
+    for i in idxs_sents_with_cutoff:
+        idxs[i] = 1
+        colours[i] = names_dict[sents[i][:3]][1]
+
+    plt.figure()
+    xs = range(len(sents))
+    for i in xs:
+        plt.plot([xs[i], xs[i]], [0, idxs[i]], '-', color=colours[i], lw=2)
+
+    plt.xlabel('Sentence Number')
+    plt.ylabel('Interruption')
+    legend_elements = [Line2D([0], [0], color=list(names_dict.values())[0][1], lw=1, label=list(names_dict.values())[1][0]),
+                       Line2D([0], [0], color=list(names_dict.values())[1][1], lw=1, label=list(names_dict.values())[0][0])]
+    plt.title('Speakers Interrupted - {0} interview'.format(' '.join(names[2:4])))
+    plt.legend(handles=legend_elements)
+    plt.ylim([0, 1.2])
+    plt.show()
 
     return
 
@@ -2858,7 +2904,7 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
     plt.show()
     return
 
-#Interupption_Analysis()
+Interupption_Analysis()
 #Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
 #Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
 
@@ -2878,6 +2924,7 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
     # Extract names of speakers featured in transcript
     names = Extract_Names(transcript_name)
+    print(names)
 
     ## Load + Pre-process Transcript
     with open(path_to_transcript, 'r') as f:
@@ -2886,18 +2933,20 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
     all_utterances, utterances_speakerwise = Split_Transcript_By_Speaker(content, names)
 
     # If want to save speaker-split utterances
-    with open("txts/Joe_Rogan_Jack_Dorsey/all_utterances.txt", "w") as f:
+    with open("txts/Joe_Rogan_{}/all_utterances.txt".format('_'.join(names[1].split(' '))), "w") as f:
         for item in all_utterances:
             f.write("%s\n" % item)
 
-
-    with open("txts/Joe_Rogan_Jack_Dorsey/utterances_speakerwise_Joe.txt", "w") as f:
+    with open("txts/Joe_Rogan_{}/utterances_speakerwise_Joe.txt".format('_'.join(names[1].split(' '))), "w") as f:
         for item in utterances_speakerwise[0]:
             f.write("%s\n" % item)
 
-    with open("txts/Joe_Rogan_Jack_Dorsey/utterances_speakerwise_Jack.txt", "w") as f:
+    with open("txts/Joe_Rogan_{0}/utterances_speakerwise_{1}.txt".format('_'.join(names[1].split(' ')), names[1].split(' ')[0]), "w") as f:
         for item in utterances_speakerwise[1]:
             f.write("%s\n" % item)
+
+    if just_analysis:  # not interested in plotting etc
+        return
 
     # Lemmatize utterances (TODO: change name "content_sentences" to "content_utterances" to be more precise)
     # content_sentences = Preprocess_Content(all_utterances)
@@ -3000,8 +3049,6 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
                transcript_name = sub_folder_name, names = names, Node_Position = node_location_method, only_nouns=True,
                save_fig = saving_figs, speakerwise_colouring=True)
 
-    if just_analysis:  # not interested in plotting etc
-        return
 
     ## Plot Word Embedding
     # Plot_Embeddings(keyword_vectors_df, embedding_method, folder_name, shifted_ngrams=shift_ngrams, save_fig=saving_figs)
@@ -3080,8 +3127,8 @@ def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embed
 
 
 ## CODE...
-if __name__ == '__main__':
-    path_to_transcript = Path('msci-project/transcripts/joe_rogan_elon_musk.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
+if __name__ == '_/_main__':
+    path_to_transcript = Path('msci-project/transcripts/joe_rogan_jack_dorsey.txt') #'data/shorter_formatted_plain_labelled.txt') #'msci-project/transcripts/joe_rogan_jack_dorsey.txt' #msci-project/transcripts/joe_rogan_elon_musk.txt
 
     embedding_method = 'fasttext'                       #'word2vec'         #'fasttext'
 
