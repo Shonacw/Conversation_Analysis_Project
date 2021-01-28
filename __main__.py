@@ -2231,7 +2231,7 @@ def Split_Transcript_By_Speaker(content, names):
 
 
 
-def Simple_Line_DA():
+def Simple_Line_DA(Interviewee='elon musk', save_fig=False):
     """
     Function to plot line
     black line moving between points
@@ -2244,16 +2244,16 @@ def Simple_Line_DA():
     or only add a node when the speaker has changed and check all labels that happened between this one and the last
     node and if ANY of them are in change_DAs then change direction
     """
-    from operator import add
     changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
-    speakers_map = {'joe rogan': 'purple', 'elon musk' : 'blue'}
+    speakers_map = {'joe rogan': 'purple', Interviewee : 'blue'}
     step_size = 1
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
     print(file[:100].to_string())
 
     plt.figure()
-    plt.title('Change of Direction when an Utterance contains a "Changer" DA')
+    plt.title('Detecting "Changer" Dialogue Acts')
     old_sent_coords = [0, 0]
     old_idx = 0
     for idx, row in file[1:200].iterrows():
@@ -2286,9 +2286,17 @@ def Simple_Line_DA():
             new_dir_x = 0 #not(old_dir_x)
             change_in_coords = [step_size, 0] if new_dir_x else [0, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+            print('new_sent_coords', new_sent_coords)
+            print('change_in_coords', change_in_coords)
+
+            try:
+                annotation = row['topics'] #[0]
+
+            except:
+                annotation = 'Nan'
 
             plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
-            plt.annotate(row['topics'][0], xy=(new_sent_coords[0]-10, new_sent_coords[1]+0.1), color='k', zorder=100), # textcoords="offset points" #weight=)
+            plt.annotate(annotation, xy=(new_sent_coords[0]-10, new_sent_coords[1]+0.1), color='k', zorder=100), # textcoords="offset points" #weight=)
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
                      color=colour)  # plot line
 
@@ -2308,21 +2316,25 @@ def Simple_Line_DA():
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
     plt.legend(legend_handles, legend_labels)
+
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Simple_Line_DA.png".format(transcript_name), dpi=600)
     plt.show()
+
     return
 
-def Simple_Line_Topics():
+def Simple_Line_Topics(Interviewee='elon musk', save_fig=False):
     """"Function """
 
-    changer_DAs = ["Wh-Question", "Yes-No-Question", "Declarative Yes-No-Question", "Declarative Wh-Question"]
-    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
     step_size = 1
 
     topic_linegraph_dict = {'Idx' :[], 'All_Current_Topics' :[], 'New_Topic':[], 'Speaker':[], 'Sentence':[],
                             'DA_Label': []}
 
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_kanye_west.pkl")
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
     print(file[:100].to_string())
 
     plt.figure()
@@ -2432,10 +2444,13 @@ def Simple_Line_Topics():
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
     plt.legend(legend_handles, legend_labels)
+
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Simple_Line_Topics.png".format(transcript_name), dpi=600)
     plt.show()
+    return
 
-
-def Shifting_Line_Topics():
+def Shifting_Line_Topics(Interviewee='elon musk', save_fig=False):
     """"Function """
     from operator import add
     import tabulate
@@ -2554,7 +2569,7 @@ def Shifting_Line_Topics():
     plt.show()
     return
 
-def Shifting_Line_Topics_2(name):
+def Shifting_Line_Topics_2(Interviewee='elon musk', save_fig=False):
     """"Function """
     speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
     step_size_x, step_size_y = 1, 1
@@ -2673,8 +2688,8 @@ def Shifting_Line_Topics_2(name):
     plt.show()
     return
 
-#Simple_Line_DA()
-#Simple_Line_Topics()
+#Simple_Line_DA(Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
+Simple_Line_Topics(Interviewee='elon musk', save_fig=True)
 #Shifting_Line_Topics()
 #Shifting_Line_Topics_2('elon_musk')
 
@@ -2737,7 +2752,6 @@ def Interupption_Analysis(save_fig=False):
     mini_df.to_hdf('Saved_dfs/joe_rogan_{}/interruptions_df.h5'.format('_'.join([n.lower() for n in names[2:4]])), key='df', mode='w')
 
     return
-
 
 def Snappyness(name, n_average=True, n = 5, normalised=False):
     """Not sure how I'll define this property of conversation but for now just plot length of speaker turn"""
@@ -2910,7 +2924,7 @@ def Snappyness_EvenSegs(name, n=200, normalised=False):
     plt.show()
     return
 
-Interupption_Analysis(save_fig=True)
+#Interupption_Analysis(save_fig=True)
 #Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
 #Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
 

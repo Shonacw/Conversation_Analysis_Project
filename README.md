@@ -140,7 +140,7 @@ colour the lines to reflect the current speaker -> from this we can see that all
 200 lines of the transcript are spoken by Joe Rogan (and hence maybe he introduces all new topics as he is leading
 the conversation?).
 
-<img src = "Screenshots/Screenshot 2021-01-22 at 13.47.44.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_DA.png" width ="500" />
 
 *Topic Changes Simple Line*
 
@@ -155,6 +155,9 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
 |:----------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
 | Joe Rogan |                 854 |                      161 |                 519 |                            74 |                                50 |                               20 |
 | Elon Musk |                 847 |                       29 |                 591 |                            80 |                                64 |                                3 |
+
+
+and same for Jack Dorsey interview...
 
 *Topic Changes Line with Shift*
 

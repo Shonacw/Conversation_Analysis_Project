@@ -25,7 +25,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Saved_Images/joe_rogan_elon_musk/Simple_Line_DA.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Saved_Images/joe_rogan_jack_dorsey/Simple_Line_DA.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -250,21 +254,7 @@
       <workItem from="1611236731045" duration="3107000" />
       <workItem from="1611311645126" duration="14587000" />
       <workItem from="1611404854442" duration="2293000" />
-      <workItem from="1611407459183" duration="50846000" />
-    </task>
-    <task id="LOCAL-00076" summary="Added Speakerwise Plotting">
-      <created>1611162871198</created>
-      <option name="number" value="00076" />
-      <option name="presentableId" value="LOCAL-00076" />
-      <option name="project" value="LOCAL" />
-      <updated>1611162871198</updated>
-    </task>
-    <task id="LOCAL-00077" summary="Added Speakerwise Plotting to 3D plot + added word embedding in background (although not neatly)">
-      <created>1611169097163</created>
-      <option name="number" value="00077" />
-      <option name="presentableId" value="LOCAL-00077" />
-      <option name="project" value="LOCAL" />
-      <updated>1611169097163</updated>
+      <workItem from="1611407459183" duration="52274000" />
     </task>
     <task id="LOCAL-00078" summary="Added Speakerwise Plotting to 3D plot + added word embedding in background (although not neatly)">
       <created>1611223251734</created>
@@ -595,7 +585,21 @@
       <option name="project" value="LOCAL" />
       <updated>1611830603991</updated>
     </task>
-    <option name="localTasksCounter" value="125" />
+    <task id="LOCAL-00125" summary="pics">
+      <created>1611831408383</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1611831408383</updated>
+    </task>
+    <task id="LOCAL-00126" summary="pics">
+      <created>1611831456979</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1611831456979</updated>
+    </task>
+    <option name="localTasksCounter" value="127" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,11 +666,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611830603892">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1611831456911">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323505734" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611830603892" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1611831456911" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -675,30 +679,30 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="220" y="124" key="Git.Interactive.Rebase.Dialog/0.23.1440.820@0.23.1440.820" timestamp="1611231073844" />
-    <state width="1398" height="261" key="GridCell.Tab.0.bottom" timestamp="1611830294904">
+    <state width="1398" height="224" key="GridCell.Tab.0.bottom" timestamp="1611832882428">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1398" height="119" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323650421" />
     <state width="1388" height="240" key="GridCell.Tab.0.bottom/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878371" />
-    <state width="1398" height="261" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611830294904" />
-    <state width="1398" height="261" key="GridCell.Tab.0.center" timestamp="1611830294903">
+    <state width="1398" height="224" key="GridCell.Tab.0.bottom/0.23.1440.820@0.23.1440.820" timestamp="1611832882428" />
+    <state width="1398" height="224" key="GridCell.Tab.0.center" timestamp="1611832882427">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1398" height="119" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323650419" />
     <state width="1388" height="240" key="GridCell.Tab.0.center/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1398" height="261" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611830294903" />
-    <state width="1398" height="261" key="GridCell.Tab.0.left" timestamp="1611830294891">
+    <state width="1398" height="224" key="GridCell.Tab.0.center/0.23.1440.820@0.23.1440.820" timestamp="1611832882427" />
+    <state width="1398" height="224" key="GridCell.Tab.0.left" timestamp="1611832882427">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1398" height="119" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323650418" />
     <state width="1388" height="240" key="GridCell.Tab.0.left/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878369" />
-    <state width="1398" height="261" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611830294891" />
-    <state width="1398" height="261" key="GridCell.Tab.0.right" timestamp="1611830294904">
+    <state width="1398" height="224" key="GridCell.Tab.0.left/0.23.1440.820@0.23.1440.820" timestamp="1611832882427" />
+    <state width="1398" height="224" key="GridCell.Tab.0.right" timestamp="1611832882427">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state width="1398" height="119" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323650420" />
     <state width="1388" height="240" key="GridCell.Tab.0.right/0.23.1440.820/1440.23.1920.1057@1440.23.1920.1057" timestamp="1610636878370" />
-    <state width="1398" height="261" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611830294904" />
+    <state width="1398" height="224" key="GridCell.Tab.0.right/0.23.1440.820@0.23.1440.820" timestamp="1611832882427" />
     <state width="1398" height="262" key="GridCell.Tab.1.bottom" timestamp="1611595732780">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -719,11 +723,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611830605282">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1611831613859">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611323507347" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611830605282" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1611831613859" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
@@ -769,7 +773,7 @@
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$predictDA.coverage" NAME="predictDA Coverage Results" MODIFIED="1611235404376" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/msci-project/src" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Keywords_sgcw.coverage" NAME="Keywords_sgcw Coverage Results" MODIFIED="1609026578184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SliceCast" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$covert_glove_to_word2vec.coverage" NAME="covert_glove_to_word2vec Coverage Results" MODIFIED="1609409151608" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1611830294795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1611832929748" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent.coverage" NAME="InferSent Coverage Results" MODIFIED="1609676572164" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$InferSent_sgcw.coverage" NAME="InferSent_sgcw Coverage Results" MODIFIED="1610112016611" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Conversation_Analysis_Project$Conversation_Analysis_Project.coverage" NAME="Conversation_Analysis_Project Coverage Results" MODIFIED="1608925685182" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.." />
