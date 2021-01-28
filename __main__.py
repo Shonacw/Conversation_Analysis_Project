@@ -2447,28 +2447,28 @@ def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False)
     plt.show()
     return
 
-def Shifting_Line_Topics(Interviewee='elon musk', save_fig=False):
-    """"Function """
-    from operator import add
-    import tabulate
-    import string
-    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+def Shifting_Line_Topics(cutoff_sent=400, Interviewee='elon musk', save_fig=False):
+    """"
+    Function
+    """
+    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+    print(file[:100].to_string())
+
     step_size_x, step_size_y = 1, 1
 
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
 
-    file = pd.read_pickle("processed_transcripts/joe_rogan_elon_musk.pkl")
-    print(file[:100].to_string())
-
     plt.figure()
-    plt.title('Shifting Topic Line ')
+    plt.title('Shifting Topic Line')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
     Dict_of_topics, Dict_of_topics_counts = {}, {}
 
-    for idx, row in file[1:400].iterrows():
+    for idx, row in file[1:cutoff_sent].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = speakers_map[old_speaker]
         if str(file.topics[old_idx]) == 'nan':
@@ -2480,7 +2480,6 @@ def Shifting_Line_Topics(Interviewee='elon musk', save_fig=False):
         continued_topic = False if len(continued_topics) == 0 else True
 
         if continued_topic:
-
             change_in_coords = [0, step_size_y]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
@@ -2563,19 +2562,22 @@ def Shifting_Line_Topics(Interviewee='elon musk', save_fig=False):
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
     plt.legend(legend_handles, legend_labels)
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Shifting_Line_Topics.png".format(transcript_name), dpi=600)
     plt.show()
     return
 
-def Shifting_Line_Topics_2(Interviewee='elon musk', save_fig=False):
+def Shifting_Line_Topics_2(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True):
     """"Function """
-    speakers_map = {'joe rogan': 'purple', 'elon musk': 'blue'}
+    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+    print(file[:100].to_string())
+
     step_size_x, step_size_y = 1, 1
 
     topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
                             'DA_Label': []}
-
-    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name)) #elon_musk #kanye_west # jack_dorsey
-    print(file[:10000].to_string())
 
     plt.figure()
     plt.title('Shifting Topic Line {0} LOGx'.format(' '.join(name.split('_')).title()))
@@ -2682,14 +2684,144 @@ def Shifting_Line_Topics_2(Interviewee='elon musk', save_fig=False):
     # plt.ylabel('Question in Utterance')
     # plt.legend(legend_handles, legend_labels)
     plt.xscale('log')
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Simpler_Shifting_Line_Topics.png".format(transcript_name), dpi=600)
+    plt.show()
+    return
+
+def DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True):
+    """"
+    Full transcript
+    Log scale on x axis
+    simple appearance with red annotations
+    """
+    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+    print(file[:100].to_string())
+
+    step_size_x, step_size_y = 1, 1
+
+    topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
+                            'DA_Label': []}
+
+    plt.figure()
+    plt.title('Shifting Topic Line {0}, log(x) scale:{1}'.format(Interviewee.title(), logscalex))
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    old_topics, most_recently_plotted = [], ''
+    Dict_of_topics, Dict_of_topics_counts = {}, {}
+
+    for idx, row in file[1:].iterrows():
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+        colour = 'k' #speakers_map[old_speaker]
+        if str(file.topics[old_idx]) == 'nan':
+            old_idx = idx
+            continue
+
+        current_topics = list(row['topics'])
+        continued_topics = [x for x in old_topics if x in current_topics]
+        continued_topic = False if len(continued_topics) == 0 else True
+
+        if continued_topic:
+
+            change_in_coords = [0, step_size_y]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)
+
+        if not continued_topic:
+            new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
+            topic_linegraph_dict['Idx'].append(idx)
+            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
+            topic_linegraph_dict['New_Topic'].append(new_topic)
+            topic_linegraph_dict['Speaker'].append(row['speaker'])
+            topic_linegraph_dict['Sentence'].append(row['utterance'])
+            topic_linegraph_dict['DA_Label'].append(row['da_label'])
+
+            change_in_coords = [step_size_x, 0]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+
+            ## NOW CHECK FOR RETURNS...
+            #print('new_topic', new_topic)
+            #print(Dict_of_topics)
+            # Check if topic has already been visited.
+            the_topic = None
+            for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
+                if topic in Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[topic]
+                    the_topic = topic
+                else:
+                    continue
+
+
+            # check if X_pos has been assigned, if not, assign new position
+            if the_topic is None:
+                for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
+                    Dict_of_topics[topic] = new_sent_coords
+                    Dict_of_topics_counts[topic] = 1
+
+                # then plot…
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+1, new_sent_coords[1]), color='k',
+                #              zorder=100),  # textcoords="offset points" #weight
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
+
+
+            else: # i.e. if we are jumping back to a previously mentioned topic
+                Dict_of_topics_counts[the_topic] += 1
+                step_size_x += 0.5  # also adjust step size so don't return to other topics
+                new_sent_coords = [X_pos, new_sent_coords[1]]  # keep y position but change x.
+
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
+
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                #              zorder=100),  # textcoords="offset points" #weight=
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
+
+                if Dict_of_topics_counts[the_topic] == 2:
+                    # Annotate the line
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-3, Dict_of_topics[the_topic][1]+10), color='darkred',
+                                 zorder=100, rotation=90, weight='bold'),  # textcoords="offset points" #weight=)
+
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)  # plot line
+
+        old_topics = current_topics #new_topic
+        old_sent_coords = new_sent_coords
+        old_idx = idx
+
+
+    print(' the final index of row', idx)
+    print('the final y position', new_sent_coords[1])
+    # print('Dict_of_topics', Dict_of_topics)
+    # print('Dict_of_topics_counts', Dict_of_topics_counts)
+    # legend_handles = []
+    # legend_labels = []
+    # for i in range(len(list(speakers_map.keys()))):
+    #     legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
+    #     legend_labels.append(list(speakers_map.keys())[i])
+
+    # plt.xlabel('Only Statements in Utterance')
+    # plt.ylabel('Question in Utterance')
+    # plt.legend(legend_handles, legend_labels)
+    if logscalex:
+        plt.xscale('log')
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/DT_Shifting_Topic_Line_LogX:{1}.png".format(transcript_name, logscalex), dpi=600)
     plt.show()
     return
 
 #Simple_Line_DA(cutoff_sent=200, Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
 #Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
 
-#Shifting_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
-#Shifting_Line_Topics_2('elon_musk')
+#Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
+#Shifting_Line_Topics_2(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
+DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
 
 def Interupption_Analysis(save_fig=False):

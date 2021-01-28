@@ -128,7 +128,7 @@ given here is for the Joe Rogan & Elon Musk interview.
 
 
 ## A Second method of Visualisation: Back to Basics
-*Dialogue Act Simple Line*
+**Dialogue Act Simple Line**
 
 Testing basic hypothesis that Questions indicate a topic change in the conversation. Here, I plot a node every time the speaker changes.
  I check through all dialogue acts used by a speaker in their set of consecutive utterances and if they used a Question 
@@ -142,14 +142,14 @@ the conversation?).
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_DA.png" width ="500" />
 
-*Topic Changes Simple Line*
+**Topic Changes Simple Line**
 
 Here I instead shift the line up when we detect the topic of conversation has changed. We can see that although 
-Elon Musk does not ask many questions, he DOES lead the conversation in terms of its topical evolution (all the blue lines
+**Elon Musk** does not ask many questions, he DOES lead the conversation in terms of its topical evolution (all the blue lines
  on the steps). Data presented in table format below on the number of Topics introduced by each speaker in the conversetion
  as a whole.
 
-<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_Topics.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_Topics.png" width ="700" />
 
 | Speaker   |   Total #Utterances |   Total #Questions Asked |   Total #Statements |   Number of Topics Introduced |   #Topics introduced by Statement |   #Topics introduced by Question |
 |:----------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
@@ -157,9 +157,9 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
 | Elon Musk |                 847 |                       29 |                 591 |                            80 |                                64 |                                3 |
 
 
-and same for Jack Dorsey interview...
+and same for **Jack Dorsey** interview...
 
-<img src = "Saved_Images/joe_rogan_jack_dorsey/Simple_Line_Topics.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_jack_dorsey/Simple_Line_Topics.png" width ="700" />
 
 | Speaker     |   Total #Utterances |   Total #Questions Asked |   Total #Statements |   Number of Topics Introduced |   #Topics introduced by Statement |   #Topics introduced by Question |
 |:------------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
@@ -167,25 +167,31 @@ and same for Jack Dorsey interview...
 | Jack Dorsey |                 992 |                       47 |                 775 |                            82 |                                70 |                                1 |
 
 
-*Topic Changes Line with Shift*
+
+**Topic Changes Line with Shift**
 
 Take the simple line plot above and introduce a horizontal shift when a previous topic is detected. 
 
-<img src = "Screenshots/Screenshot 2021-01-23 at 18.57.25.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Shifting_Line_Topics.png" width ="600" />
 
 ...and a simplified version...
 
 <img src = "Screenshots/Screenshot 2021-01-23 at 19.05.48.png" width ="500" />
 
+
+and now same for the Jack Dorsey interview
+
+<img src = "Saved_Images/joe_rogan_jack_dorsey/Shifting_Line_Topics.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Shifting_Line_Topics.png" width ="400" />
+
 *Topic Changes Line with Shift - Comparison between different interviews*
 
 And now similar but for the ENTIRE conversations between a) Joe Rogan and Jack Dorsey, b) Joe Rogan and Elon Musk
 
-<img src = "Screenshots/Screenshot 2021-01-24 at 17.40.16.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.44.46.png" width ="400" />
+<img src = "Saved_Images/joe_rogan_elon_musk/DT_Shifting_Topic_Line_LogX:False.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/DT_Shifting_Topic_Line_LogX:False.png" width ="400" />
 
 Now introducing a logarithmic x-axis scale so can view the dense information on the LHS of the above graphs better....
 
-<img src = "Screenshots/Screenshot 2021-01-24 at 17.53.44.png" width ="400" /> <img src = "Screenshots/Screenshot 2021-01-24 at 17.51.51.png" width ="400" />
+<img src = "Saved_Images/joe_rogan_elon_musk/DT_Shifting_Topic_Line_LogX:True.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/DT_Shifting_Topic_Line_LogX:True.png" width ="400" />
 
 Unreadable graph, but noticing the difference in pattern between that of above two conversations, 
 and the interview between Joe Rogan and Kanye West...
