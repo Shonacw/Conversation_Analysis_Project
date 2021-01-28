@@ -213,7 +213,7 @@ Each time we start a new branch, send the x increments a different way along the
 Angle the horizonal components of each branch with an incrementally steeper gradient such 
 that we can differentiate different branches....
 
-<img src = "Screenshots/Screenshot 2021-01-28 at 14.10.49.png" width ="400" />
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.23.30.png" width ="400" />
 
 Also add a slight colour map to help differentiate them...
 
