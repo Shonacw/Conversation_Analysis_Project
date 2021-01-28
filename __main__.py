@@ -2659,7 +2659,7 @@ def Shifting_Line_Topics_2(cutoff_sent=400, Interviewee='jack dorsey', save_fig=
 
                 if Dict_of_topics_counts[the_topic] == 2:
                     # Annotate the line
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-1.4, Dict_of_topics[the_topic][1]+9),
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+9),
                                  color='k', zorder=100, rotation=90, weight='bold')
 
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
@@ -2819,7 +2819,7 @@ def DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=
 #Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
 
 #Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
-Shifting_Line_Topics_2(cutoff_sent=500, Interviewee='jack dorsey', save_fig=True)
+Shifting_Line_Topics_2(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
 
