@@ -2684,13 +2684,7 @@ def Interupption_Analysis(save_fig=False):
     Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
     vs how many Questions they ask/ topics they introduce/ time spoken
     """
-    names = ['Joe', 'Rogan', 'Elon', 'Musk'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
-
-    with open('txts/Joe_Rogan_{0}/utterances_speakerwise_{1}.txt'.format('_'.join(names[2:4]), names[2]), 'r') as f:
-        utts_spkr1 = f.read()
-
-    with open('txts/Joe_Rogan_{0}/utterances_speakerwise_Joe.txt'.format('_'.join(names[2:4])), 'r') as f:
-        utts_spkr2 = f.read()
+    names = ['Joe', 'Rogan', 'Jack', 'Dorsey'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
 
     with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
         all_utts = f.read()
@@ -2724,9 +2718,9 @@ def Interupption_Analysis(save_fig=False):
     plt.title('Speakers Interrupted - {0} interview'.format(' '.join(names[2:4])))
     plt.legend(handles=legend_elements)
     plt.ylim([0, 1.2])
-    plt.show()
     if save_fig:
         plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
+
     plt.show()
 
     # Info on interruptions
