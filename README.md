@@ -149,7 +149,7 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
  on the steps). Data presented in table format below on the number of Topics introduced by each speaker in the conversetion
  as a whole.
 
-<img src = "Screenshots/Screenshot 2021-01-22 at 21.08.30.png" width ="500" />
+<img src = "Saved_Images/joe_rogan_elon_musk/Simple_Line_Topics.png" width ="500" />
 
 | Speaker   |   Total #Utterances |   Total #Questions Asked |   Total #Statements |   Number of Topics Introduced |   #Topics introduced by Statement |   #Topics introduced by Question |
 |:----------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
@@ -158,6 +158,13 @@ Elon Musk does not ask many questions, he DOES lead the conversation in terms of
 
 
 and same for Jack Dorsey interview...
+
+<img src = "Saved_Images/joe_rogan_jack_dorsey/Simple_Line_Topics.png" width ="500" />
+
+|:------------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
+| Joe Rogan   |                 727 |                      158 |                 387 |                            63 |                                32 |                               23 |
+| Jack Dorsey |                 992 |                       47 |                 775 |                            82 |                                70 |                                1 |
+
 
 *Topic Changes Line with Shift*
 

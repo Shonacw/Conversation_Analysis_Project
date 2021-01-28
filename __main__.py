@@ -2231,7 +2231,7 @@ def Split_Transcript_By_Speaker(content, names):
 
 
 
-def Simple_Line_DA(Interviewee='elon musk', save_fig=False):
+def Simple_Line_DA(cutoff_sent=200, Interviewee='elon musk', save_fig=False):
     """
     Function to plot line
     black line moving between points
@@ -2256,7 +2256,7 @@ def Simple_Line_DA(Interviewee='elon musk', save_fig=False):
     plt.title('Detecting "Changer" Dialogue Acts')
     old_sent_coords = [0, 0]
     old_idx = 0
-    for idx, row in file[1:200].iterrows():
+    for idx, row in file[1:cutoff_sent].iterrows():
         new_speaker = row['speaker_change']
         old_speaker = file.speaker[old_idx] #i.e. the speaker who said all utterances between old index and new index
 
@@ -2323,26 +2323,25 @@ def Simple_Line_DA(Interviewee='elon musk', save_fig=False):
 
     return
 
-def Simple_Line_Topics(Interviewee='elon musk', save_fig=False):
-    """"Function """
-
+def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False):
+    """"
+    Function
+    """
     speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
     step_size = 1
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+    print(file[:100].to_string())
 
     topic_linegraph_dict = {'Idx' :[], 'All_Current_Topics' :[], 'New_Topic':[], 'Speaker':[], 'Sentence':[],
                             'DA_Label': []}
 
-    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
-
-    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
-    print(file[:100].to_string())
-
     plt.figure()
-    plt.title('Change of Direction when topic changes')
+    plt.title('Detecting Changes in Topic')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
-    for idx, row in file[1:].iterrows():
+    for idx, row in file[1:cutoff_sent].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = speakers_map[old_speaker]
         if str(file.topics[old_idx]) == 'nan':
@@ -2399,41 +2398,39 @@ def Simple_Line_Topics(Interviewee='elon musk', save_fig=False):
                'Number of Topics Introduced': [],
                '#Topics introduced by Statement' :[], '#Topics introduced by Question':[]} #'Topics Introduced': [],
 
-    mini_df['Speaker'] = ['Joe Rogan', 'Elon Musk']
+    mini_df['Speaker'] = ['Joe Rogan', Interviewee.title()]
     joe_total_df = file[file['speaker'] == 'joe rogan']
-    elon_total_df = file[file['speaker'] == 'elon musk']
+    interviewee_total_df = file[file['speaker'] == Interviewee]
     joe_total_utts = len(joe_total_df)
-    elon_total_utts = len(elon_total_df)
-    mini_df['Total #Utterances'] = [joe_total_utts, elon_total_utts]
+    interviewee_total_utts = len(interviewee_total_df)
+    mini_df['Total #Utterances'] = [joe_total_utts, interviewee_total_utts]
     joe_total_Qs = len([idx for idx, row in joe_total_df.iterrows() if 'Question' in row['da_label']])
-    elon_total_Qs = len([idx for idx, row in elon_total_df.iterrows() if 'Question' in row['da_label']])
+    interviewee_total_Qs = len([idx for idx, row in interviewee_total_df.iterrows() if 'Question' in row['da_label']])
     joe_total_Ss = len([idx for idx, row in joe_total_df.iterrows() if 'Statement' in row['da_label']])
-    elon_total_Ss = len([idx for idx, row in elon_total_df.iterrows() if 'Statement' in row['da_label']])
-    mini_df['Total #Questions Asked'] = [joe_total_Qs, elon_total_Qs]
-    mini_df['Total #Statements'] = [joe_total_Ss, elon_total_Ss]
+    interviewee_total_Ss = len([idx for idx, row in interviewee_total_df.iterrows() if 'Statement' in row['da_label']])
+    mini_df['Total #Questions Asked'] = [joe_total_Qs, interviewee_total_Qs]
+    mini_df['Total #Statements'] = [joe_total_Ss, interviewee_total_Ss]
 
     joe_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'joe rogan']
-    elon_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == 'elon musk']
+    interviewee_df = topic_linegraph_df[topic_linegraph_df['Speaker'] == Interviewee]
     mini_df['Number of Topics Introduced'].append(len(joe_df))
-    mini_df['Number of Topics Introduced'].append(len(elon_df))
+    mini_df['Number of Topics Introduced'].append(len(interviewee_df))
     topics_introduced_joe = ', '.join(list(itertools.chain.from_iterable(list(joe_df.New_Topic))))
-    topics_introduced_elon = ', '.join(list(itertools.chain.from_iterable(list(elon_df.New_Topic))))
+    topics_introduced_interviewee = ', '.join(list(itertools.chain.from_iterable(list(interviewee_df.New_Topic))))
     print('topics_introduced_joe', topics_introduced_joe)
-    print('topics_introduced_elon', topics_introduced_elon)
-    #mini_df['Topics Introduced'] = [topics_introduced_joe, topics_introduced_elon]
+    print('topics_introduced_interviewee', topics_introduced_interviewee)
     mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in joe_df.iterrows() if 'Statement' in row['DA_Label']]))
-    mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in elon_df.iterrows() if 'Statement' in row['DA_Label']]))
+    mini_df['#Topics introduced by Statement'].append(len([idx for idx, row in interviewee_df.iterrows() if 'Statement' in row['DA_Label']]))
     mini_df['#Topics introduced by Question'].append(len([idx for idx, row in joe_df.iterrows() if 'Question' in row['DA_Label']]))
-    mini_df['#Topics introduced by Question'].append(len([idx for idx, row in elon_df.iterrows() if 'Question' in row['DA_Label']]))
+    mini_df['#Topics introduced by Question'].append(len([idx for idx, row in interviewee_df.iterrows() if 'Question' in row['DA_Label']]))
 
     # Create df
     mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
 
     print(tabulate.tabulate(topic_linegraph_df.values, topic_linegraph_df.columns, tablefmt="pipe"))
     print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
-    topic_linegraph_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/topic_linegraph_df.h5', key='df', mode='w')
-    mini_df.to_hdf('Saved_dfs/joe_rogan_elon_musk/mini_df.h5', key='df', mode='w')
-
+    topic_linegraph_df.to_hdf('Saved_dfs/{0}/topic_linegraph_df.h5'.format(transcript_name), key='df', mode='w')
+    mini_df.to_hdf('Saved_dfs/{0}/mini_df.h5'.format(transcript_name), key='df', mode='w')
 
     legend_handles = []
     legend_labels = []
@@ -2688,9 +2685,10 @@ def Shifting_Line_Topics_2(Interviewee='elon musk', save_fig=False):
     plt.show()
     return
 
-#Simple_Line_DA(Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
-Simple_Line_Topics(Interviewee='elon musk', save_fig=True)
-#Shifting_Line_Topics()
+#Simple_Line_DA(cutoff_sent=200, Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
+#Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
+
+#Shifting_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
 #Shifting_Line_Topics_2('elon_musk')
 
 
