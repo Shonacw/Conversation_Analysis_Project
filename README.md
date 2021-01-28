@@ -199,6 +199,31 @@ and the interview between Joe Rogan and Kanye West...
 
 
 
+**Discussion Trees - Rearranging the Simple Shift Visualisation**
+
+Rather than *shifting* to an old topics position when it is returned to, we start a new branch from 
+its last position... (branch numbers annotated in the orange circles)
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.11.42.png" width ="400" />
+
+Each time we start a new branch, send the x increments a different way along the x axis....
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.10.49.png" width ="400" />
+
+Angle the horizonal components of each branch with an incrementally steeper gradient such 
+that we can differentiate different branches....
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.10.49.png" width ="400" />
+
+Also add a slight colour map to help differentiate them...
+
+<img src = "Screenshots/Screenshot 2021-01-28 at 14.27.41.png" width ="400" />
+
+And now shift down...
+
+
+
+
 # Other Stuff
 - **Interruptions... when one speaker cuts the other off**
 
