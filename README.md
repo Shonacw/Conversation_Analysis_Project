@@ -161,6 +161,7 @@ and same for Jack Dorsey interview...
 
 <img src = "Saved_Images/joe_rogan_jack_dorsey/Simple_Line_Topics.png" width ="500" />
 
+| Speaker     |   Total #Utterances |   Total #Questions Asked |   Total #Statements |   Number of Topics Introduced |   #Topics introduced by Statement |   #Topics introduced by Question |
 |:------------|--------------------:|-------------------------:|--------------------:|------------------------------:|----------------------------------:|---------------------------------:|
 | Joe Rogan   |                 727 |                      158 |                 387 |                            63 |                                32 |                               23 |
 | Jack Dorsey |                 992 |                       47 |                 775 |                            82 |                                70 |                                1 |
