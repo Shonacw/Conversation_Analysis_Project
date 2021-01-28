@@ -187,6 +187,7 @@ and the interview between Joe Rogan and Kanye West...
 - Interruptions... when one speaker cuts the other off
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Interruptions_Jack.png" width ="350" />
+
 | Speaker     |   Total #Interruptions |
 |:------------|-----------------------:|
 | Joe Rogan   |                     53 |
