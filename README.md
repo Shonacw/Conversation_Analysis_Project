@@ -184,7 +184,7 @@ and the interview between Joe Rogan and Kanye West...
 
 
 # Other Stuff
-- *Interruptions... when one speaker cuts the other off*
+- **Interruptions... when one speaker cuts the other off**
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Interruptions_Jack.png" width ="350" />
 
@@ -209,14 +209,14 @@ and the interview between Joe Rogan and Kanye West...
 Does this tell us something about the nature of the conversation? Help us classify the conversation? insight into how 
 comfortable the interviewer feels around the interviewee?
 
-- *Snappyness of conversation (other word needed): basic illustration using utterance lengths*
+- **Snappyness of conversation (other word needed): basic illustration using utterance lengths**
 
 <img src = "Saved_Images/Stuff/elon_musk_n:100_normalised:False.png" width ="350" /> <img src = "Saved_Images/Stuff/jack_dorsey_n:100_normalised:False.png" width ="350" />
 
 Tells us something about the pace of human conversations - is it common for the pace to slow in the 2nd quarter? for it 
 to speed up just before winding down at the end?... how can we quantify this and use it as a feature for conversation classification?
 
-- *Learning how to create Quiver animations...*
+- **Learning how to create Quiver animations...**
 
 (note VERY MESSY- not final versions in any way)
 
