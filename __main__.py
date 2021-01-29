@@ -2994,7 +2994,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
-    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
+    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction, Dict_of_topics_heights_climbed = {}, {}, {}, {}
     branch_number = 0
 
     for idx, row in file[1:cutoff_sent].iterrows():
@@ -3012,6 +3012,16 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
         if continued_topic:
             change_in_coords = [0, 1]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+            #print('continued_topic', continued_topics)
+            # if step_size_x < 0:
+            #     current_direction = -1
+            # else:
+            #     current_direction = 1
+            for topic in continued_topics:
+                try:
+                    Dict_of_topics_heights_climbed[topic].append(new_sent_coords[1])
+                except:
+                    Dict_of_topics_heights_climbed[topic] = [new_sent_coords[1]]
 
             plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
@@ -3031,8 +3041,8 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
             change_in_coords = [step_size_x, step_size_y] # step_size_y starts at zero (horizontal) then increases for later branches
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
-            print(Dict_of_topics_direction)
-            print('step_size_x', step_size_x)
+            #print(Dict_of_topics_direction)
+            #print('step_size_x', step_size_x)
             ## NOW, Check if this new topic has been visited before during this DT...
             the_topic = None
             for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
@@ -3088,8 +3098,11 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                     topic_direction_updated = 1
 
                 Dict_of_topics_direction[the_topic] = topic_direction_updated
-
-                new_sent_coords = [X_pos, Y_pos] #new_sent_coords[1]]  #Y_pos] # keep y position but change x.
+                print('\nbranch_number:', branch_number)
+                print(Y_pos)
+                print(Dict_of_topics_heights_climbed[the_topic])
+                print(sum(Dict_of_topics_heights_climbed[the_topic]))
+                new_sent_coords = [X_pos, Y_pos + Dict_of_topics_heights_climbed[the_topic][-1]] #new_sent_coords[1]]  #Y_pos] # keep y position but change x.
 
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
                 plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
