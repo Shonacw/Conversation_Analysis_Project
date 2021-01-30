@@ -44,6 +44,8 @@ from matplotlib.lines import Line2D
 from operator import add
 import tabulate
 import string
+import more_itertools as mit
+from matplotlib import cm
 
 import networkx as nx
 from wordcloud import WordCloud
@@ -2977,72 +2979,80 @@ def DT_Firt_Draft_Mess(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
 
 
 def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
-    """"Function """
-    from matplotlib import cm
-    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
-    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
-    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
-    print(file[:100].to_string())
+    """"
+    Function
+    NOTE A:
+    Here, we have seen that >=1 topic from the previous Utterance is still being spoken about in this utterance
+    so we loop through all the topics currently being spoken about and add on the current node position to ALL of their
+    dictionary lists.
+    Ideally only want to add on the current positions to the topic which is in the next utterance too. i.e. so if
+    'people' AND 'twitter' were both carried on, but only twitter is come back to later (and hence only twitter is
+    plotted in bold on the map) then only want to save coords for TWITTER. but the issue is we can't know what will be
+    come back to before we get to that utterance in a later stage.
 
-    step_size_x, step_size_y = 1, 0
+    NOTE B:
+        No topics were continued between the most recent utterance and the current one. Now we must decide if
+        the new topic is a topic we have seen before (loop back), or a brand new one (just take a step sideways).
 
-    topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
-                            'DA_Label': []}
+    NOTE C:
+        Extract the topic that's being continued on in the next utterance also - to avoid looking at one that's only
+        mentioned once. i.e. only interested in the more long-term topics
+    """
 
+    # Upload df containing Topic + Dialogue Act information...
+    transcript_name = "joe_rogan_{}".format('_'.join(Interviewee.split(' ')))
+    transcript_df = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+
+    # Define some dictionaries and counters we'll need...
+    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction, Dict_of_topics_heights_climbed = {}, {}, {}, {}
+    (step_size_x, step_size_y) = (1, 0)
+    old_sent_coords, old_topics = [0, 0], []
+    branch_number, old_idx = 0, 0
+
+    # Instantiate figure
     plt.figure()
     plt.title('Shifting Topic Line 2: {0}'.format(Interviewee.title()))
-    old_sent_coords = [0, 0]
-    old_idx = 0
-    old_topics, most_recently_plotted = [], ''
-    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction, Dict_of_topics_heights_climbed = {}, {}, {}, {}
-    branch_number = 0
 
-    for idx, row in file[1:cutoff_sent].iterrows():
-        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
-        colour = cm.copper(branch_number/20)
-        #colour = 'k' #speakers_map[old_speaker]
-        if str(file.topics[old_idx]) == 'nan':
+    # Loop through Utterances in the dataframe...
+    for idx, row in transcript_df[1:cutoff_sent].iterrows():
+        colour = cm.copper(branch_number/20)                          # Added a colour map so later branches are lighter
+
+        if str(transcript_df.topics[old_idx]) == 'nan':               # Skip past Utterances which have no topic
             old_idx = idx
             continue
 
-        current_topics = list(row['topics'])
-        continued_topics = [x for x in old_topics if x in current_topics]
-        continued_topic = False if len(continued_topics) == 0 else True
+        current_topics = list(row['topics'])                                # All topics contained in this Utt
+        continued_topics = [x for x in old_topics if x in current_topics]   # Topics continued from previous Utt
+        continued_topic = False if len(continued_topics) == 0 else True     # False if no topics were continued on
 
-        if continued_topic:
+        if continued_topic:                 # If continued on topics from last Utterance, just move up the y axis 1 step
             change_in_coords = [0, 1]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
-            #print('continued_topic', continued_topics)
-            # if step_size_x < 0:
-            #     current_direction = -1
-            # else:
-            #     current_direction = 1
-            for topic in continued_topics:
+
+            print('continued_topics', continued_topics)
+            for topic in continued_topics: # Note A
+                print('-topic', topic)
                 try:
+                    print('Dict_of_topics_heights_climbed[topic] BEFORE',Dict_of_topics_heights_climbed[topic])
                     Dict_of_topics_heights_climbed[topic].append(new_sent_coords[1])
+                    print('Dict_of_topics_heights_climbed [topic] AFTER', Dict_of_topics_heights_climbed[topic])
                 except:
+                    print('excepted. couldnt find it so creating it')
                     Dict_of_topics_heights_climbed[topic] = [new_sent_coords[1]]
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)                  # Plot node
+            print('new_sent_coords[0], new_sent_coords[1]:', new_sent_coords[0], new_sent_coords[1])
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour)
-            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour)  # plot line
+                     color=colour)                                                                  # Plot line
 
-        elif not continued_topic:
-            # DIFFERENT TOPIC FROM PREVIOUS. Now we decide if it's a topic we have seen before, or a brand new one.
-            new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
-            topic_linegraph_dict['Idx'].append(idx)
-            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
-            topic_linegraph_dict['New_Topic'].append(new_topic)
-            topic_linegraph_dict['Speaker'].append(row['speaker'])
-            topic_linegraph_dict['Sentence'].append(row['utterance'])
-            topic_linegraph_dict['DA_Label'].append(row['da_label'])
+        elif not continued_topic:                                                                   # NOTE B
+            new_topic = [x for x in current_topics if x in list(transcript_df.topics[idx + 1])]     # NOTE C
 
-            change_in_coords = [step_size_x, step_size_y] # step_size_y starts at zero (horizontal) then increases for later branches
-            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+
             #print(Dict_of_topics_direction)
             #print('step_size_x', step_size_x)
+
             ## NOW, Check if this new topic has been visited before during this DT...
             the_topic = None
             for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
@@ -3053,29 +3063,31 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                 else:
                     continue
 
-            # check if X_pos has been assigned, if not, assign new position
+            ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
             if the_topic is None:
-                for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
+                change_in_coords = [step_size_x, step_size_y]                       # Shift horizontally and upwards
+                new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+                for topic in new_topic:  # If multiple new topics have been introduced, they all get this coordinate        ##COULD BE WEHRE THERE'S AN ISSUE maybe each new topic introduced together needs it's only x coord
                     Dict_of_topics[topic] = new_sent_coords
                     Dict_of_topics_counts[topic] = 1
-                    if step_size_x < 0:
+
+                    if step_size_x < 0:                      # Save the direction in which this branch is travelling
                         current_direction = -1
                     else:
                          current_direction = 1
                     Dict_of_topics_direction[topic] = current_direction
 
-                # then plot…
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)  # plot node
-                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0]+1, new_sent_coords[1]), color='k',
-                #              zorder=100),  # textcoords="offset points" #weight
-
-                #print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
-
+                # Plot: continuing on the same branch, but with a new position to mark a new set of topics
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)                   # Plot node
                 plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                         color=colour)  # plot line
+                         color=colour)                                                                      # Plot line
 
+                plt.annotate(f'no continued_topics. Current topics: {current_topics}, new_topic: {new_topic}, topic: {topic}',
+                             xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100) # If want info plotted
 
-            else: # i.e. if we are jumping back to a previously mentioned topic
+            ## Here we are starting a new branch at the position of the topic we've jumped back to
+            else:
 
                 plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=10)
                 plt.rc('font', size=6)
@@ -3097,25 +3109,41 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                     step_size_x += 0.5*branch_number # increase incrememnt
                     topic_direction_updated = 1
 
-                Dict_of_topics_direction[the_topic] = topic_direction_updated
-                print('\nbranch_number:', branch_number)
-                print(Y_pos)
-                print(Dict_of_topics_heights_climbed[the_topic])
-                print(sum(Dict_of_topics_heights_climbed[the_topic]))
-                new_sent_coords = [X_pos, Y_pos + Dict_of_topics_heights_climbed[the_topic][-1]] #new_sent_coords[1]]  #Y_pos] # keep y position but change x.
 
+                sublists_height = []
+                for group in mit.consecutive_groups(list(Dict_of_topics_heights_climbed[the_topic])):
+                    sublists_height.append(list(group))
+                height_since_start_list = [x[-1] - x[0] for x in sublists_height]
+                height = sublists_height[0][0]
+                height_to_add = sum(height_since_start_list)
+
+                Dict_of_topics_direction[the_topic] = topic_direction_updated
+                print('\nthe_topic', the_topic)
+                print('branch_number:', branch_number)
+                print('Dict_of_topics[the_topic]', Dict_of_topics[the_topic])
+                print('Y_pos', Y_pos)
+
+                print('Dict_of_topics_heights_climbed[the_topic]', Dict_of_topics_heights_climbed[the_topic])
+                print('sublist', sublists_height)
+                print('height_since_start_list', height_since_start_list)
+                print('height of [0][0]', height)
+                print('height_to_add', height_to_add)
+
+                new_sent_coords = [X_pos, Y_pos + height_to_add] #new_sent_coords[1]]  # + Dict_of_topics_heights_climbed[the_topic][-1]
+
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
                 plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
 
-                # plt.annotate(', '.join(current_topics) + str(topic_direction_updated), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
-                #              zorder=100),  # textcoords="offset points" #weight=
+                plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                             zorder=100),  # textcoords="offset points" #weight=
 
                 if Dict_of_topics_counts[the_topic] == 2:
                     # Annotate the line
                     plt.annotate(the_topic , xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+9),
                                  color='k', zorder=100, rotation=90, weight='bold')
 
-        old_topics = current_topics #new_topic
+        old_topics = current_topics # current_topics #new_topic
         old_sent_coords = new_sent_coords
         old_idx = idx
 
@@ -3146,7 +3174,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 #Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
-DT_First_Draft(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
+DT_First_Draft(cutoff_sent=300, Interviewee='jack dorsey', save_fig=False)
 
 
 def Interupption_Analysis(save_fig=False):
