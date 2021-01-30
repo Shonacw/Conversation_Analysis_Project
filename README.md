@@ -233,7 +233,15 @@ and shift down...
 
 <img src = "Screenshots/Screenshot 2021-01-28 at 21.35.13.png" width ="400" />
 
+**Discussion Trees**
 
+<img src = "Saved_Images/joe_rogan_elon_musk/Discussion_Tree1.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Discussion_Tree1.png" width ="400" />
+
+enlarged versions...
+
+<img src = "Saved_Images/joe_rogan_elon_musk/DT_1_bigger.png" width ="700" />
+
+<img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />
 
 # Other Stuff
 - **Interruptions... when one speaker cuts the other off**
