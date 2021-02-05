@@ -3214,7 +3214,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
-def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=False):
+def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=-1, save_fig=False):
     """
     Work with sets of topics
     Access transcript dfs from newer collection (of 20k+) from preprocessed Spotify Podcast dataset.
@@ -3231,7 +3231,7 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
     Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
     (step_size_x, step_size_y) = (1, 0)
     old_sent_coords, old_topic, old_current_topics = [0, 0], '', []
-    branch_number, old_idx, topic_direction = 0, 0, +1
+    branch_number, topic_direction = 0, +1
     topics_with_stacks = []
     single_stacks_appended_to_last_counter = 0
 
@@ -3255,18 +3255,17 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
         quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
         colour_leaves = Colours_Dict[quartile][0] #cm.YlOrRd(branch_number/20)       # Added a colour map so later branches are lighter
         size_leaves = Colours_Dict[quartile][1]
-        print('colour of leaves: ', colour_leaves)
 
         colour = 'k'
         no_topic = False
 
-        if str(transcript_df.topics[old_idx]) == 'nan':               # Skip past Utterances which have no topic
-            old_idx = idx
+        set_of_topics = row['topics']
+        current_topics = [list(x) for x in set_of_topics if x]               # All topics contained in this Utt #pop if set is not empty
+
+        if idx < 10 and len(current_topics)==0:                      #Sometimes the first few Utterances have no topic
+            print('Skipped one due to no topics')
             continue
 
-        set_of_topics = row['topics']
-
-        current_topics = [list(x) for x in set_of_topics if x]               # All topics contained in this Utt #pop if set is not empty
         current_topics = [item for sublist in current_topics for item in sublist]
         next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
         next_topics = [item for sublist in next_topics for item in sublist]
@@ -3426,7 +3425,7 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
                 # plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100)
 
                 if Dict_of_topics_counts[the_topic] == 2:
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0], Dict_of_topics[the_topic][1]),
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]+0.2, Dict_of_topics[the_topic][1]),
                                  color='k', zorder=100, rotation=90, weight='bold') # Annotate the line
                 #print('branch number', branch_number, 'the_topic', the_topic)
 
@@ -3435,7 +3434,7 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
         old_topic = the_topic # current_topics #new_topic
         old_current_topics = current_topics
         old_sent_coords = new_sent_coords
-        old_idx = idx
+        print('     ', the_topic)
 
     print('single_stacks_appended_to_last_counter: ', single_stacks_appended_to_last_counter)
 
@@ -3472,10 +3471,39 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
 #DT_First_Draft(cutoff_sent=-1, Interviewee='kanye west', save_fig=True) #'jack dorsey' #'elon musk' #kanye west
-DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
+#DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
+#DT_Second_Draft(folder_number='35', transcript_name='spotify_wall_street_e20_no_67434', cutoff_sent=-1, save_fig=False)
 
 
 
+
+def DT_Handler(podcast_name, cutoff=10):
+    """
+    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    """
+    # First, find all transcripts for episodes of the given podcast
+    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
+    print('Number of {0} podcasts found: {1}'.format(podcast_name, num_podcasts))
+    #pprint(configfiles)
+    hhh
+    # Next, build Discussion Trees for each episode
+    # pod_cnt = 0
+    # for folder_number, transcript_name in    :
+    #     if pod_cnt == cutoff:
+    #         break
+    #
+    #     DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=False)
+    #     pod_cnt += 1
+
+    return
+
+DT_Handler('wall_street', cutoff=10)
+
+
+
+
+##
 def Interupption_Analysis(save_fig=False):
     """
     Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
