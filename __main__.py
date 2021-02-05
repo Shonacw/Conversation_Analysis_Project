@@ -3214,7 +3214,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
-def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=-1, save_fig=False):
+def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
     """
     Work with sets of topics
     Access transcript dfs from newer collection (of 20k+) from preprocessed Spotify Podcast dataset.
@@ -3224,8 +3224,14 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=-1, save_fig=Fal
 
     """
     # Upload df containing Topic + Dialogue Act information...
-    transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
-    print(transcript_df.head(100).to_string())
+    print('str(path)', str(path))
+    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+    podcast_name = str(path).split("_e", 1)[0][:-2]
+    print('transcript_name', transcript_name)
+
+    #transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
+    transcript_df = pd.read_pickle(path)
+    # print(transcript_df.head(100).to_string())                                        # If want
 
     # Define some dictionaries and counters we'll need...
     Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
@@ -3475,8 +3481,6 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=-1, save_fig=Fal
 #DT_Second_Draft(folder_number='35', transcript_name='spotify_wall_street_e20_no_67434', cutoff_sent=-1, save_fig=False)
 
 
-
-
 def DT_Handler(podcast_name, cutoff=10):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
@@ -3486,19 +3490,20 @@ def DT_Handler(podcast_name, cutoff=10):
     num_podcasts = len(configfiles)
     print('Number of {0} podcasts found: {1}'.format(podcast_name, num_podcasts))
     #pprint(configfiles)
-    hhh
+    # order them by episode number?
+    # order them by number of speakers present?
+
     # Next, build Discussion Trees for each episode
-    # pod_cnt = 0
-    # for folder_number, transcript_name in    :
-    #     if pod_cnt == cutoff:
-    #         break
-    #
-    #     DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=False)
-    #     pod_cnt += 1
+    pod_cnt = 0
+    for path in configfiles:
+        if pod_cnt == cutoff:
+            break
+        DT_Second_Draft(path, cutoff_sent=-1, save_fig=False)
+        pod_cnt += 1
 
     return
 
-DT_Handler('wall_street', cutoff=10)
+DT_Handler('wall_street', cutoff=2)
 
 
 
