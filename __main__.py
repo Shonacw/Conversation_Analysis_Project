@@ -593,7 +593,7 @@ def Find_Keywords_in_Segment(sents_in_segment, all_keywords, Info=False):
     return keywords_contained_in_segment
 
 ## Functions for Segmentation...
-def split(a, n):
+def split_segs(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
@@ -633,7 +633,7 @@ def Peform_Segmentation(content_sentences, segmentation_method='Even', Num_Even_
 
     if segmentation_method == 'Even':
         num_sents = len(content_sentences)
-        idx_split = split(range(num_sents), Num_Even_Segs)
+        idx_split = split_segs(range(num_sents), Num_Even_Segs)
         first_sent_idxs_list = [i[0] for i in idx_split][1:]
 
     if seg_method == 'SliceCast':
@@ -3235,6 +3235,15 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
     topics_with_stacks = []
     single_stacks_appended_to_last_counter = 0
 
+    # Deal with leaf colours quartile-wise
+    Num_Total_Utts = len(transcript_df)
+    Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
+    Colours_Dict = {0:['palegreen', 5], 1:['lawngreen', 4], 2: ['forestgreen', 3], 3:['darkgreen', 2]}
+
+
+    """Find which input of Colour_Segments the current idx is in, return its index from that list (0,1,2, or 3) then
+    find the related colour from colour dict"""
+
     # Instantiate figure
     plt.figure()
     plt.title('Discussion Tree: {}'.format(transcript_name))
@@ -3242,7 +3251,12 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df[1:cutoff_sent].iterrows():
         print('idx: ', idx)
-        #colour = cm.copper(branch_number/20)                          # Added a colour map so later branches are lighter
+
+        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
+        colour_leaves = Colours_Dict[quartile][0] #cm.YlOrRd(branch_number/20)       # Added a colour map so later branches are lighter
+        size_leaves = Colours_Dict[quartile][1]
+        print('colour of leaves: ', colour_leaves)
+
         colour = 'k'
         no_topic = False
 
@@ -3250,14 +3264,21 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
             old_idx = idx
             continue
 
-        current_topics = [x.pop() for x in list(row['topics'])]                 # All topics contained in this Utt
+        set_of_topics = row['topics']
+
+        current_topics = [list(x) for x in set_of_topics if x]               # All topics contained in this Utt #pop if set is not empty
+        current_topics = [item for sublist in current_topics for item in sublist]
+        next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
+        next_topics = [item for sublist in next_topics for item in sublist]
+
         continued_topics = [x for x in current_topics if x == old_topic]        # Topics continued from previous Utt
-        new_topic = [x for x in current_topics if x in list(transcript_df.topics[idx + 1])]  # NOTE C
+        new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
         continued_topic = False if len(continued_topics) == 0 else True         # False if no topics were continued on
 
-        print('current_topics', current_topics)
-        print('new_topic', new_topic)
-        print('continued_topic', continued_topic)
+        # print('current_topics', current_topics)
+        # print('continued_topics', continued_topics)
+        # print('new_topic', new_topic)
+        # print('continued_topic', continued_topic)
 
         if not continued_topic and len(new_topic) == 0: # i.e. if the name of the stack isnt in the current topics, but the current topics also don't match up with the NEXT ones (a stand-along utterance in a way...
             # in this case we just match it up with the previous stack (if this happens a lot though should just make them their own node point
@@ -3267,7 +3288,6 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
             # print('single_stacks_appended_to_last_counter', single_stacks_appended_to_last_counter)
             continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
             no_topic = True
-            print('in 1')
 
         if continued_topic:                 # If continued on topics from last Utterance, just move up the y axis 1 step
             change_in_coords = [0, 1]
@@ -3287,7 +3307,7 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
                 the_topic = [topic for topic in continued_topics if topic in topics_with_stacks][0]
                 Dict_of_topics[the_topic] = new_sent_coords
                 Dict_of_topics_direction[the_topic] = current_direction
-                Dict_of_topics_counts[the_topic] += 1
+                # Dict_of_topics_counts[the_topic] += 1
 
             # for topic in continued_topics: # Note A
             #     try:
@@ -3305,12 +3325,10 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
                      color=colour)                                                                  # Plot line
             # plt.annotate(continued_topics, xy=(new_sent_coords[0], new_sent_coords[1]))
-            print('2')
 
         elif not continued_topic:                                                                                       # NOTE B
             # print('\nall new topics', new_topic, 'list(transcript_df.topics[idx + 1])', list(transcript_df.topics[idx + 1]))
             # print('checking if it had its own stack before.. (topics_with_stacks):', topics_with_stacks)
-            print('3')
             the_topic = None
             for top in new_topic:
                 if top in topics_with_stacks: #Dict_of_topics:
@@ -3327,7 +3345,7 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
                 change_in_coords = [step_size_x, step_size_y]                       # Shift horizontally and upwards
                 new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-                the_topic = new_topic[0]
+                the_topic = new_topic[0]  # change this eventually, this is an arbitary choice for the stack name
                 #print('new_topic', new_topic, ', the topic to name the stack:', the_topic)
                 topics_with_stacks.append(the_topic)
 
@@ -3345,15 +3363,18 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)                   # Plot node
                 plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
                          color=colour)
-                # Plot line
-                plt.rc('font', size=7)
-                plt.annotate(the_topic, xy=(new_sent_coords[0] + 0.2*topic_direction, new_sent_coords[1]+1), color='k',
-                             rotation = 90, zorder=100, weight='bold') # If want info plotted #f'Current topics: {current_topics}, new_topic: {new_topic}, topic: {the_topic}'
-                plt.rc('font', size=8)
+
+                # Annotate each stack
+                # plt.rc('font', size=6)
+                # plt.annotate(the_topic, xy=(new_sent_coords[0] + 0.2*topic_direction, new_sent_coords[1]+1), color='k',
+                #              rotation = 90, zorder=100) #, weight='bold')
+                # # for above: If want info plotted #f'Current topics: {current_topics}, new_topic: {new_topic}, topic: {the_topic}'
+                # plt.rc('font', size=8)
 
             ## Here we are starting a new branch at the position of the topic we've jumped back to
             else:
-                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=5)
+                # Plot and annotate little orange dots indicating the number of branch which just ended
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, ms=size_leaves)
                 plt.rc('font', size=5)
                 plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='darkred', zorder=100,
                              weight='bold')
@@ -3361,7 +3382,6 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
 
                 # New branch, and update step sizes
                 branch_number += 1
-                print('Branch Number: ', branch_number)
                 step_size_y += 1
 
                 if topic_direction > 0: # if the branch was moving positively last time, we want to go negative
@@ -3399,16 +3419,16 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
                 # print('height_to_add', height_to_add)
 
                 # Plot...
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
+                #plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)                  # Plot node
                 plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)     # Dashed line
 
                 # plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100)
 
-                # if Dict_of_topics_counts[the_topic] == 2:
-                #     plt.annotate(the_topic , xy=(Dict_of_topics[the_topic][0], Dict_of_topics[the_topic][1]),
-                #                  color='k', zorder=100, rotation=90, weight='bold') # Annotate the line
-                print('branch number', branch_number, 'the_topic', the_topic)
+                if Dict_of_topics_counts[the_topic] == 2:
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0], Dict_of_topics[the_topic][1]),
+                                 color='k', zorder=100, rotation=90, weight='bold') # Annotate the line
+                #print('branch number', branch_number, 'the_topic', the_topic)
 
                 #topics_with_stacks.append(the_topic)
 
@@ -3418,6 +3438,13 @@ def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=Fa
         old_idx = idx
 
     print('single_stacks_appended_to_last_counter: ', single_stacks_appended_to_last_counter)
+
+    # Indicate which node finishes off the final branch
+    plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='red', ms=6)
+    plt.rc('font', size=9)
+    plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='red', zorder=100,
+                 weight='bold')
+    plt.rc('font', size=8)
 
     # print('Dict_of_topics', Dict_of_topics)
     # print('Dict_of_topics_counts', Dict_of_topics_counts)
