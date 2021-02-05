@@ -243,6 +243,12 @@ enlarged versions...
 
 <img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />
 
+A new branch is started when they discuss a previously-mentioned topic, and the branch starts from the node representing 
+that topic (on the branch where it was first mentioned). A Discussion Tree with many long branches indicates the speakers
+are covering a lot of new topics and in some ways having a more 'linear' conversation; a Discussion Tree with lots of short branches 
+indicated the conversation keeps looping back to the same topics.
+
+
 # Other Stuff
 - **Interruptions... when one speaker cuts the other off**
 
