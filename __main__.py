@@ -3214,7 +3214,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
-def DT_Second_Draft(cutoff_sent=400, folder_number, transcript_name, save_fig=False):
+def DT_Second_Draft(folder_number, transcript_name, cutoff_sent=400, save_fig=False):
     """
     Work with sets of topics
     Access transcript dfs from newer collection (of 20k+) from preprocessed Spotify Podcast dataset.
@@ -3250,11 +3250,10 @@ def DT_Second_Draft(cutoff_sent=400, folder_number, transcript_name, save_fig=Fa
             old_idx = idx
             continue
 
-        current_topics = list(row['topics'])           #.pop()                  # All topics contained in this Utt
-        # print('current_topics', current_topics)
-        continued_topics = [x for x in current_topics if x == old_topic]   # Topics continued from previous Utt
+        current_topics = [x.pop() for x in list(row['topics'])]                 # All topics contained in this Utt
+        continued_topics = [x for x in current_topics if x == old_topic]        # Topics continued from previous Utt
         new_topic = [x for x in current_topics if x in list(transcript_df.topics[idx + 1])]  # NOTE C
-        continued_topic = False if len(continued_topics) == 0 else True     # False if no topics were continued on
+        continued_topic = False if len(continued_topics) == 0 else True         # False if no topics were continued on
 
         print('current_topics', current_topics)
         print('new_topic', new_topic)
@@ -3446,7 +3445,9 @@ def DT_Second_Draft(cutoff_sent=400, folder_number, transcript_name, save_fig=Fa
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
 
 #DT_First_Draft(cutoff_sent=-1, Interviewee='kanye west', save_fig=True) #'jack dorsey' #'elon musk' #kanye west
-DT_Second_Draft(cutoff_sent=-1, folder_number='29', transcript_name='joe_rogan_kanye_west', save_fig=True)
+DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
+
+
 
 def Interupption_Analysis(save_fig=False):
     """
