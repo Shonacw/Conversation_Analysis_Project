@@ -3214,7 +3214,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
-def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
+def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
     """
     Work with sets of topics
     Access transcript dfs from newer collection (of 20k+) from preprocessed Spotify Podcast dataset.
@@ -3224,10 +3224,7 @@ def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
 
     """
     # Upload df containing Topic + Dialogue Act information...
-    print('str(path)', str(path))
     transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-    podcast_name = str(path).split("_e", 1)[0][:-2]
-    print('transcript_name', transcript_name)
 
     #transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
     transcript_df = pd.read_pickle(path)
@@ -3256,8 +3253,6 @@ def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
 
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df[1:cutoff_sent].iterrows():
-        print('idx: ', idx)
-
         quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
         colour_leaves = Colours_Dict[quartile][0] #cm.YlOrRd(branch_number/20)       # Added a colour map so later branches are lighter
         size_leaves = Colours_Dict[quartile][1]
@@ -3440,9 +3435,10 @@ def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
         old_topic = the_topic # current_topics #new_topic
         old_current_topics = current_topics
         old_sent_coords = new_sent_coords
-        print('     ', the_topic)
+        # print('idx: ', idx)
+        # print('     ', the_topic)
 
-    print('single_stacks_appended_to_last_counter: ', single_stacks_appended_to_last_counter)
+    # print('single_stacks_appended_to_last_counter: ', single_stacks_appended_to_last_counter)
 
     # Indicate which node finishes off the final branch
     plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='red', ms=6)
@@ -3463,8 +3459,12 @@ def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
     # plt.ylabel('Question in Utterance')
     # plt.legend(legend_handles, legend_labels)
     if save_fig:
-        plt.savefig("Spotify_Podcast_DataSet/Discussion_Trees/{0}/{1}.png".format(folder_number, transcript_name), dpi=600)
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT.png".format(podcast_name, transcript_name), dpi=600)
     plt.show()
+
     return
 
 ## Call....
@@ -3480,8 +3480,8 @@ def DT_Second_Draft(path, cutoff_sent=-1, save_fig=False):
 #DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
 #DT_Second_Draft(folder_number='35', transcript_name='spotify_wall_street_e20_no_67434', cutoff_sent=-1, save_fig=False)
 
-
-def DT_Handler(podcast_name, cutoff=10):
+import os
+def DT_Handler(podcast_name, cutoff=10, save_fig=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
@@ -3493,17 +3493,21 @@ def DT_Handler(podcast_name, cutoff=10):
     # order them by episode number?
     # order them by number of speakers present?
 
+    # Make sure a folder is set up in which we can save the DTs
+    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
+
     # Next, build Discussion Trees for each episode
     pod_cnt = 0
     for path in configfiles:
         if pod_cnt == cutoff:
             break
-        DT_Second_Draft(path, cutoff_sent=-1, save_fig=False)
+        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig)
         pod_cnt += 1
 
     return
 
-DT_Handler('wall_street', cutoff=2)
+DT_Handler('wall_street', cutoff=5, save_fig=True)
 
 
 
