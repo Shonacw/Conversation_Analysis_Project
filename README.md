@@ -253,7 +253,7 @@ indicates the conversation keeps looping back to the same topics.
 
 # Applying Techniques to the Spotify Podcast Dataset 
 
-The [Spotify Podcast Dataset](https://podcastsdataset.byspotify.com/_ offers transcripts for 100,000 episodes
+The [Spotify Podcast Dataset](https://podcastsdataset.byspotify.com/) offers transcripts for 100,000 episodes
  from different podcast shows on Spotify. We ran a) Dialogue Act Classification and b) Topic Detection on the 
  transcripts offered from this dataset and are now able to begin analysing the linguistic and structural features of 
  podcasts on a larger scale. 
