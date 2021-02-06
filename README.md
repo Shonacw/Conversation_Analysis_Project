@@ -237,11 +237,11 @@ and shift down...
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Discussion_Tree1.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Discussion_Tree1.png" width ="400" />
 
-[//]: (enlarged versions...)
+[comment]: <> (enlarged versions...)
 
-[//]: <img src = "Saved_Images/joe_rogan_elon_musk/DT_1_bigger.png" width ="700" />
+[comment]: <> (<img src = "Saved_Images/joe_rogan_elon_musk/DT_1_bigger.png" width ="700" />)
 
-[//]: <img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />
+[comment]: <> (<img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />)
 
 A new branch is started when they discuss a previously-mentioned topic, and the branch starts from the node representing 
 that topic (on the branch where it was first mentioned). A Discussion Tree with many long branches indicates the speakers

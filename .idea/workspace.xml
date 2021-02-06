@@ -24,37 +24,7 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_building_your_78683/5_star_building_your_78683_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_daves_got_53809/5_star_daves_got_53809_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_here_comes_83579/5_star_here_comes_83579_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_network_saves_90965/5_star_network_saves_90965_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_never_look_38889/5_star_never_look_38889_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/5_star/5_star_the_future_11042/5_star_the_future_11042_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics__its_46814/heavy_topics__its_46814_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_a_drunk_2654/heavy_topics_a_drunk_2654_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_being_a_71410/heavy_topics_being_a_71410_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_cancer_is_75657/heavy_topics_cancer_is_75657_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_create_the_54285/heavy_topics_create_the_54285_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_fuckboys_and_44643/heavy_topics_fuckboys_and_44643_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_ho_rule_84271/heavy_topics_ho_rule_84271_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_i_killed_94201/heavy_topics_i_killed_94201_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_our_first_66570/heavy_topics_our_first_66570_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_vibrating_on_826/heavy_topics_vibrating_on_826_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_victorias_secr_32008/heavy_topics_victorias_secr_32008_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/heavy_topics/heavy_topics_working_through_75295/heavy_topics_working_through_75295_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e13_bulge_32218/wall_street_e13_bulge_32218_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e20_no_67434/wall_street_e20_no_67434_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e34_fldp_94637/wall_street_e34_fldp_94637_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e45_former_54218/wall_street_e45_former_54218_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e48_private_56384/wall_street_e48_private_56384_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e52_goldman_79617/wall_street_e52_goldman_79617_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e53_boutique_26627/wall_street_e53_boutique_26627_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e57_one_13207/wall_street_e57_one_13207_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e68_levfin_44608/wall_street_e68_levfin_44608_DT.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e69_classical_74467/wall_street_e69_classical_74467_DT.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-    </list>
+    <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -285,28 +255,7 @@
       <workItem from="1612521115814" duration="7189000" />
       <workItem from="1612542957138" duration="109000" />
       <workItem from="1612543392655" duration="752000" />
-      <workItem from="1612544324789" duration="6810000" />
-    </task>
-    <task id="LOCAL-00105" summary="cleaning up ReadME">
-      <created>1611513417781</created>
-      <option name="number" value="00105" />
-      <option name="presentableId" value="LOCAL-00105" />
-      <option name="project" value="LOCAL" />
-      <updated>1611513417781</updated>
-    </task>
-    <task id="LOCAL-00106" summary="cleaning up ReadME">
-      <created>1611513443358</created>
-      <option name="number" value="00106" />
-      <option name="presentableId" value="LOCAL-00106" />
-      <option name="project" value="LOCAL" />
-      <updated>1611513443358</updated>
-    </task>
-    <task id="LOCAL-00107" summary="cleaning up ReadME">
-      <created>1611513627165</created>
-      <option name="number" value="00107" />
-      <option name="presentableId" value="LOCAL-00107" />
-      <option name="project" value="LOCAL" />
-      <updated>1611513627165</updated>
+      <workItem from="1612544324789" duration="7117000" />
     </task>
     <task id="LOCAL-00108" summary="cleaning up ReadME">
       <created>1611513670487</created>
@@ -630,7 +579,28 @@
       <option name="project" value="LOCAL" />
       <updated>1612626183837</updated>
     </task>
-    <option name="localTasksCounter" value="154" />
+    <task id="LOCAL-00154" summary="Spotify Podcasts">
+      <created>1612626480577</created>
+      <option name="number" value="00154" />
+      <option name="presentableId" value="LOCAL-00154" />
+      <option name="project" value="LOCAL" />
+      <updated>1612626480577</updated>
+    </task>
+    <task id="LOCAL-00155" summary="Spotify Podcasts">
+      <created>1612626589973</created>
+      <option name="number" value="00155" />
+      <option name="presentableId" value="LOCAL-00155" />
+      <option name="project" value="LOCAL" />
+      <updated>1612626589973</updated>
+    </task>
+    <task id="LOCAL-00156" summary="Spotify Podcasts">
+      <created>1612626682037</created>
+      <option name="number" value="00156" />
+      <option name="presentableId" value="LOCAL-00156" />
+      <option name="project" value="LOCAL" />
+      <updated>1612626682037</updated>
+    </task>
+    <option name="localTasksCounter" value="157" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -697,11 +667,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1612626183250">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1612626681954">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869737237" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1612626183250" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1612626681954" />
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.821@0.23.1440.821" timestamp="1612521093395" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
@@ -759,11 +729,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1612626185320">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1612626683256">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869738774" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1612626185320" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1612626683256" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
