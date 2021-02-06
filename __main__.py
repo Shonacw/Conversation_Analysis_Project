@@ -3013,6 +3013,8 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     topics_with_stacks = []
     single_stacks_appended_to_last_counter = 0
 
+    first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].notna()].tolist()[0]) + 1
+
     # Instantiate figure
     plt.figure()
     plt.title('Discussion Tree: Joe Rogan & {0}'.format(Interviewee.title()))
@@ -3026,6 +3028,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
         if str(transcript_df.topics[old_idx]) == 'nan':               # Skip past Utterances which have no topic
             old_idx = idx
+            print('was nan, looping w no plot')
             continue
 
         current_topics = list(row['topics'])           #.pop()                  # All topics contained in this Utt
@@ -3103,8 +3106,12 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
             ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
             if the_topic is None:
+                print('4')
                 change_in_coords = [step_size_x, step_size_y]                       # Shift horizontally and upwards
-                new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+                if idx == first_idx_with_a_topic:
+                    new_sent_coords = old_sent_coords
+                else:
+                    new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
                 the_topic = new_topic[0]
                 #print('new_topic', new_topic, ', the topic to name the stack:', the_topic)
@@ -3132,6 +3139,9 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
             ## Here we are starting a new branch at the position of the topic we've jumped back to
             else:
+                print('5')
+
+
                 plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=8)
                 plt.rc('font', size=5)
                 plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='darkred', zorder=100,
