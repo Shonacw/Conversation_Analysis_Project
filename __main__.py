@@ -3214,7 +3214,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
-def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
+def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=False):
     """
     Work with sets of topics
     Access transcript dfs from newer collection (of 20k+) from preprocessed Spotify Podcast dataset.
@@ -3222,9 +3222,16 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
     Want to be able to call this function when looping through LOTS of different podcasts, i.e. no longer just considering
     Joe Rogan podcasts.
 
+
+    NOTE Z:
+        In here if the name of the stack isnt in the current topics, but the current topics also don't match up with the
+        NEXT ones (a stand-along utterance in a way... in this case we just match it up with the previous stack
+        (if this happens a lot though should just make them their own node point and? check if any of the current topics
+        were discussed in the last one
     """
     # Upload df containing Topic + Dialogue Act information...
     transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+    print('Building DT for...', transcript_name)
 
     #transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
     transcript_df = pd.read_pickle(path)
@@ -3241,7 +3248,7 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
     # Deal with leaf colours quartile-wise
     Num_Total_Utts = len(transcript_df)
     Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
-    Colours_Dict = {0:['palegreen', 5], 1:['lawngreen', 4], 2: ['forestgreen', 3], 3:['darkgreen', 2]}
+    Colours_Dict = {0:['palegreen', 5], 1:['lawngreen', 4], 2: ['forestgreen', 4], 3:['darkgreen', 4]}
 
 
     """Find which input of Colour_Segments the current idx is in, return its index from that list (0,1,2, or 3) then
@@ -3256,15 +3263,15 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
         quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
         colour_leaves = Colours_Dict[quartile][0] #cm.YlOrRd(branch_number/20)       # Added a colour map so later branches are lighter
         size_leaves = Colours_Dict[quartile][1]
-
         colour = 'k'
+        colour_label = 'k' #'saddlebrown'
         no_topic = False
 
         set_of_topics = row['topics']
         current_topics = [list(x) for x in set_of_topics if x]               # All topics contained in this Utt #pop if set is not empty
 
-        if idx < 10 and len(current_topics)==0:                      #Sometimes the first few Utterances have no topic
-            print('Skipped one due to no topics')
+        if idx < 20 and len(current_topics) == 0:                      #Sometimes the first few Utterances have no topic
+            #print('Skipped one due to no topics')
             continue
 
         current_topics = [item for sublist in current_topics for item in sublist]
@@ -3275,19 +3282,24 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
         new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
         continued_topic = False if len(continued_topics) == 0 else True         # False if no topics were continued on
 
-        # print('current_topics', current_topics)
-        # print('continued_topics', continued_topics)
-        # print('new_topic', new_topic)
-        # print('continued_topic', continued_topic)
+        if info:
+            print('idx: ', idx)
+            print('current_topics', current_topics)
+            print('continued_topics', continued_topics)
+            print('new_topic', new_topic)
+            print('continued_topic', continued_topic)
 
-        if not continued_topic and len(new_topic) == 0: # i.e. if the name of the stack isnt in the current topics, but the current topics also don't match up with the NEXT ones (a stand-along utterance in a way...
-            # in this case we just match it up with the previous stack (if this happens a lot though should just make them their own node point
-            # check if any of the current topics were discussed in the last one
-            continued_topics = [x for x in current_topics if x in old_current_topics]
-            single_stacks_appended_to_last_counter += 1
-            # print('single_stacks_appended_to_last_counter', single_stacks_appended_to_last_counter)
-            continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
-            no_topic = True
+        if not continued_topic and len(new_topic) == 0:
+            if len(old_current_topics) == 0:
+                #ie if this is the FIRST line!
+                new_topic = current_topics.copy()
+            else:
+                #if this isn't the first line. Note Z
+                continued_topics = [x for x in current_topics if x in old_current_topics]
+                single_stacks_appended_to_last_counter += 1
+                # print('single_stacks_appended_to_last_counter', single_stacks_appended_to_last_counter)
+                continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+                no_topic = True
 
         if continued_topic:                 # If continued on topics from last Utterance, just move up the y axis 1 step
             change_in_coords = [0, 1]
@@ -3321,9 +3333,9 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
             #         pass
             #         # Dict_of_topics_counts[topic] = 1
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)                  # Plot node
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)              # Plot node
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour)                                                                  # Plot line
+                     color=colour, linewidth=1, zorder=0)                                                 # Plot line
             # plt.annotate(continued_topics, xy=(new_sent_coords[0], new_sent_coords[1]))
 
         elif not continued_topic:                                                                                       # NOTE B
@@ -3360,9 +3372,9 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
                 Dict_of_topics_direction[the_topic] = current_direction
 
                 # Plot: continuing on the same branch, but with a new position to mark a new set of topics
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=1)                   # Plot node
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)     # Plot node
                 plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                         color=colour)
+                         color=colour, linewidth=1, zorder=0)
 
                 # Annotate each stack
                 # plt.rc('font', size=6)
@@ -3374,9 +3386,9 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
             ## Here we are starting a new branch at the position of the topic we've jumped back to
             else:
                 # Plot and annotate little orange dots indicating the number of branch which just ended
-                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, ms=size_leaves)
-                plt.rc('font', size=5)
-                plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='darkred', zorder=100,
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, ms=size_leaves, zorder=100)
+                plt.rc('font', size=7) #size_leaves
+                plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='saddlebrown', zorder=101,
                              weight='bold')
                 plt.rc('font', size=8)
 
@@ -3420,14 +3432,13 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
 
                 # Plot...
                 #plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)                  # Plot node
-                plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)     # Dashed line
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)                  # Plot node
 
                 # plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100)
 
                 if Dict_of_topics_counts[the_topic] == 2:
-                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]+0.2, Dict_of_topics[the_topic][1]),
-                                 color='k', zorder=100, rotation=90, weight='bold') # Annotate the line
+                    plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]+0.3, Dict_of_topics[the_topic][1]),
+                                 color=colour_label, zorder=150, rotation=0) # weight='bold' #Annotate the line
                 #print('branch number', branch_number, 'the_topic', the_topic)
 
                 #topics_with_stacks.append(the_topic)
@@ -3441,8 +3452,8 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
     # print('single_stacks_appended_to_last_counter: ', single_stacks_appended_to_last_counter)
 
     # Indicate which node finishes off the final branch
-    plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='red', ms=6)
-    plt.rc('font', size=9)
+    plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, ms=size_leaves)
+    plt.rc('font', size=7)
     plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='red', zorder=100,
                  weight='bold')
     plt.rc('font', size=8)
@@ -3467,6 +3478,35 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
 
     return
 
+import os
+def DT_Handler(podcast_name, cutoff=10, save_fig=False):
+    """
+    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    """
+    # First, find all transcripts for episodes of the given podcast
+    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
+    print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
+    #pprint(configfiles)
+    # order them by episode number?
+    # order them by number of speakers present?
+
+    # Make sure a folder is set up in which we can save the DTs
+    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
+
+    # Next, build Discussion Trees for each episode
+    pod_cnt = 1
+    for path in configfiles:
+        print(str(path))
+        if pod_cnt == cutoff:
+            break
+        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
+        pod_cnt += 1
+
+    return
+
+
 ## Call....
 
 #Simple_Line_DA(cutoff_sent=200, Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
@@ -3480,35 +3520,8 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False):
 #DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
 #DT_Second_Draft(folder_number='35', transcript_name='spotify_wall_street_e20_no_67434', cutoff_sent=-1, save_fig=False)
 
-import os
-def DT_Handler(podcast_name, cutoff=10, save_fig=False):
-    """
-    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
-    """
-    # First, find all transcripts for episodes of the given podcast
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
-    num_podcasts = len(configfiles)
-    print('Number of {0} podcasts found: {1}'.format(podcast_name, num_podcasts))
-    #pprint(configfiles)
-    # order them by episode number?
-    # order them by number of speakers present?
-
-    # Make sure a folder is set up in which we can save the DTs
-    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
-        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
-
-    # Next, build Discussion Trees for each episode
-    pod_cnt = 0
-    for path in configfiles:
-        if pod_cnt == cutoff:
-            break
-        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig)
-        pod_cnt += 1
-
-    return
-
-DT_Handler('wall_street', cutoff=5, save_fig=True)
-
+DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
+#DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=True)
 
 
 

@@ -246,8 +246,7 @@ enlarged versions...
 A new branch is started when they discuss a previously-mentioned topic, and the branch starts from the node representing 
 that topic (on the branch where it was first mentioned). A Discussion Tree with many long branches indicates the speakers
 are covering a lot of new topics and in some ways having a more 'linear' conversation; a Discussion Tree with lots of short branches 
-indicated the conversation keeps looping back to the same topics.
-
+indicates the conversation keeps looping back to the same topics.
 
 # Other Stuff
 - **Interruptions... when one speaker cuts the other off**
@@ -291,6 +290,16 @@ to speed up just before winding down at the end?... how can we quantify this and
 <img src = "Animations/myAnimation_4S.gif" width ="600" />
 
 ^speaker-wise trajectories 
+
+# Applying Techniques to the Spotify Podcast Dataset 
+
+The {Spotify Podcast Dataset}[https://podcastsdataset.byspotify.com/] offers transcripts for 100,000 episodes
+ from different podcast shows on Spotify. We ran a) Dialogue Act Classification and b) Topic Detection on the 
+ transcripts offered from this dataset and are now able to begin analysing the linguistic and structural features of 
+ podcasts on a larger scale. 
+ 
+ 
+
 
 
 # Code Usage 
