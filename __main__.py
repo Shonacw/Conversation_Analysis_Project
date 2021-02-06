@@ -3132,7 +3132,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
             ## Here we are starting a new branch at the position of the topic we've jumped back to
             else:
-                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=5)
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=8)
                 plt.rc('font', size=5)
                 plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='darkred', zorder=100,
                              weight='bold')
@@ -3178,7 +3178,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
                 # print('height_to_add', height_to_add)
 
                 # Plot...
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
+                #plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)                  # Plot node
                 plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)     # Dashed line
 
@@ -3514,14 +3514,12 @@ def DT_Handler(podcast_name, cutoff=10, save_fig=False):
 
 #Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
 #Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
-#DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=True)
+#DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=False)
 
-#DT_First_Draft(cutoff_sent=-1, Interviewee='kanye west', save_fig=True) #'jack dorsey' #'elon musk' #kanye west
-#DT_Second_Draft(folder_number='29', transcript_name='joe_rogan_kanye_west', cutoff_sent=-1, save_fig=False)
-#DT_Second_Draft(folder_number='35', transcript_name='spotify_wall_street_e20_no_67434', cutoff_sent=-1, save_fig=False)
-
-DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
+DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
 #DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=True)
+
+#DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
 
 
 

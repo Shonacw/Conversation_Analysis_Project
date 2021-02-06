@@ -224,16 +224,19 @@ Also add a slight colour map to help differentiate them...
 
 <img src = "Screenshots/Screenshot 2021-01-28 at 14.27.41.png" width ="400" />
 
---- FIXED BUGS ----
+Fixed a few bugs....
 
 <img src = "Screenshots/Screenshot 2021-01-28 at 21.33.50.png" width ="400" />
 
-and shift down...
-(error-full..)
+Now consider 200 Utterances and shift the branches down...
 
-<img src = "Screenshots/Screenshot 2021-01-28 at 21.35.13.png" width ="400" />
+<img src = "Screenshots/Screenshot 2021-02-06 at 16.01.59.pngg" width ="400" />
+
+Where the labels of each stack have also been plotted.
 
 **Discussion Trees: Joe Rogan Podcast**
+
+Discussion Trees formed from the full conversation from two Joe Rogan Podcasts...
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Discussion_Tree1.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Discussion_Tree1.png" width ="400" />
 
