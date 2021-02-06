@@ -233,22 +233,29 @@ and shift down...
 
 <img src = "Screenshots/Screenshot 2021-01-28 at 21.35.13.png" width ="400" />
 
-**Discussion Trees**
+**Discussion Trees: Joe Rogan Podcast**
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Discussion_Tree1.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Discussion_Tree1.png" width ="400" />
 
-enlarged versions...
+[//]: #enlarged versions...
 
-<img src = "Saved_Images/joe_rogan_elon_musk/DT_1_bigger.png" width ="700" />
+[//]: <img src = "Saved_Images/joe_rogan_elon_musk/DT_1_bigger.png" width ="700" />
 
-<img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />
+[//]: <img src = "Saved_Images/joe_rogan_jack_dorsey/DT_1_bigger.png" width ="700" />
 
 A new branch is started when they discuss a previously-mentioned topic, and the branch starts from the node representing 
 that topic (on the branch where it was first mentioned). A Discussion Tree with many long branches indicates the speakers
 are covering a lot of new topics and in some ways having a more 'linear' conversation; a Discussion Tree with lots of short branches 
 indicates the conversation keeps looping back to the same topics.
 
-# Other Stuff
+# Applying Techniques to the Spotify Podcast Dataset 
+
+The [Spotify Podcast Dataset](https://podcastsdataset.byspotify.com/_ offers transcripts for 100,000 episodes
+ from different podcast shows on Spotify. We ran a) Dialogue Act Classification and b) Topic Detection on the 
+ transcripts offered from this dataset and are now able to begin analysing the linguistic and structural features of 
+ podcasts on a larger scale. 
+
+## Other Analysis Considered So Far..
 - **Interruptions... when one speaker cuts the other off**
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Interruptions_Elon.png" width ="350" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Interruptions_Jack.png" width ="350" />
@@ -290,14 +297,6 @@ to speed up just before winding down at the end?... how can we quantify this and
 <img src = "Animations/myAnimation_4S.gif" width ="600" />
 
 ^speaker-wise trajectories 
-
-# Applying Techniques to the Spotify Podcast Dataset 
-
-The {Spotify Podcast Dataset}[https://podcastsdataset.byspotify.com/] offers transcripts for 100,000 episodes
- from different podcast shows on Spotify. We ran a) Dialogue Act Classification and b) Topic Detection on the 
- transcripts offered from this dataset and are now able to begin analysing the linguistic and structural features of 
- podcasts on a larger scale. 
- 
  
 
 

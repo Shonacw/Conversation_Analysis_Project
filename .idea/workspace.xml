@@ -53,9 +53,7 @@
       <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e57_one_13207/wall_street_e57_one_13207_DT.png" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e68_levfin_44608/wall_street_e68_levfin_44608_DT.png" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Spotify_Podcast_DataSet/wall_street/wall_street_e69_classical_74467/wall_street_e69_classical_74467_DT.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__main__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -287,14 +285,7 @@
       <workItem from="1612521115814" duration="7189000" />
       <workItem from="1612542957138" duration="109000" />
       <workItem from="1612543392655" duration="752000" />
-      <workItem from="1612544324789" duration="6526000" />
-    </task>
-    <task id="LOCAL-00104" summary="cleaning up ReadME">
-      <created>1611512938867</created>
-      <option name="number" value="00104" />
-      <option name="presentableId" value="LOCAL-00104" />
-      <option name="project" value="LOCAL" />
-      <updated>1611512938867</updated>
+      <workItem from="1612544324789" duration="6810000" />
     </task>
     <task id="LOCAL-00105" summary="cleaning up ReadME">
       <created>1611513417781</created>
@@ -632,7 +623,14 @@
       <option name="project" value="LOCAL" />
       <updated>1612545372388</updated>
     </task>
-    <option name="localTasksCounter" value="153" />
+    <task id="LOCAL-00153" summary="Spotify Podcasts">
+      <created>1612626183837</created>
+      <option name="number" value="00153" />
+      <option name="presentableId" value="LOCAL-00153" />
+      <option name="project" value="LOCAL" />
+      <updated>1612626183837</updated>
+    </task>
+    <option name="localTasksCounter" value="154" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -655,7 +653,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/RAKE-tutorial" />
     </ignored-roots>
-    <MESSAGE value="fixed noun issue" />
     <MESSAGE value="keyword analysis" />
     <MESSAGE value="Added functionality for plots to have the Combined word embedding as background so that we can compare between transcripts" />
     <MESSAGE value="added colour to quiver lines as a measure of segment 'richness'" />
@@ -680,7 +677,8 @@
     <MESSAGE value="Beginning draft two of DTs" />
     <MESSAGE value="Working on draft 2 of DTs" />
     <MESSAGE value="Working on DT Handler for Spotify Podcasts" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working on DT Handler for Spotify Podcasts" />
+    <MESSAGE value="Spotify Podcasts" />
+    <option name="LAST_COMMIT_MESSAGE" value="Spotify Podcasts" />
   </component>
   <component name="WindowStateProjectService">
     <state x="165" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608925643457">
@@ -699,11 +697,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1612545372200">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1612626183250">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869737237" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1612545372200" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1612626183250" />
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.821@0.23.1440.821" timestamp="1612521093395" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
@@ -761,11 +759,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1612545374540">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1612626185320">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869738774" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1612545374540" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1612626185320" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
