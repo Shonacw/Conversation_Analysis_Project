@@ -236,7 +236,7 @@ Where the labels of each stack have also been plotted.
 
 **Discussion Trees: Joe Rogan Podcast**
 
-Discussion Trees formed from the full conversation from two Joe Rogan Podcasts...
+Here I plot the Discussion Trees formed when considering *all* utterances from two Joe Rogan podcasts.  
 
 <img src = "Saved_Images/joe_rogan_elon_musk/Discussion_Tree1.png" width ="400" /> <img src = "Saved_Images/joe_rogan_jack_dorsey/Discussion_Tree1.png" width ="400" />
 
