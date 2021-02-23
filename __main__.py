@@ -3277,11 +3277,11 @@ def Choose_Topics(new_topics, nlp):
     """
     # First of all check if there is only one new_topic
     only_one = True if len(new_topics) == 1 else False
-    print('IN CHOOSE TOPICS, new_topics:', new_topics)
+    # print('IN CHOOSE TOPICS, new_topics:', new_topics)
 
     if only_one:
         the_topic = new_topics[0]
-        print('only one new topic')
+        # print('only one new topic')
 
     else:
         # nlp = spacy.load("en_core_web_sm")              #en_core_web_sm   #en_core_web_lg# do this outside of this function to speed up time
@@ -3305,13 +3305,13 @@ def Choose_Topics(new_topics, nlp):
                     else:
                         continue
 
-        print('to_remove:', to_remove)
+        # print('to_remove:', to_remove)
         new_topics = [x for x in new_topics if x not in to_remove]
 
         # check if we now have only one option
         if len(new_topics) == 1:
             the_topic = new_topics[0]
-            print('after removing plurals, only one new topic')
+            # print('after removing plurals, only one new topic')
 
         else:
             # Check if there are any bigrams
@@ -3321,12 +3321,12 @@ def Choose_Topics(new_topics, nlp):
                 the_topic = max(new_topics, key=len)
 
             else:
-                print('bigrams to choose from:', bigrams)
+                # print('bigrams to choose from:', bigrams)
                 the_topic = bigrams[0]
 
 
     #the_topic = new_topics[0] #for now...
-    print('the_topic chosen:', the_topic)
+    # print('the_topic chosen:', the_topic)
 
     return the_topic
 
@@ -3346,7 +3346,7 @@ def DT_Backbone(path, podcast_name, info=False):
     transcript_df['branch_num'] = [None] * Num_Total_Utts
     transcript_df['position_X'] = [None] * Num_Total_Utts
     transcript_df['position_Y'] = [None] * Num_Total_Utts
-    transcript_df['continued_topics'] = [None] * Num_Total_Utts
+    # transcript_df['continued_topics'] = [None] * Num_Total_Utts
     transcript_df['leaf_colour'] = [None] * Num_Total_Utts
 
     transcript_df['new_topic'] = [False] * Num_Total_Utts
@@ -3378,6 +3378,7 @@ def DT_Backbone(path, podcast_name, info=False):
 
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df.iterrows():
+        print('idx', idx)
         quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
         colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
         size_leaves = Colours_Dict[quartile][1]
@@ -3394,11 +3395,18 @@ def DT_Backbone(path, podcast_name, info=False):
             continue
 
         current_topics = [item for sublist in current_topics for item in sublist]
-        next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
-        next_topics = [item for sublist in next_topics for item in sublist]
-
         continued_topics = [x for x in current_topics if x == old_topic]  # Topics continued from previous Utt
-        new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
+
+
+        if idx == Num_Total_Utts-1: # i.e. no 'next' topics
+            new_topic = current_topics
+
+        else:
+            next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
+            next_topics = [item for sublist in next_topics for item in sublist]
+
+            new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
+
         continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
 
         # if info:
@@ -3457,7 +3465,7 @@ def DT_Backbone(path, podcast_name, info=False):
             transcript_df.loc[idx, 'stack_name'] = the_topic
             transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
             transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-            transcript_df.loc[idx, 'continued_topics'] = continued_topics
+            # transcript_df.loc[idx, 'continued_topics'] = continued_topics
 
 
             # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
@@ -3500,11 +3508,11 @@ def DT_Backbone(path, podcast_name, info=False):
 
                 Dict_of_topics_direction[the_topic] = current_direction
 
-                print('new_sent_coords', new_sent_coords)
+
                 transcript_df.loc[idx, 'stack_name'] = the_topic
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'continued_topics'] = continued_topics
+                # transcript_df.loc[idx, 'continued_topics'] = set(continued_topics)
                 transcript_df.loc[idx, 'new_topic'] = True
 
 
@@ -3522,10 +3530,12 @@ def DT_Backbone(path, podcast_name, info=False):
 
             ## Here we are starting a new branch at the position of the topic we've jumped back to
             else:
-                transcript_df[transcript_df['position'] == old_sent_coords].new_branch = True
-                transcript_df[transcript_df['position'] == old_sent_coords].leaf_colour = colour_leaves
-                transcript_df[transcript_df['new_branch'] is True].iloc[-1].branch_num = branch_number # this won't be right lol
 
+                # print('transcript_df[transcript_df[new_topic] == True].iloc[-1].branch_num BEFORE')
+                # print(transcript_df[transcript_df['new_topic'] == True].iloc[-1].branch_num)
+                # transcript_df[transcript_df['new_topic'] == True].iloc[-1].branch_num = branch_number # this won't be right lol
+                # print('AFTER')
+                # print(transcript_df[transcript_df['new_topic'] == True].iloc[-1].branch_num)
 
 
                 # Plot and annotate little orange dots indicating the number of branch which just ended
@@ -3579,11 +3589,15 @@ def DT_Backbone(path, podcast_name, info=False):
                 # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
 
+                transcript_df.loc[idx-1, 'leaf_colour'] = colour_leaves
+
                 transcript_df.loc[idx, 'stack_name'] = the_topic
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'continued_topics'] = continued_topics
+                # transcript_df.loc[idx, 'continued_topics'] = continued_topics
                 transcript_df.loc[idx, 'new_topic'] = True # even though it's not actually a new topic, it is different to the last
+                transcript_df.loc[idx, 'new_branch'] = True
+                transcript_df.loc[idx, 'branch_num'] = branch_number
 
                 # plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100)
 
@@ -3602,14 +3616,18 @@ def DT_Backbone(path, podcast_name, info=False):
 
     # update hdf file for given podcast
     # check if dir for this podcast exists
-
-    if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
-        os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+    try:
+        if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+    except OSError:
+        pass
 
     transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df', mode='w')
+
     if info:
         print('Saved DF to file')
-        print(transcript_df.head(100).to_string())
+        print(transcript_df.head(-200).to_string())
+
     return
 
 def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=False):
@@ -3924,7 +3942,7 @@ def DT_Handler(podcast_name, cutoff=10, save_fig=False):
 
 #DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
 
-DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', info=False)
+DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', info=True)
 
 
 ##
