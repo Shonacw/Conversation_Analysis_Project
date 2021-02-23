@@ -28,18 +28,17 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.collocations import TrigramCollocationFinder
 from nltk.metrics import TrigramAssocMeasures
 
+import os
 import itertools
 from pathlib import Path
 import operator
 from functools import reduce
 import numpy as np
-from scipy import spatial
 import pandas as pd
 import sys
 import unicodedata
 from collections import defaultdict
 from pprint import pprint
-import random
 from matplotlib.lines import Line2D
 from operator import add
 import tabulate
@@ -1087,6 +1086,52 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shift
     plt.show()
 
     return
+
+def Plot_Embeddings_Spotify(path, save_fig=False):
+    """
+    Plots the layout of all topic keywords in a given podcast transcript from spotify.
+    """
+    print('\n-Plotting Word Embedding for Spotify Podcast Topics...')
+
+    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+    print('Building DT for...', transcript_name)
+
+    # transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
+    transcript_df = pd.read_pickle(path)
+
+    #all_topics =
+    """
+    We really only want to consider the topics which had their own stack. i.e. for each row of the transcript
+    similar to when building DTs... need a column with 'stack name'...
+    
+    """
+    #topics
+
+    plt.figure()
+
+    for i in range(len(keyword_types)):
+        type = keyword_types[i]
+        words = keyword_vectors_df['{}_keyw'.format(type)]
+        Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
+        unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
+
+        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
+        for label, x, y in zip(words, Xs, Ys):
+            plt.annotate(label, xy=(x, y), xytext=(-5, 0), textcoords="offset points")
+        print('Plotted: ', labels[i])
+        print(labels[i], 'which were not plotted due to lack of embedding: ', list(unplotted))
+
+    plt.legend()
+    embedding_method = embedding_method.title()
+    plt.title('{0} Keywords Embedding'.format(embedding_method))
+    if save_fig and not shift_ngrams:
+        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding.png".format(transcript_name, embedding_method), dpi=600)
+    if save_fig and shift_ngrams:
+        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding_ShiftedNgrams.png".format(transcript_name, embedding_method), dpi=600)
+    plt.show()
+
+    return
+
 
 
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcript_name, names, segments_info_df_2=pd.DataFrame(),
@@ -3224,6 +3269,349 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     plt.show()
     return
 
+def Choose_Topics(new_topics, nlp):
+    """
+    Function to decide which topic word should label the stack.
+    Saves the stack name to a new column in the df.
+    Once I've run it here can then plot the word embedding trajectory and the DT using it.
+    """
+    # First of all check if there is only one new_topic
+    only_one = True if len(new_topics) == 1 else False
+    print('IN CHOOSE TOPICS, new_topics:', new_topics)
+
+    if only_one:
+        the_topic = new_topics[0]
+        print('only one new topic')
+
+    else:
+        # nlp = spacy.load("en_core_web_sm")              #en_core_web_sm   #en_core_web_lg# do this outside of this function to speed up time
+
+        # Remove words which are not nouns or proper nouns
+        tokens = [nlp(word)[0] for word in new_topics]
+        #all_pairs = [(token.text, token.pos_) for token in tokens]      # if interested later
+        only_nouns = [token.text for token in tokens if token.pos_ in ['NOUN', 'PROPN']]
+
+        new_topics = only_nouns
+
+        # Remove plural words
+        to_remove = []
+        for i in new_topics:
+            for j in new_topics:
+                if i == j:
+                    continue
+                else:
+                    if j == i+'s' or j == i+'es':
+                        to_remove.append(j) #remove j (the plural version) from the list
+                    else:
+                        continue
+
+        print('to_remove:', to_remove)
+        new_topics = [x for x in new_topics if x not in to_remove]
+
+        # check if we now have only one option
+        if len(new_topics) == 1:
+            the_topic = new_topics[0]
+            print('after removing plurals, only one new topic')
+
+        else:
+            # Check if there are any bigrams
+            bigrams = [x for x in new_topics if '_' in x]
+            if len(bigrams) == 0:
+                # If no bigrams, we now just choose the LONGEST noun/ proper noun
+                the_topic = max(new_topics, key=len)
+
+            else:
+                print('bigrams to choose from:', bigrams)
+                the_topic = bigrams[0]
+
+
+    #the_topic = new_topics[0] #for now...
+    print('the_topic chosen:', the_topic)
+
+    return the_topic
+
+def DT_Backbone(path, podcast_name, info=False):
+    """
+    Function which encapsulates the backbone of DT_Second_draft
+    """
+    # LOAD df containing Topic + Dialogue Act information...
+    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+    print('Building DT for...', transcript_name)
+
+    transcript_df = pd.read_pickle(path)
+
+    # create new column we will fill
+    Num_Total_Utts = len(transcript_df)
+    transcript_df['stack_name'] = [None] * Num_Total_Utts
+    transcript_df['branch_num'] = [None] * Num_Total_Utts
+    transcript_df['position_X'] = [None] * Num_Total_Utts
+    transcript_df['position_Y'] = [None] * Num_Total_Utts
+    transcript_df['continued_topics'] = [None] * Num_Total_Utts
+    transcript_df['leaf_colour'] = [None] * Num_Total_Utts
+
+    transcript_df['new_topic'] = [False] * Num_Total_Utts
+    transcript_df['new_branch'] = [False] * Num_Total_Utts
+
+
+    # Define some dictionaries and counters we'll need...
+    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
+    (step_size_x, step_size_y) = (1, 0)
+    old_sent_coords, old_topic, old_current_topics = [0, 0], '', []
+    branch_number, topic_direction = 0, +1
+    topics_with_stacks = []
+    single_stacks_appended_to_last_counter = 0
+    first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
+
+    if info:
+        print(transcript_df.head(100).to_string())
+        print('\nfirst_idx_with_a_topic:', first_idx_with_a_topic)
+
+    # Deal with leaf colours quartile-wise
+    Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
+    Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
+
+    nlp = spacy.load("en_core_web_sm")  ####
+
+    # Instantiate figure
+    # plt.figure()
+    # plt.title('Discussion Tree: {}'.format(transcript_name))
+
+    # Loop through Utterances in the dataframe...
+    for idx, row in transcript_df.iterrows():
+        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
+        colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
+        size_leaves = Colours_Dict[quartile][1]
+        colour = 'k'
+        colour_label = 'k'  # 'saddlebrown'
+        no_topic = False
+
+        set_of_topics = row['topics']
+        current_topics = [list(x) for x in set_of_topics if x]  # All topics contained in this Utt
+
+        if idx < 20 and len(current_topics) == 0:  # Sometimes the first few Utterances have no topic
+            if info:
+                print('Skipped idx due to no topics')
+            continue
+
+        current_topics = [item for sublist in current_topics for item in sublist]
+        next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
+        next_topics = [item for sublist in next_topics for item in sublist]
+
+        continued_topics = [x for x in current_topics if x == old_topic]  # Topics continued from previous Utt
+        new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
+        continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+
+        # if info:
+        #     print('\nidx: ', idx)
+        #     print('current_topics', current_topics)
+        #     print('continued_topics', continued_topics)
+        #     print('new_topic', new_topic)
+        #     print('continued_topic', continued_topic)
+
+        if not continued_topic and len(new_topic) == 0:
+            if len(old_current_topics) == 0:
+                # ie if this is the FIRST line!
+                new_topic = current_topics.copy()
+            else:
+                # if this isn't the first line. Note Z
+                continued_topics = [x for x in current_topics if x in old_current_topics]
+                single_stacks_appended_to_last_counter += 1
+                # print('single_stacks_appended_to_last_counter', single_stacks_appended_to_last_counter)
+                continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+                no_topic = True
+
+        if continued_topic:  # If continued on topics from last Utterance, just move up the y axis 1 step
+            change_in_coords = [0, 1]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            # print('-continued_topics', continued_topics)
+            # print('-topics_with_stacks', topics_with_stacks)
+            # print('-the_topic', the_topic)
+            # find which of the continued topics the stack is named after and store the values for it in the dicts
+
+            if step_size_x < 0:  # Save the direction in which this branch is travelling
+                current_direction = -1
+            else:
+                current_direction = 1
+
+            if not no_topic:
+                the_topic = [topic for topic in continued_topics if topic in topics_with_stacks][0]
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_direction[the_topic] = current_direction
+                # Dict_of_topics_counts[the_topic] += 1
+
+            # for topic in continued_topics: # Note A
+            #     try:
+            #         # print('Dict_of_topics_heights_climbed[topic] BEFORE', Dict_of_topics_heights_climbed[topic])
+            #         # Dict_of_topics_heights_climbed[topic].append(new_sent_coords[1])
+            #         Dict_of_topics[topic] = new_sent_coords
+            #         Dict_of_topics_direction[topic] = topic_direction
+            #         Dict_of_topics_counts[topic] += 1
+            #         # print('Dict_of_topics_heights_climbed [topic] AFTER', Dict_of_topics_heights_climbed[topic])
+            #     except:
+            #         pass
+            #         # Dict_of_topics_counts[topic] = 1
+
+
+            # not updating leaf colour as this is not the end of a stack (and hence doesn't have a leaf)
+            transcript_df.loc[idx, 'stack_name'] = the_topic
+            transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+            transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+            transcript_df.loc[idx, 'continued_topics'] = continued_topics
+
+
+            # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
+            # plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+            #          color=colour, linewidth=1, zorder=0)  # Plot line
+            # plt.annotate(continued_topics, xy=(new_sent_coords[0], new_sent_coords[1]))
+
+        elif not continued_topic:  # NOTE B
+            # print('\nall new topics', new_topic, 'list(transcript_df.topics[idx + 1])', list(transcript_df.topics[idx + 1]))
+            # print('checking if it had its own stack before.. (topics_with_stacks):', topics_with_stacks)
+            the_topic = None
+            for top in new_topic:
+                if top in topics_with_stacks:  # Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[top]
+                    topic_direction = Dict_of_topics_direction[top]
+                    the_topic = top
+                    break
+                else:
+                    continue
+            # print('the_topic chosen (if it had been seen before): ', the_topic)
+
+            ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
+            if the_topic is None:
+                change_in_coords = [step_size_x, step_size_y]  # Shift horizontally and upwards
+                if idx == first_idx_with_a_topic:
+                    new_sent_coords = old_sent_coords
+                else:
+                    new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+                the_topic = Choose_Topics(new_topic, nlp)
+
+                topics_with_stacks.append(the_topic)
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_counts[the_topic] = 1
+
+                if step_size_x < 0:  # Save the direction in which this branch is travelling
+                    current_direction = -1
+                else:
+                    current_direction = 1
+
+                Dict_of_topics_direction[the_topic] = current_direction
+
+                print('new_sent_coords', new_sent_coords)
+                transcript_df.loc[idx, 'stack_name'] = the_topic
+                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+                transcript_df.loc[idx, 'continued_topics'] = continued_topics
+                transcript_df.loc[idx, 'new_topic'] = True
+
+
+                # Plot: continuing on the same branch, but with a new position to mark a new set of topics
+                # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
+                # plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                #          color=colour, linewidth=1, zorder=0)
+
+                # Annotate each stack
+                # plt.rc('font', size=6)
+                # plt.annotate(the_topic, xy=(new_sent_coords[0] + 0.2*topic_direction, new_sent_coords[1]+1), color='k',
+                #              rotation = 90, zorder=100) #, weight='bold')
+                # # for above: If want info plotted #f'Current topics: {current_topics}, new_topic: {new_topic}, topic: {the_topic}'
+                # plt.rc('font', size=8)
+
+            ## Here we are starting a new branch at the position of the topic we've jumped back to
+            else:
+                transcript_df[transcript_df['position'] == old_sent_coords].new_branch = True
+                transcript_df[transcript_df['position'] == old_sent_coords].leaf_colour = colour_leaves
+                transcript_df[transcript_df['new_branch'] is True].iloc[-1].branch_num = branch_number # this won't be right lol
+
+
+
+                # Plot and annotate little orange dots indicating the number of branch which just ended
+                # plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, ms=size_leaves, zorder=100)
+                # plt.rc('font', size=7)  # size_leaves
+                # plt.annotate(branch_number, xy=(old_sent_coords[0], old_sent_coords[1]), color='saddlebrown',
+                #              zorder=101,
+                #              weight='bold')
+                # plt.rc('font', size=8)
+
+                # New branch, and update step sizes
+                branch_number += 1
+                step_size_y += 1
+
+                if topic_direction > 0:  # if the branch was moving positively last time, we want to go negative
+                    step_size_x = -1  # make it negative
+                    step_size_x -= 0.01 * branch_number  # increase increment
+                    topic_direction_updated = -1
+                elif topic_direction < 0:
+                    step_size_x = 1  # make it positive
+                    step_size_x += 0.01 * branch_number  # increase increment
+                    topic_direction_updated = 1
+
+                new_sent_coords = [X_pos,
+                                   Y_pos]  # new_sent_coords[1]]  # + Dict_of_topics_heights_climbed[the_topic][-1]
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_direction[the_topic] = topic_direction_updated
+                Dict_of_topics_counts[the_topic] += 1
+
+                # print(f'-NEW BRANCH {branch_number} CREATED at topic {the_topic}. topic_direction_updated', topic_direction_updated)
+
+                # sublists_height = []
+                # for group in mit.consecutive_groups(list(Dict_of_topics_heights_climbed[the_topic])):
+                #     sublists_height.append(list(group))
+                # height_since_start_list = [x[-1] - x[0] for x in sublists_height]
+                # height = sublists_height[0][0]
+                # height_to_add = sum(height_since_start_list)
+
+                # print('\nthe_topic', the_topic)
+                # print('branch_number:', branch_number)
+                # print('Dict_of_topics[the_topic]', Dict_of_topics[the_topic])
+                # print('Y_pos', Y_pos)
+                #
+                # print('Dict_of_topics_heights_climbed[the_topic]', Dict_of_topics_heights_climbed[the_topic])
+                # print('sublist', sublists_height)
+                # print('height_since_start_list', height_since_start_list)
+                # print('height of [0][0]', height)
+                # print('height_to_add', height_to_add)
+
+                # Plot...
+                # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
+
+                transcript_df.loc[idx, 'stack_name'] = the_topic
+                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+                transcript_df.loc[idx, 'continued_topics'] = continued_topics
+                transcript_df.loc[idx, 'new_topic'] = True # even though it's not actually a new topic, it is different to the last
+
+                # plt.annotate(the_topic, xy=(new_sent_coords[0], new_sent_coords[1]), color='k', zorder=100)
+
+                # if Dict_of_topics_counts[the_topic] == 2:
+                #     plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0] + 0.3, Dict_of_topics[the_topic][1]),
+                #                  color=colour_label, zorder=150, rotation=0)  # weight='bold' #Annotate the line
+                # print('branch number', branch_number, 'the_topic', the_topic)
+
+                # topics_with_stacks.append(the_topic)
+
+        old_topic = the_topic  # current_topics #new_topic
+        old_current_topics = current_topics
+        old_sent_coords = new_sent_coords
+        # print('idx: ', idx)
+        # print('     ', the_topic)
+
+    # update hdf file for given podcast
+    # check if dir for this podcast exists
+
+    if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+    transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df', mode='w')
+    if info:
+        print('Saved DF to file')
+        print(transcript_df.head(100).to_string())
+    return
+
 def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=False):
     """
     Work with sets of topics
@@ -3254,15 +3642,18 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
     branch_number, topic_direction = 0, +1
     topics_with_stacks = []
     single_stacks_appended_to_last_counter = 0
+    first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
+
+    if info:
+        print(transcript_df.head(100).to_string())
+        print('\nfirst_idx_with_a_topic:', first_idx_with_a_topic)
 
     # Deal with leaf colours quartile-wise
     Num_Total_Utts = len(transcript_df)
     Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
-    Colours_Dict = {0:['palegreen', 5], 1:['lawngreen', 4], 2: ['forestgreen', 4], 3:['darkgreen', 4]}
+    Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
 
-
-    """Find which input of Colour_Segments the current idx is in, return its index from that list (0,1,2, or 3) then
-    find the related colour from colour dict"""
+    nlp = spacy.load("en_core_web_sm") ####
 
     # Instantiate figure
     plt.figure()
@@ -3281,7 +3672,8 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
         current_topics = [list(x) for x in set_of_topics if x]               # All topics contained in this Utt #pop if set is not empty
 
         if idx < 20 and len(current_topics) == 0:                      #Sometimes the first few Utterances have no topic
-            #print('Skipped one due to no topics')
+            if info:
+                print('Skipped idx due to no topics')
             continue
 
         current_topics = [item for sublist in current_topics for item in sublist]
@@ -3293,7 +3685,7 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
         continued_topic = False if len(continued_topics) == 0 else True         # False if no topics were continued on
 
         if info:
-            print('idx: ', idx)
+            print('\nidx: ', idx)
             print('current_topics', current_topics)
             print('continued_topics', continued_topics)
             print('new_topic', new_topic)
@@ -3365,12 +3757,14 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
             ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
             if the_topic is None:
                 change_in_coords = [step_size_x, step_size_y]                       # Shift horizontally and upwards
-                new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+                if idx == first_idx_with_a_topic:
+                    new_sent_coords = old_sent_coords
+                else:
+                    new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-                the_topic = new_topic[0]  # change this eventually, this is an arbitary choice for the stack name
-                #print('new_topic', new_topic, ', the topic to name the stack:', the_topic)
+                the_topic = Choose_Topics(new_topic, nlp) #Choose_Topics(new_topic, nlp) #new_topic[0]  # change this eventually, this is an arbitary choice for the stack name
+
                 topics_with_stacks.append(the_topic)
-
                 Dict_of_topics[the_topic] = new_sent_coords
                 Dict_of_topics_counts[the_topic] = 1
 
@@ -3488,7 +3882,6 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
-import os
 def DT_Handler(podcast_name, cutoff=10, save_fig=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
@@ -3526,11 +3919,12 @@ def DT_Handler(podcast_name, cutoff=10, save_fig=False):
 #Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=False)
 
-DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
-#DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=True)
+#DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
+#DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 #DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
 
+DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', info=False)
 
 
 ##

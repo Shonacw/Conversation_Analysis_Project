@@ -232,7 +232,7 @@ Now consider 200 Utterances and shift the branches down...
 
 <img src = "Screenshots/Screenshot 2021-02-06 at 16.24.54.png" width ="400" />
 
-Where the labels of each stack have also been plotted.
+Where the labels of each stack have also been plotted. (Bug with starting-stack location also fixed).
 
 **Discussion Trees: Joe Rogan Podcast**
 
