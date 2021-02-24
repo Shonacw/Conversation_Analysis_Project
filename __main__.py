@@ -3523,10 +3523,11 @@ def DT_Backbone(path, podcast_name, info=False):
         print('Accesing ConceptNet word vectors...')
     words_to_get = list(transcript_df[transcript_df['new_topic'] == True ].stack_name)
 
-    ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
-    print(ConceptNet_df.head().to_string())
+    # ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
+    # print(ConceptNet_df.head().to_string())
 
-    # word_embeddings = [get_ConceptNet(word) for word in words_to_get]
+    words_found, word_embeddings = get_ConceptNet(words_to_get)
+    bbb
     #
     # # Save to df
     # for name, coord in zip(words_to_get, word_embeddings):
@@ -3547,6 +3548,43 @@ def DT_Backbone(path, podcast_name, info=False):
         print(transcript_df.head(-200).to_string())
 
     return
+
+def get_ConceptNet(word_list):
+
+    # load ConceptNet file into dictionary
+    #Load Conceptnet dict
+    embeddings_dict = {}
+
+    with open('ConceptNet/en_mini_conceptnet.h5', 'r', errors='ignore', encoding='utf8') as f:
+        try:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                vector = np.asarray(values[1:], "float32")
+                embeddings_dict[word] = vector
+        except:
+            f.__next__()
+    print('Loaded %s word vectors.' % len(embeddings_dict))
+
+    words_found, vectors = [], []
+
+    # Now search for words
+    for word in word_list:
+        try:
+            vectors.append(embeddings_dict[word])
+            words_found.append(word)
+        except:
+            print('Could not find ConceptNet embedding for ', word)
+            continue
+
+    print('Num words in word_list: ', len(word_list))
+    print('Num words with vectors: ', len(words_found))
+    print('Words not found:', [word for word in word_list if word not in words_found])
+
+    return words_found, vectors
+
+
+
 
 
 def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=False):
