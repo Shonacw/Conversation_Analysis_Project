@@ -3365,9 +3365,9 @@ def DT_Backbone(path, podcast_name, info=False):
     single_stacks_appended_to_last_counter = 0
     first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
 
-    if info:
-        print(transcript_df.head(100).to_string())
-        print('\nfirst_idx_with_a_topic:', first_idx_with_a_topic)
+    # if info:
+    #     print(transcript_df.head(100).to_string())
+    #     print('\nfirst_idx_with_a_topic:', first_idx_with_a_topic)
 
     # Deal with leaf colours quartile-wise
     Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
@@ -3523,11 +3523,29 @@ def DT_Backbone(path, podcast_name, info=False):
         print('Accesing ConceptNet word vectors...')
     words_to_get = list(transcript_df[transcript_df['new_topic'] == True ].stack_name)
 
-    # ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
-    # print(ConceptNet_df.head().to_string())
+    words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(words_to_get)
 
-    words_found, word_embeddings = get_ConceptNet(words_to_get)
+    print(transcript_df.head(100).to_string(), '\n\n\n')
+    print('words_found', words_found, '\n\n')
+    # Now assign word embedding position to utterances based on their topics
+    # (or no position if they dont contain a topical keyword)
+    for idx, row in transcript_df.iterrows():
+        print('\n', str(row['stack_name']))
+        if str(row['stack_name']) in words_found:
+            print('found')
+            i = words_found.index(str(row['stack_name']))
+            print(words_found[i])
+            print('before', row['word_embedding_X'])
+            row['word_embedding_X'] = reduced_vectors_X[i] # assign relevant embedding
+            row['word_embedding_Y'] = reduced_vectors_Y[i]
+            print('after', row['word_embedding_X'])
+        else:
+            print('not found')
+
+    print(transcript_df.tail(1000).to_string())
+
     bbb
+
     #
     # # Save to df
     # for name, coord in zip(words_to_get, word_embeddings):
@@ -3549,82 +3567,72 @@ def DT_Backbone(path, podcast_name, info=False):
 
     return
 
-def get_ConceptNet(word_list):
+def get_ConceptNet(word_list, info=False):
 
-    # load ConceptNet file into dictionary
-    #Load Conceptnet dict
-    #embeddings_dict = {}
+    # load ConceptNet file into dataframe
     ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
-    print(ConceptNet_df.head().to_string())
 
-    # for word in word_list:
-    #     try:
-    #         df.loc[word].values
-    #     except KeyError:
-    #         continue
-    #
-    # with open('ConceptNet/en_mini_conceptnet.h5', 'r', errors='ignore', encoding='utf8') as f:
-    #     try:
-    #         for line in f:
-    #             values = line.split()
-    #             word = values[0]
-    #             vector = np.asarray(values[1:], "float32")
-    #             embeddings_dict[word] = vector
-    #     except:
-    #         f.__next__()
-    # print('Loaded %s word vectors.' % len(embeddings_dict))
-    # print(embeddings_dict)
-    words_found, vectors = [], []
+    words_found, vectors, idxs_of_missing_words = [], [], []
 
-    # Now search for words
-    for word in word_list:
+    # Search for words
+    for idx, word in enumerate(word_list):
         try:
             vectors.append(ConceptNet_df.loc[word].values)    # embeddings_dict[word])
             words_found.append(word)
         except:
             print('Could not find ConceptNet embedding for ', word)
+            idxs_of_missing_words.append(idx)
             continue
+    if info:
+        print('Num words in word_list: ', len(word_list))
+        print('Num words with vectors: ', len(words_found))
+        print('len(vectors)', len(vectors))
+        print('Words not found:', [word for word in word_list if word not in words_found])
 
-    print('Num words in word_list: ', len(word_list))
-    print('Num words with vectors: ', len(words_found))
-    print('Words not found:', [word for word in word_list if word not in words_found])
+        #now perform dimensionality reduction
+        print('Performing TSNE dimensionality reduction')
+    tsne = TSNE(n_components=2, random_state=0)
+    reduced_vectors = list(tsne.fit_transform([l.tolist() for l in vectors]) ) # Note B
 
-    # #now perform dimensionality reduction
-    # tsne = TSNE(n_components=2, random_state=0)
-    # reduced_vectors = tsne.fit_transform(vectors)  # Note B
+    # Now add back in placeholders for the missing words
+    for idx in idxs_of_missing_words:
+        reduced_vectors.insert(idx, [None, None])
 
-    return words_found, reduced_vectors
+    reduced_vectors = np.array(reduced_vectors)
+    reduced_vectors_X, reduced_vectors_Y = reduced_vectors[:, 0], reduced_vectors[:, 1]
 
-def get_embedding_matrix(path, word2id, force_rebuild=False):
-    fpath = "../helper_files/embedding_matrix.pkl"
-    if not force_rebuild and os.path.exists(fpath):
-        with open(fpath, "rb") as f:
-            matrix = pickle.load(f)
-    else:
-        # glv_vector = load_pretrained_glove(path)
-        glv_vector = load_pretrained_conceptnet()
-        dim = len(glv_vector[list(glv_vector.keys())[0]])
-        matrix = np.zeros((len(word2id) + 1, dim))
-
-        for word, id in word2id.items():
-            try:
-                matrix[id] = glv_vector[word]
-            except KeyError:
-                continue
-        with open(fpath, "wb") as f:
-            pickle.dump(matrix, f)
-    return matrix
-
-def get_n_d_embedding(self, topic, n):
-    if self.pca is None:
-        print("No pca fitted yet, run fit_n_d_embeddings()")
-        return
-    # embeds = [self.glove[w] for w in topic if w in self.glove.keys()]
-    embeds = [self.glove.get(w) for w in topic if self.glove.get(w) is not None]
-    if embeds:
-        mean = np.array(embeds).mean(axis=0)
-        return self.pca.transform([mean])[0][0]
-    return False
+    return words_found, reduced_vectors_X, reduced_vectors_Y
+#
+# def get_embedding_matrix(path, word2id, force_rebuild=False):
+#     fpath = "../helper_files/embedding_matrix.pkl"
+#     if not force_rebuild and os.path.exists(fpath):
+#         with open(fpath, "rb") as f:
+#             matrix = pickle.load(f)
+#     else:
+#         # glv_vector = load_pretrained_glove(path)
+#         glv_vector = load_pretrained_conceptnet()
+#         dim = len(glv_vector[list(glv_vector.keys())[0]])
+#         matrix = np.zeros((len(word2id) + 1, dim))
+#
+#         for word, id in word2id.items():
+#             try:
+#                 matrix[id] = glv_vector[word]
+#             except KeyError:
+#                 continue
+#         with open(fpath, "wb") as f:
+#             pickle.dump(matrix, f)
+#     return matrix
+#
+# def get_n_d_embedding(self, topic, n):
+#     if self.pca is None:
+#         print("No pca fitted yet, run fit_n_d_embeddings()")
+#         return
+#     # embeds = [self.glove[w] for w in topic if w in self.glove.keys()]
+#     embeds = [self.glove.get(w) for w in topic if self.glove.get(w) is not None]
+#     if embeds:
+#         mean = np.array(embeds).mean(axis=0)
+#         return self.pca.transform([mean])[0][0]
+#     return False
 
 
 
