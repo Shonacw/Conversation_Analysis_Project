@@ -3871,18 +3871,24 @@ def DT_Handler(podcast_name, podcast_count=10, save_fig=False):
     # order them by episode number?
     # order them by number of speakers present?
 
-    # Make sure a folder is set up in which we can save the DTs
-    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
-        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
+    # # Make sure a folder is set up in which we can save the DTs
+    # if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+    #     os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
 
     # Next, build Discussion Trees for each episode
-    pod_cnt = 1
+    pod_cnt = 0
     for path in configfiles:
-        print(str(path))
         if pod_cnt == podcast_count:
             break
+        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        print('\nEpisode:', transcript_name, '. Full path: ', str(path))
 
-        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
+        #DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
+
+        print('Plotting DT...')
+        DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False)
+        print('Plotting TTTS...')
+        TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False)
         pod_cnt += 1
 
     return
@@ -3947,7 +3953,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     #load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
-
+    print('pod_df: \n', pod_df.head().to_string())
     colour = 'k'        # colour of tree structure
     colour_label = 'k'  # colour of annotations
 
@@ -3956,7 +3962,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     # Instantiate figure
     plt.figure()
     plt.title('Discussion Tree: {}'.format(transcript_name))
-
     for idx, row in pod_df[0:cutoff_sent].iterrows():
         the_topic = row['stack_name']
 
@@ -3978,7 +3983,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         else:
             # Annotate last position with a leaf + branch number label
             leaf_colour = pod_df.iloc[idx-1]['leaf_colour']
-            print(leaf_colour)
             # Plot and annotate little orange dots indicating the number of branch which just ended
             plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=leaf_colour, zorder=100) #ms=size_leaves,
             plt.rc('font', size=7)  # size_leaves
@@ -3992,7 +3996,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
 
         old_sent_coords = [x, y]
-
 
     # save
     if save_fig:
@@ -4046,6 +4049,7 @@ def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fi
 
 def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
     """Function to plot the Trajectory Through Topic Space Visualisation, using backbone df."""
+
 
     # load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
@@ -4177,10 +4181,10 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
 
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
 
-#DT_Third_Draft('heavy_topics', 'heavy_topics_fuckboys_and_44643', cutoff_sent=-1, save_fig=False, info=True)
+#DT_Third_Draft('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=True)
 
-#DT_Handler('heavy_topics', podcast_count=10, save_fig=False) #'wall_street' #'5_star' (football one)
-Info_Collection_Handler('heavy_topics', save_fig=False)
+#Info_Collection_Handler('heavy_topics', save_fig=False)
+DT_Handler('heavy_topics', podcast_count=4, save_fig=False) #'wall_street' #'5_star' (football one)
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
