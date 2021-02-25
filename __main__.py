@@ -3506,7 +3506,7 @@ def DT_Backbone(path, podcast_name, info=False):
                 transcript_df.loc[idx, 'stack_name'] = the_topic
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'new_topic']  = True
+                transcript_df.loc[idx, 'new_topic'] = True
                 transcript_df.loc[idx, 'new_branch'] = True
                 transcript_df.loc[idx, 'branch_num'] = branch_number
 
@@ -3904,7 +3904,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     #load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
 
-
     colour = 'k'        # colour of tree structure
     colour_label = 'k'  # colour of annotations
 
@@ -3916,12 +3915,15 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     for idx, row in pod_df.iterrows():
         the_topic = row['stack_name']
+
+        if not the_topic:
+            continue
+
         branch_num = row['branch_num']
         x = row['position_X']
         y = row['position_Y']
         new_topic = row['new_topic']
         new_branch = row['new_branch']
-        leaf_colour = row['leaf_colour']
 
 
         plt.plot(x, y, 'o', color=colour, ms=3, zorder=0)  # Plot node
@@ -3931,9 +3933,10 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
         else:
             # Annotate last position with a leaf + branch number label
-
+            leaf_colour = pod_df.iloc[idx-1]['leaf_colour']
+            print(leaf_colour)
             # Plot and annotate little orange dots indicating the number of branch which just ended
-            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, zorder=100) #ms=size_leaves,
+            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=leaf_colour, zorder=100) #ms=size_leaves,
             plt.rc('font', size=7)  # size_leaves
             plt.annotate(branch_num-1, xy=(old_sent_coords[0], old_sent_coords[1]), color='k', zorder=101,
                          weight='bold')
@@ -3943,9 +3946,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         if new_topic:
             # Annotate
             plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
-
-
-
 
         old_sent_coords = [x, y]
 
@@ -3979,7 +3979,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 #DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=False)
 
 #DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
-#DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
+#DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=True)
 
