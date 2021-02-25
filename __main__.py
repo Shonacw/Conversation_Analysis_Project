@@ -2231,8 +2231,245 @@ def Split_Transcript_By_Speaker(content, names):
 
     return all_utterances, [content_speaker_1, content_speaker_2]
 
+## Other analysis stuff
+def Interupption_Analysis(save_fig=False):
+    """
+    Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
+    vs how many Questions they ask/ topics they introduce/ time spoken
+    """
+    names = ['Joe', 'Rogan', 'Jack', 'Dorsey'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
+
+    with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
+        all_utts = f.read()
+
+    names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
+    sents = all_utts.split('\n')
+
+    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
+    print('', len(idxs_sents_with_cutoff))
+    # number of times speaker 123 was interrupted by 321
+    idxs_123 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '123']
+    # number of times speaker 123 was interrupted by 123
+    idxs_321 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '321']
+    pprint(np.array(sents)[idxs_sents_with_cutoff])
+
+    idxs = np.zeros(len(sents))
+    colours = ['k' for i in idxs]
+    for i in idxs_sents_with_cutoff:
+        idxs[i] = 1
+        colours[i] = names_dict[sents[i][:3]][1]
+
+    plt.figure()
+    xs = range(len(sents))
+    for i in xs:
+        plt.plot([xs[i], xs[i]], [0, idxs[i]], '-', color=colours[i], lw=2)
+
+    plt.xlabel('Sentence Number')
+    plt.ylabel('Interruption')
+    legend_elements = [Line2D([0], [0], color=list(names_dict.values())[0][1], lw=1, label=list(names_dict.values())[1][0]),
+                       Line2D([0], [0], color=list(names_dict.values())[1][1], lw=1, label=list(names_dict.values())[0][0])]
+    plt.title('Speakers Interrupted - {0} interview'.format(' '.join(names[2:4])))
+    plt.legend(handles=legend_elements)
+    plt.ylim([0, 1.2])
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
+    plt.show()
+
+    # Info on interruptions
+    mini_df = {'Speaker': [], 'Total #Interruptions': []}
+
+    mini_df['Speaker'] = ['Joe Rogan', ' '.join(names[2:4])]
+    mini_df['Total #Interruptions'] = [len(idxs_321), len(idxs_123)]
+    # NOTE the above ^ 'len's are swapped around as we want to know how many times the speaker interrupted the other,
+    # not how many times they themselves were interupptrd
+
+    # Create df and save / print in xml
+    mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
+
+    print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
+    mini_df.to_hdf('Saved_dfs/joe_rogan_{}/interruptions_df.h5'.format('_'.join([n.lower() for n in names[2:4]])), key='df', mode='w')
+
+    return
+
+def Snappyness(name, n_average=True, n = 5, normalised=False):
+    """Not sure how I'll define this property of conversation but for now just plot length of speaker turn"""
+
+    import string
+    import statistics
+    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
+    print(file[:100].to_string())
+
+    length_of_utts = []
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    for idx, row in file.iterrows():
+        new_speaker = row['speaker_change']
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+
+        if not new_speaker:
+            # Only want to plot line when the speaker has changed
+            old_idx = idx
+            continue
+
+        # collect utterances from old_idx to new_idx-1
+        utt = ' '.join(list(file.utterance[old_idx:idx]))
+        words_in_utt = utt.split(' ')
+        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
+        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
+        words_in_utt = [word for word in words_in_utt if len(word)>1 or word.lower()=='i']
+        num_words_in_utt = len(words_in_utt)
+
+        length_of_utts.append(num_words_in_utt)
+        # colour = speakers_map[old_speaker]
+
+        # # Collect Utterances of this speaker
+        # Utts = list(file.da_label[old_idx:idx])
+        # tag_change = any(x in changer_DAs for x in das_covered)
+    if not n_average:
+        #plotting all
+        if not normalised:
+            plt.figure()
+            plt.title(f'{name.title()} interview: Length of Utterances')
+            plt.bar(range(len(length_of_utts)), length_of_utts)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+        if normalised:
+            max_y = max(length_of_utts)
+            num_utts = len(length_of_utts)
+            xs = range(len(length_of_utts))
+            xs_normalised = [val/ num_utts for val in xs]
+            length_of_utts_normalised = [val / max_y for val in length_of_utts]
+
+            plt.figure()
+            plt.title(f'{name.title()} interview: Normalised Utterances Lengths')
+            plt.bar(xs, length_of_utts_normalised)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+
+    if n_average:
+        list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
+        if not normalised:
+            plt.figure()
+            plt.title(f'{name.title()} interview: Length of Utterances (averaging every {n} utt lengths)')
+            plt.bar(range(len(list1)), list1)
+            plt.ylabel('Utterance length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+        if normalised:
+            max_y = max(list1)
+            num_utts = len(list1)
+            xs = range(len(list1))
+            xs_normalised = [val / num_utts for val in xs]
+            list1_normalised = [val/max_y for val in list1]
+
+            plt.figure()
+            plt.title(f'{name.title()} interview: Normalised Utterance Lengths\n(averaged every {n})')
+            plt.bar(xs, list1_normalised)
+            plt.ylabel('Normalised Utterance Length')
+            plt.xlabel('Utterance Number')
+            plt.show()
+
+    return
+
+def Snappyness_EvenSegs(name, n=200, normalised=False):
+    """
+    Split into n even segments and find utterance lengths + normalise
+    """
+
+    import string
+    import statistics
+    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
+    print(file[:100].to_string())
+
+    length_of_utts = []
+    old_sent_coords = [0, 0]
+    old_idx = 0
+    for idx, row in file.iterrows():
+        new_speaker = row['speaker_change']
+        old_speaker = file.speaker[
+            old_idx]  # i.e. the speaker who said all utterances between old index and new index
+
+        if not new_speaker:
+            # Only want to plot line when the speaker has changed
+            old_idx = idx
+            continue
+
+        # collect utterances from old_idx to new_idx-1
+        utt = ' '.join(list(file.utterance[old_idx:idx]))
+        words_in_utt = utt.split(' ')
+        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
+        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
+        words_in_utt = [word for word in words_in_utt if len(word) > 1 or word.lower() == 'i']
+        num_words_in_utt = len(words_in_utt)
+
+        length_of_utts.append(num_words_in_utt)
+
+        #list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
+
+    num_utts = len(length_of_utts)
+    print('length_of_utts: ', num_utts, length_of_utts)
+    idxs_split = split(range(num_utts), n)
+    first_sent_idxs_list = [i[0] for i in idxs_split]
+    first_sent_idxs_list.insert(-1, num_utts)
+    print('first_sent_idxs_list', len(first_sent_idxs_list), first_sent_idxs_list)
+    utt_lengths_split = [length_of_utts[i1:i2] for i1, i2 in zip(first_sent_idxs_list, first_sent_idxs_list[1:])]
+
+    print('utt_lengths_split: ', len(utt_lengths_split), utt_lengths_split)
+    average_utts_length = [np.average(sublist) for sublist in utt_lengths_split]
+    print('average_utts_length', len(average_utts_length), average_utts_length)
+
+    if not normalised:
+        plt.figure()
+        plt.title(f'{name.title()} interview: Average Length of Utterances ({n} Even Segments)')
+        plt.bar(range(len(average_utts_length)), average_utts_length)
+        plt.ylabel('Utterance length')
+        plt.xlabel('Utterance Number')
+
+    if normalised:
+        max_y = max(average_utts_length)
+        num_utts = len(average_utts_length)
+        xs = range(n)
+        list1_normalised = [val/max_y for val in average_utts_length]
+        print('list1_normalised', len(list1_normalised), list1_normalised)
+
+        plt.figure()
+        plt.title(f'{name.title()} interview: Normalised Average Length of Utterances ({n} Even Segments)')
+        plt.bar(xs, list1_normalised)
+
+        # create nth degree polynomial fit
+        # n = 1
+        # zn = np.polyfit(xs[::2], list1_normalised[::2], n)
+        # pn = np.poly1d(zn)  # construct polynomial
+
+        # create qth degree polynomial fit
+        q = 10
+        zq = np.polyfit(xs[::2], list1_normalised[::2], q)
+        pq = np.poly1d(zq)
+
+        # plot data and fit
+        xx = np.linspace(0, max(xs), 50)
+        # plt.plot(xx, pn(xx), color='g')
+        plt.plot(xx, pq(xx), color='k')
+        #plt.plot(xs, list1_normalised, '-')
+
+        plt.ylabel('Normalised Utterance Length')
+        plt.xlabel('Utterance Number')
+
+    #plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
+
+    plt.show()
+    return
+
+#Interupption_Analysis(save_fig=True)
+#Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
+#Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
 
 
+
+
+## Discussion Tree Building
 def Simple_Line_DA(cutoff_sent=200, Interviewee='elon musk', save_fig=False):
     """
     Function to plot line
@@ -3859,84 +4096,6 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
-def DT_Handler(podcast_name, podcast_count=10, save_fig=False):
-    """
-    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
-    """
-    # First, find all transcripts for episodes of the given podcast
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
-    num_podcasts = len(configfiles)
-    print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
-    #pprint(configfiles)
-    # order them by episode number?
-    # order them by number of speakers present?
-
-    # # Make sure a folder is set up in which we can save the DTs
-    # if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
-    #     os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
-
-    # Next, build Discussion Trees for each episode
-    pod_cnt = 0
-    for path in configfiles:
-        if pod_cnt == podcast_count:
-            break
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-        print('\nEpisode:', transcript_name, '. Full path: ', str(path))
-
-        #DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
-
-        print('Plotting DT...')
-        DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False)
-        print('Plotting TTTS...')
-        TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False)
-        pod_cnt += 1
-
-    return
-
-
-def Info_Collection_Handler(podcast_name, save_fig=False):
-    """
-    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
-    """
-    # First, find all transcripts for episodes of the given podcast
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
-        "**/spotify_{}_*.pkl".format(podcast_name)))
-    num_podcasts = len(configfiles)
-    print('\nNumber of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts), '\n\n')
-    # pprint(configfiles)
-    # order them by episode number?
-    # order them by number of speakers present?
-
-    # Make sure a folder is set up in which we can save the Info
-    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
-        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
-
-    # Next, collect backbone info
-    pod_cnt = 1
-    for path in configfiles:
-        # print(str(path))
-        print('\n', pod_cnt, '/', num_podcasts)
-        DT_Backbone(path, podcast_name, info=False)
-        pod_cnt += 1
-
-        # # Now, Create df of ConceptNet embeddings and save all the embeddings in the individual files...
-        # for path in configfiles:
-        #
-        # return
-
-    # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
-    conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
-
-    if os.path.exists(conceptnet_path):
-        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
-
-    else:
-        Create_ConceptNet_TSNE(podcast_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
-
-    return
-
-
-
 def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
     """
     Function to plot Discussion Trees using backbone data, rather than from scratch
@@ -3953,15 +4112,16 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     #load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
-    print('pod_df: \n', pod_df.head().to_string())
     colour = 'k'        # colour of tree structure
     colour_label = 'k'  # colour of annotations
 
     old_sent_coords = [0, 0]
+    annotations = []
 
     # Instantiate figure
     plt.figure()
     plt.title('Discussion Tree: {}'.format(transcript_name))
+    plt.rc('font', size=7)
     for idx, row in pod_df[0:cutoff_sent].iterrows():
         the_topic = row['stack_name']
 
@@ -3985,15 +4145,16 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             leaf_colour = pod_df.iloc[idx-1]['leaf_colour']
             # Plot and annotate little orange dots indicating the number of branch which just ended
             plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=leaf_colour, zorder=100) #ms=size_leaves,
-            plt.rc('font', size=7)  # size_leaves
+            # plt.rc('font', size=7)  # size_leaves
             plt.annotate(branch_num-1, xy=(old_sent_coords[0], old_sent_coords[1]), color='k', zorder=101,
                          weight='bold')
-            plt.rc('font', size=8)
+            # plt.rc('font', size=8)
 
 
-        if new_topic:
+        if new_topic and the_topic not in annotations:
             # Annotate
             plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
+            annotations.append(the_topic)
 
         old_sent_coords = [x, y]
 
@@ -4020,6 +4181,7 @@ def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fi
     # Instantiate figure
     plt.figure()
     plt.title('WE: {}'.format(transcript_name))
+    plt.rc('font', size=7)
 
     for idx, row in pod_df[pod_df['new_topic']==True][0:cutoff_sent].iterrows():
         the_topic = row['stack_name']
@@ -4035,6 +4197,9 @@ def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fi
         plt.plot(x, y, 'o', color='lightpink')
         plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), textcoords="offset points")
 
+    ConceptNet_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name))
+    plt.set_xlim(min(ConceptNet_df['X']), max(ConceptNet_df['X']))
+    plt.set_ylim(min(ConceptNet_df['Y']), max(ConceptNet_df['Y']))
 
     # save
     if save_fig:
@@ -4112,60 +4277,73 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
+##
+def Info_Collection_Handler(podcast_name, save_fig=False):
+    """
+    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    """
+    # First, find all transcripts for episodes of the given podcast
+    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
+        "**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
+    print('\nNumber of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts), '\n\n')
+    # pprint(configfiles)
+    # order them by episode number?
+    # order them by number of speakers present?
 
+    # Make sure a folder is set up in which we can save the Info
+    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
 
-    #
-    #     xs = [x[0] for x in node_position]
-    #     ys = [x[1] for x in node_position]
-    #
-    #     u = [i-j for i, j in zip(xs[1:], xs[:-1])]
-    #     v = [i-j for i, j in zip(ys[1:], ys[:-1])]
-    #
-    #     # To make sure labels are spread out well, going to mess around with xs and ys
-    #     xs_, ys_ = xs, ys
-    #     ppairs = [(i, j) for i, j in zip(xs_, ys_)]
-    #     repeats = list(set(map(tuple, ppairs)))
-    #     repeat_num = [0 for i in range(len(repeats))]
-    #     # plt.rc('font', size=8)  # putting font back to normal
-    #     for x, y, label in zip(xs, ys, labels):
-    #         # first check location of annotation is unique - if not, update location for the sentence number
-    #         if (x, y) in repeats:
-    #             idx = repeats.index((x, y))
-    #             addition = repeat_num[idx]
-    #             x += addition
-    #             y -= 1
-    #             repeat_num[idx] += 3
-    #             pass
-    #
-    #         plt.annotate(str(label + 1) + '.',  # this is the text
-    #                      (x, y),  # this is the point to label
-    #                      textcoords="offset points",  # how to position the text
-    #                      xytext=(0, 5),  # distance from text to points (x,y)
-    #                      ha='center',
-    #                      zorder=100)  # horizontal alignment can be left, right or center
-    #
-    #     # Make Quiver Line very thin if using a large number of segments
-    #     num_segs = len(colour_for_segment)
-    #     if num_segs == 200:
-    #         line_wdth = 0.001
-    #     else:
-    #         line_wdth = 0.002
-    #
-    #     plt.rc('font', size=10)  # putting font back to normal
-    #
-    #
-    #
-    # plt.title(' '.join(save_name.split('_')))
-    # if save_fig:
-    #     plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
-    # plt.show()
+    # Next, collect backbone info
+    pod_cnt = 1
+    for path in configfiles:
+        # print(str(path))
+        print('\n', pod_cnt, '/', num_podcasts)
+        DT_Backbone(path, podcast_name, info=False)
+        pod_cnt += 1
 
+        # # Now, Create df of ConceptNet embeddings and save all the embeddings in the individual files...
+        # for path in configfiles:
+        #
+        # return
 
+    # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
+    conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
 
+    if os.path.exists(conceptnet_path):
+        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
 
+    else:
+        Create_ConceptNet_TSNE(podcast_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
 
+    return
 
+def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
+    """
+    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    """
+    # First, find all transcripts for episodes of the given podcast
+    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
 
+    print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
+
+    # Next, build Discussion Trees for each episode
+    pod_cnt = 0
+    for path in configfiles:
+        if pod_cnt == podcast_count:
+            break
+        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+
+        print('\nEpisode:', transcript_name, '. Full path: ', str(path))
+        print('Plotting DT...')
+        DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=save_fig, info=info)
+        print('Plotting TTTS...')
+        TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=save_fig, info=info)
+        pod_cnt += 1
+
+    return
 
 ## Call....
 
@@ -4182,247 +4360,18 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
 
 #DT_Third_Draft('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=True)
-
-#Info_Collection_Handler('heavy_topics', save_fig=False)
-DT_Handler('heavy_topics', podcast_count=4, save_fig=False) #'wall_street' #'5_star' (football one)
-
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
+
+#Info_Collection_Handler('heavy_topics', save_fig=False)
+DT_Handler('heavy_topics', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
+
+
+
+
+
+
 ##
-def Interupption_Analysis(save_fig=False):
-    """
-    Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
-    vs how many Questions they ask/ topics they introduce/ time spoken
-    """
-    names = ['Joe', 'Rogan', 'Jack', 'Dorsey'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
-
-    with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
-        all_utts = f.read()
-
-    names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
-    sents = all_utts.split('\n')
-
-    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
-    print('', len(idxs_sents_with_cutoff))
-    # number of times speaker 123 was interrupted by 321
-    idxs_123 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '123']
-    # number of times speaker 123 was interrupted by 123
-    idxs_321 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '321']
-    pprint(np.array(sents)[idxs_sents_with_cutoff])
-
-    idxs = np.zeros(len(sents))
-    colours = ['k' for i in idxs]
-    for i in idxs_sents_with_cutoff:
-        idxs[i] = 1
-        colours[i] = names_dict[sents[i][:3]][1]
-
-    plt.figure()
-    xs = range(len(sents))
-    for i in xs:
-        plt.plot([xs[i], xs[i]], [0, idxs[i]], '-', color=colours[i], lw=2)
-
-    plt.xlabel('Sentence Number')
-    plt.ylabel('Interruption')
-    legend_elements = [Line2D([0], [0], color=list(names_dict.values())[0][1], lw=1, label=list(names_dict.values())[1][0]),
-                       Line2D([0], [0], color=list(names_dict.values())[1][1], lw=1, label=list(names_dict.values())[0][0])]
-    plt.title('Speakers Interrupted - {0} interview'.format(' '.join(names[2:4])))
-    plt.legend(handles=legend_elements)
-    plt.ylim([0, 1.2])
-    if save_fig:
-        plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
-    plt.show()
-
-    # Info on interruptions
-    mini_df = {'Speaker': [], 'Total #Interruptions': []}
-
-    mini_df['Speaker'] = ['Joe Rogan', ' '.join(names[2:4])]
-    mini_df['Total #Interruptions'] = [len(idxs_321), len(idxs_123)]
-    # NOTE the above ^ 'len's are swapped around as we want to know how many times the speaker interrupted the other,
-    # not how many times they themselves were interupptrd
-
-    # Create df and save / print in xml
-    mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
-
-    print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
-    mini_df.to_hdf('Saved_dfs/joe_rogan_{}/interruptions_df.h5'.format('_'.join([n.lower() for n in names[2:4]])), key='df', mode='w')
-
-    return
-
-def Snappyness(name, n_average=True, n = 5, normalised=False):
-    """Not sure how I'll define this property of conversation but for now just plot length of speaker turn"""
-
-    import string
-    import statistics
-    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
-    print(file[:100].to_string())
-
-    length_of_utts = []
-    old_sent_coords = [0, 0]
-    old_idx = 0
-    for idx, row in file.iterrows():
-        new_speaker = row['speaker_change']
-        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
-
-        if not new_speaker:
-            # Only want to plot line when the speaker has changed
-            old_idx = idx
-            continue
-
-        # collect utterances from old_idx to new_idx-1
-        utt = ' '.join(list(file.utterance[old_idx:idx]))
-        words_in_utt = utt.split(' ')
-        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
-        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
-        words_in_utt = [word for word in words_in_utt if len(word)>1 or word.lower()=='i']
-        num_words_in_utt = len(words_in_utt)
-
-        length_of_utts.append(num_words_in_utt)
-        # colour = speakers_map[old_speaker]
-
-        # # Collect Utterances of this speaker
-        # Utts = list(file.da_label[old_idx:idx])
-        # tag_change = any(x in changer_DAs for x in das_covered)
-    if not n_average:
-        #plotting all
-        if not normalised:
-            plt.figure()
-            plt.title(f'{name.title()} interview: Length of Utterances')
-            plt.bar(range(len(length_of_utts)), length_of_utts)
-            plt.ylabel('Utterance length')
-            plt.xlabel('Utterance Number')
-            plt.show()
-        if normalised:
-            max_y = max(length_of_utts)
-            num_utts = len(length_of_utts)
-            xs = range(len(length_of_utts))
-            xs_normalised = [val/ num_utts for val in xs]
-            length_of_utts_normalised = [val / max_y for val in length_of_utts]
-
-            plt.figure()
-            plt.title(f'{name.title()} interview: Normalised Utterances Lengths')
-            plt.bar(xs, length_of_utts_normalised)
-            plt.ylabel('Utterance length')
-            plt.xlabel('Utterance Number')
-            plt.show()
-
-    if n_average:
-        list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
-        if not normalised:
-            plt.figure()
-            plt.title(f'{name.title()} interview: Length of Utterances (averaging every {n} utt lengths)')
-            plt.bar(range(len(list1)), list1)
-            plt.ylabel('Utterance length')
-            plt.xlabel('Utterance Number')
-            plt.show()
-        if normalised:
-            max_y = max(list1)
-            num_utts = len(list1)
-            xs = range(len(list1))
-            xs_normalised = [val / num_utts for val in xs]
-            list1_normalised = [val/max_y for val in list1]
-
-            plt.figure()
-            plt.title(f'{name.title()} interview: Normalised Utterance Lengths\n(averaged every {n})')
-            plt.bar(xs, list1_normalised)
-            plt.ylabel('Normalised Utterance Length')
-            plt.xlabel('Utterance Number')
-            plt.show()
-
-    return
-
-def Snappyness_EvenSegs(name, n=200, normalised=False):
-    """
-    Split into n even segments and find utterance lengths + normalise
-    """
-
-    import string
-    import statistics
-    file = pd.read_pickle("processed_transcripts/joe_rogan_{0}.pkl".format(name))
-    print(file[:100].to_string())
-
-    length_of_utts = []
-    old_sent_coords = [0, 0]
-    old_idx = 0
-    for idx, row in file.iterrows():
-        new_speaker = row['speaker_change']
-        old_speaker = file.speaker[
-            old_idx]  # i.e. the speaker who said all utterances between old index and new index
-
-        if not new_speaker:
-            # Only want to plot line when the speaker has changed
-            old_idx = idx
-            continue
-
-        # collect utterances from old_idx to new_idx-1
-        utt = ' '.join(list(file.utterance[old_idx:idx]))
-        words_in_utt = utt.split(' ')
-        # remove punctuation and single-letter strings unless they're "i" (i.e. so ['he', ''', 'd'] (he'd) = ['he']
-        words_in_utt = [word for word in words_in_utt if word not in string.punctuation]
-        words_in_utt = [word for word in words_in_utt if len(word) > 1 or word.lower() == 'i']
-        num_words_in_utt = len(words_in_utt)
-
-        length_of_utts.append(num_words_in_utt)
-
-        #list1 = list(itertools.chain.from_iterable([statistics.mean(length_of_utts[i:i+n])]*n for i in range(0,len(length_of_utts),n)))
-
-    num_utts = len(length_of_utts)
-    print('length_of_utts: ', num_utts, length_of_utts)
-    idxs_split = split(range(num_utts), n)
-    first_sent_idxs_list = [i[0] for i in idxs_split]
-    first_sent_idxs_list.insert(-1, num_utts)
-    print('first_sent_idxs_list', len(first_sent_idxs_list), first_sent_idxs_list)
-    utt_lengths_split = [length_of_utts[i1:i2] for i1, i2 in zip(first_sent_idxs_list, first_sent_idxs_list[1:])]
-
-    print('utt_lengths_split: ', len(utt_lengths_split), utt_lengths_split)
-    average_utts_length = [np.average(sublist) for sublist in utt_lengths_split]
-    print('average_utts_length', len(average_utts_length), average_utts_length)
-
-    if not normalised:
-        plt.figure()
-        plt.title(f'{name.title()} interview: Average Length of Utterances ({n} Even Segments)')
-        plt.bar(range(len(average_utts_length)), average_utts_length)
-        plt.ylabel('Utterance length')
-        plt.xlabel('Utterance Number')
-
-    if normalised:
-        max_y = max(average_utts_length)
-        num_utts = len(average_utts_length)
-        xs = range(n)
-        list1_normalised = [val/max_y for val in average_utts_length]
-        print('list1_normalised', len(list1_normalised), list1_normalised)
-
-        plt.figure()
-        plt.title(f'{name.title()} interview: Normalised Average Length of Utterances ({n} Even Segments)')
-        plt.bar(xs, list1_normalised)
-
-        # create nth degree polynomial fit
-        # n = 1
-        # zn = np.polyfit(xs[::2], list1_normalised[::2], n)
-        # pn = np.poly1d(zn)  # construct polynomial
-
-        # create qth degree polynomial fit
-        q = 10
-        zq = np.polyfit(xs[::2], list1_normalised[::2], q)
-        pq = np.poly1d(zq)
-
-        # plot data and fit
-        xx = np.linspace(0, max(xs), 50)
-        # plt.plot(xx, pn(xx), color='g')
-        plt.plot(xx, pq(xx), color='k')
-        #plt.plot(xs, list1_normalised, '-')
-
-        plt.ylabel('Normalised Utterance Length')
-        plt.xlabel('Utterance Number')
-
-    #plt.savefig("Saved_Images/Stuff/{0}_n:{1}_normalised:{2}.png".format(name, n, normalised), dpi=600)
-
-    plt.show()
-    return
-
-#Interupption_Analysis(save_fig=True)
-#Snappyness('jack_dorsey', n_average=False, n = 20, normalised=True) #'elon_musk' #'jack_dorsey'
-#Snappyness_EvenSegs('jack_dorsey', n=100, normalised=True)
-
 
 def Go(path_to_transcript, use_combined_embed, speakerwise, use_saved_dfs, embedding_method, seg_method,
        node_location_method, Even_number_of_segments,
