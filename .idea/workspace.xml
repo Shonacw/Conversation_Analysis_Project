@@ -261,14 +261,7 @@
       <workItem from="1612544324789" duration="11375000" />
       <workItem from="1613995976823" duration="11563000" />
       <workItem from="1614247509174" duration="6465000" />
-      <workItem from="1614254440291" duration="3595000" />
-    </task>
-    <task id="LOCAL-00122" summary="gif (not done though)">
-      <created>1611830206272</created>
-      <option name="number" value="00122" />
-      <option name="presentableId" value="LOCAL-00122" />
-      <option name="project" value="LOCAL" />
-      <updated>1611830206272</updated>
+      <workItem from="1614254440291" duration="4732000" />
     </task>
     <task id="LOCAL-00123" summary="pics">
       <created>1611830330306</created>
@@ -606,7 +599,14 @@
       <option name="project" value="LOCAL" />
       <updated>1614255238909</updated>
     </task>
-    <option name="localTasksCounter" value="171" />
+    <task id="LOCAL-00171" summary="DT_Version3 working">
+      <created>1614258346423</created>
+      <option name="number" value="00171" />
+      <option name="presentableId" value="LOCAL-00171" />
+      <option name="project" value="LOCAL" />
+      <updated>1614258346423</updated>
+    </task>
+    <option name="localTasksCounter" value="172" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -673,11 +673,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="452" y="187" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.1440.820@0.23.1440.820" timestamp="1609676865172" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1614255238741">
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1614258346301">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869737237" />
-    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1614255238741" />
+    <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1614258346301" />
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.821@0.23.1440.821" timestamp="1612521093395" />
     <state x="110" y="123" width="1230" height="616" key="DiffContextDialog" timestamp="1611229225986">
       <screen x="0" y="23" width="1440" height="820" />
@@ -735,11 +735,11 @@
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="133" y="120" key="SettingsEditor/0.23.1440.820@0.23.1440.820" timestamp="1611406909297" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1614255240811">
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2" timestamp="1614258347749">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
     <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820/1440.23.1920.1057@0.23.1440.820" timestamp="1611869738774" />
-    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1614255240811" />
+    <state x="320" y="173" key="Vcs.Push.Dialog.v2/0.23.1440.820@0.23.1440.820" timestamp="1614258347749" />
     <state x="373" y="174" key="com.intellij.openapi.vcs.changes.SpecificFilesViewDialog" timestamp="1609020322077">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
