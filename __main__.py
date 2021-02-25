@@ -1087,51 +1087,6 @@ def Plot_Embeddings(keyword_vectors_df, embedding_method, transcript_name, shift
 
     return
 
-def Plot_Embeddings_Spotify(path, save_fig=False):
-    """
-    Plots the layout of all topic keywords in a given podcast transcript from spotify.
-    """
-    print('\n-Plotting Word Embedding for Spotify Podcast Topics...')
-
-    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-    print('Building DT for...', transcript_name)
-
-    # transcript_df = pd.read_pickle(f"/Users/ShonaCW/Downloads/processed_transcripts (2)/{folder_number}/{transcript_name}.pkl")
-    transcript_df = pd.read_pickle(path)
-
-    #all_topics =
-    """
-    We really only want to consider the topics which had their own stack. i.e. for each row of the transcript
-    similar to when building DTs... need a column with 'stack name'...
-    
-    """
-    #topics
-
-    plt.figure()
-
-    for i in range(len(keyword_types)):
-        type = keyword_types[i]
-        words = keyword_vectors_df['{}_keyw'.format(type)]
-        Xs, Ys = keyword_vectors_df['{}_X'.format(type)], keyword_vectors_df['{}_Y'.format(type)]
-        unplotted = list(keyword_vectors_df['unfamiliar_{}'.format(type)].dropna(axis=0))
-
-        plt.scatter(Xs, Ys, c=colours[i], label=labels[i])
-        for label, x, y in zip(words, Xs, Ys):
-            plt.annotate(label, xy=(x, y), xytext=(-5, 0), textcoords="offset points")
-        print('Plotted: ', labels[i])
-        print(labels[i], 'which were not plotted due to lack of embedding: ', list(unplotted))
-
-    plt.legend()
-    embedding_method = embedding_method.title()
-    plt.title('{0} Keywords Embedding'.format(embedding_method))
-    if save_fig and not shift_ngrams:
-        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding.png".format(transcript_name, embedding_method), dpi=600)
-    if save_fig and shift_ngrams:
-        plt.savefig("Saved_Images/{0}/{1}_WordEmbedding_ShiftedNgrams.png".format(transcript_name, embedding_method), dpi=600)
-    plt.show()
-
-    return
-
 
 
 def Plot_2D_Topic_Evolution_SegmentWise(segments_info_df_1, save_name, transcript_name, names, segments_info_df_2=pd.DataFrame(),
@@ -3883,6 +3838,8 @@ def DT_Handler(podcast_name, podcast_count=10, backbone_only=True, save_fig=Fals
 
         else:
             DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
+
+            #TTTS(podcast_name, podcast_name, cutoff_sent=-1, save_fig=False, info=False)
         pod_cnt += 1
 
     return
@@ -3913,7 +3870,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     plt.figure()
     plt.title('Discussion Tree: {}'.format(transcript_name))
 
-    for idx, row in pod_df.iterrows():
+    for idx, row in pod_df[0:cutoff_sent].iterrows():
         the_topic = row['stack_name']
 
         if not the_topic:
@@ -3962,6 +3919,156 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     return
 
 
+def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
+    """
+    Function to plot the word embedding layout, using backbone df.
+    """
+    # load relevant df
+    pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df')
+
+    # Instantiate figure
+    plt.figure()
+    plt.title('WE: {}'.format(transcript_name))
+
+    for idx, row in pod_df[pod_df['new_topic']==True][0:cutoff_sent].iterrows():
+        the_topic = row['stack_name']
+
+        branch_num = row['branch_num']
+        new_branch = row['new_branch']
+        x = row['word_embedding_X']
+        y = row['word_embedding_Y']
+
+        if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
+            continue
+
+        plt.plot(x, y, 'o', color='lightpink')
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), textcoords="offset points")
+
+
+    # save
+    if save_fig:
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_WE.png".format(podcast_name, transcript_name), dpi=600)
+
+    plt.show()
+
+    return
+
+def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
+    """Function to plot the Trajectory Through Topic Space Visualisation, using backbone df."""
+
+    # load relevant df
+    pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df')
+
+    # Instantiate figure
+    plt.figure()
+    plt.title('TTTS: {}'.format(transcript_name))
+
+    xs, ys = list(pod_df[pod_df['new_topic']==True][0:cutoff_sent]['word_embedding_X']), list(pod_df[pod_df['new_topic']==True][0:cutoff_sent]['word_embedding_Y'])
+    xs, ys = [x for x in xs if x], [y for y in ys if y] # remove Nones
+
+    u = [i - j for i, j in zip(xs[1:], xs[:-1])]
+    v = [i - j for i, j in zip(ys[1:], ys[:-1])]
+
+    if len(xs) > 50:
+        linewidth = 0.002
+    else:
+        linewidth = 0.004
+
+    # Plot background
+    for idx, row in pod_df[0:cutoff_sent].iterrows():
+        the_topic = row['stack_name']
+
+        branch_num = row['branch_num']
+        new_branch = row['new_branch']
+        x = row['word_embedding_X']
+        y = row['word_embedding_Y']
+
+        if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
+            continue
+
+        plt.plot(x, y, 'o', color='lightpink')
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), textcoords="offset points", zorder=200)
+
+    # Plot Quiver
+    colour_for_segment = 'lightblue' # eventually change colour with richness etc or speakerwise
+
+    plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+               angles='xy', width=linewidth, scale=1, color=colour_for_segment, zorder=6)
+
+    # plot special colours for the first and last point
+    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    # Legend
+    line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
+    line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+
+    plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
+
+    # save
+    if save_fig:
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_TTTS.png".format(podcast_name, transcript_name), dpi=600)
+
+    plt.show()
+
+    return
+
+
+
+    #
+    #     xs = [x[0] for x in node_position]
+    #     ys = [x[1] for x in node_position]
+    #
+    #     u = [i-j for i, j in zip(xs[1:], xs[:-1])]
+    #     v = [i-j for i, j in zip(ys[1:], ys[:-1])]
+    #
+    #     # To make sure labels are spread out well, going to mess around with xs and ys
+    #     xs_, ys_ = xs, ys
+    #     ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+    #     repeats = list(set(map(tuple, ppairs)))
+    #     repeat_num = [0 for i in range(len(repeats))]
+    #     # plt.rc('font', size=8)  # putting font back to normal
+    #     for x, y, label in zip(xs, ys, labels):
+    #         # first check location of annotation is unique - if not, update location for the sentence number
+    #         if (x, y) in repeats:
+    #             idx = repeats.index((x, y))
+    #             addition = repeat_num[idx]
+    #             x += addition
+    #             y -= 1
+    #             repeat_num[idx] += 3
+    #             pass
+    #
+    #         plt.annotate(str(label + 1) + '.',  # this is the text
+    #                      (x, y),  # this is the point to label
+    #                      textcoords="offset points",  # how to position the text
+    #                      xytext=(0, 5),  # distance from text to points (x,y)
+    #                      ha='center',
+    #                      zorder=100)  # horizontal alignment can be left, right or center
+    #
+    #     # Make Quiver Line very thin if using a large number of segments
+    #     num_segs = len(colour_for_segment)
+    #     if num_segs == 200:
+    #         line_wdth = 0.001
+    #     else:
+    #         line_wdth = 0.002
+    #
+    #     plt.rc('font', size=10)  # putting font back to normal
+    #
+    #
+    #
+    # plt.title(' '.join(save_name.split('_')))
+    # if save_fig:
+    #     plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
+    # plt.show()
+
 
 
 
@@ -3982,9 +4089,11 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 #DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=True)
+#DT_Third_Draft('heavy_topics', 'heavy_topics_fuckboys_and_44643', cutoff_sent=-1, save_fig=False, info=True)
 
-DT_Third_Draft('heavy_topics', 'heavy_topics_fuckboys_and_44643', cutoff_sent=-1, save_fig=False, info=True)
 #DT_Handler('heavy_topics', podcast_count=10, save_fig=False) #'wall_street' #'5_star' (football one)
+
+TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
 ##
 def Interupption_Analysis(save_fig=False):
