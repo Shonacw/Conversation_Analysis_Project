@@ -3279,6 +3279,8 @@ def Choose_Topics(new_topics, nlp):
     only_one = True if len(new_topics) == 1 else False
     # print('IN CHOOSE TOPICS, new_topics:', new_topics)
 
+    new_topics_backup = new_topics.copy()
+
     if only_one:
         the_topic = new_topics[0]
         # print('only one new topic')
@@ -3288,6 +3290,7 @@ def Choose_Topics(new_topics, nlp):
 
         # Remove words which are not nouns or proper nouns
         tokens = [nlp(word)[0] for word in new_topics]
+
         #all_pairs = [(token.text, token.pos_) for token in tokens]      # if interested later
         only_nouns = [token.text for token in tokens if token.pos_ in ['NOUN', 'PROPN']]
 
@@ -3318,7 +3321,11 @@ def Choose_Topics(new_topics, nlp):
             bigrams = [x for x in new_topics if '_' in x]
             if len(bigrams) == 0:
                 # If no bigrams, we now just choose the LONGEST noun/ proper noun
-                the_topic = max(new_topics, key=len)
+                try:
+                    the_topic = max(new_topics, key=len)
+                except:
+                    # i.e. if there are NO new_topics from when we only considered nouns.. i.e. if new_topics=['29', '30']
+                    the_topic = new_topics_backup[0]
 
             else:
                 # print('bigrams to choose from:', bigrams)
@@ -3334,7 +3341,6 @@ def DT_Backbone(path, podcast_name, info=False):
     """
     Function which encapsulates the backbone of DT_Second_draft
 
-    TODO: add the word embedding for the stack label using ConceptNet word vectors
     """
     # LOAD df containing Topic + Dialogue Act information...
     transcript_name = str(path).split("/spotify_", 1)[1][:-4]
@@ -3365,10 +3371,6 @@ def DT_Backbone(path, podcast_name, info=False):
     single_stacks_appended_to_last_counter = 0
     first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
 
-    # if info:
-    #     print(transcript_df.head(100).to_string())
-    #     print('\nfirst_idx_with_a_topic:', first_idx_with_a_topic)
-
     # Deal with leaf colours quartile-wise
     Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
     Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
@@ -3377,7 +3379,6 @@ def DT_Backbone(path, podcast_name, info=False):
 
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df.iterrows():
-        print('idx', idx)
         quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
         colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
         size_leaves = Colours_Dict[quartile][1]
@@ -3407,12 +3408,12 @@ def DT_Backbone(path, podcast_name, info=False):
 
         continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
 
-        # if info:
-        #     print('\nidx: ', idx)
-        #     print('current_topics', current_topics)
-        #     print('continued_topics', continued_topics)
-        #     print('new_topic', new_topic)
-        #     print('continued_topic', continued_topic)
+        if info:
+            print('\nidx: ', idx)
+            print('current_topics', current_topics)
+            print('continued_topics', continued_topics)
+            print('new_topic', new_topic)
+            print('continued_topic', continued_topic)
 
         if not continued_topic and len(new_topic) == 0:
             if len(old_current_topics) == 0:
@@ -3500,19 +3501,14 @@ def DT_Backbone(path, podcast_name, info=False):
                 Dict_of_topics_direction[the_topic] = topic_direction_updated
                 Dict_of_topics_counts[the_topic] += 1
 
-                # Plot...
-                # plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='green', ms=5)   # Plot branch-starting node
-                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color=colour, ms=3, zorder=0)  # Plot node
-
                 transcript_df.loc[idx-1, 'leaf_colour'] = colour_leaves
 
                 transcript_df.loc[idx, 'stack_name'] = the_topic
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'new_topic'] = True # even though it's not actually a new topic, it is different to the last
+                transcript_df.loc[idx, 'new_topic']  = True
                 transcript_df.loc[idx, 'new_branch'] = True
                 transcript_df.loc[idx, 'branch_num'] = branch_number
-
 
         old_topic = the_topic
         old_current_topics = current_topics
@@ -3521,38 +3517,21 @@ def DT_Backbone(path, podcast_name, info=False):
     # Now collect and save the ConceptNet Numberbatch word embeddings for all the stack_labels
     if info:
         print('Accesing ConceptNet word vectors...')
-    words_to_get = list(transcript_df[transcript_df['new_topic'] == True ].stack_name)
+    words_to_get = list(transcript_df[transcript_df['new_topic']==True].stack_name)
 
     words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(words_to_get)
 
-    print(transcript_df.head(100).to_string(), '\n\n\n')
-    print('words_found', words_found, '\n\n')
     # Now assign word embedding position to utterances based on their topics
     # (or no position if they dont contain a topical keyword)
     for idx, row in transcript_df.iterrows():
-        print('\n', str(row['stack_name']))
         if str(row['stack_name']) in words_found:
-            print('found')
             i = words_found.index(str(row['stack_name']))
-            print(words_found[i])
-            print('before', row['word_embedding_X'])
-            row['word_embedding_X'] = reduced_vectors_X[i] # assign relevant embedding
-            row['word_embedding_Y'] = reduced_vectors_Y[i]
-            print('after', row['word_embedding_X'])
+            transcript_df.loc[idx, 'word_embedding_X'] = reduced_vectors_X[i] # assign relevant embedding
+            transcript_df.loc[idx, 'word_embedding_Y'] = reduced_vectors_Y[i]  # assign relevant embedding
         else:
-            print('not found')
+            continue
 
-    print(transcript_df.tail(1000).to_string())
-
-    bbb
-
-    #
-    # # Save to df
-    # for name, coord in zip(words_to_get, word_embeddings):
-    #     transcript_df[(transcript_df['new_topic'] == True) & (transcript_df['stack_name'] == name)][word_embedding_X, word_embedding_Y] = coord[0], coord[1]
-    #
-
-    # update hdf file for given podcast
+    # Create new hdf file for given podcast
     try:
         if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
             os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
@@ -3580,7 +3559,6 @@ def get_ConceptNet(word_list, info=False):
             vectors.append(ConceptNet_df.loc[word].values)    # embeddings_dict[word])
             words_found.append(word)
         except:
-            print('Could not find ConceptNet embedding for ', word)
             idxs_of_missing_words.append(idx)
             continue
     if info:
@@ -3602,37 +3580,8 @@ def get_ConceptNet(word_list, info=False):
     reduced_vectors_X, reduced_vectors_Y = reduced_vectors[:, 0], reduced_vectors[:, 1]
 
     return words_found, reduced_vectors_X, reduced_vectors_Y
-#
-# def get_embedding_matrix(path, word2id, force_rebuild=False):
-#     fpath = "../helper_files/embedding_matrix.pkl"
-#     if not force_rebuild and os.path.exists(fpath):
-#         with open(fpath, "rb") as f:
-#             matrix = pickle.load(f)
-#     else:
-#         # glv_vector = load_pretrained_glove(path)
-#         glv_vector = load_pretrained_conceptnet()
-#         dim = len(glv_vector[list(glv_vector.keys())[0]])
-#         matrix = np.zeros((len(word2id) + 1, dim))
-#
-#         for word, id in word2id.items():
-#             try:
-#                 matrix[id] = glv_vector[word]
-#             except KeyError:
-#                 continue
-#         with open(fpath, "wb") as f:
-#             pickle.dump(matrix, f)
-#     return matrix
-#
-# def get_n_d_embedding(self, topic, n):
-#     if self.pca is None:
-#         print("No pca fitted yet, run fit_n_d_embeddings()")
-#         return
-#     # embeds = [self.glove[w] for w in topic if w in self.glove.keys()]
-#     embeds = [self.glove.get(w) for w in topic if self.glove.get(w) is not None]
-#     if embeds:
-#         mean = np.array(embeds).mean(axis=0)
-#         return self.pca.transform([mean])[0][0]
-#     return False
+
+
 
 
 
@@ -3906,7 +3855,7 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
-def DT_Handler(podcast_name, cutoff=10, save_fig=False):
+def DT_Handler(podcast_name, podcast_count=10, backbone_only=True, save_fig=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
@@ -3926,12 +3875,98 @@ def DT_Handler(podcast_name, cutoff=10, save_fig=False):
     pod_cnt = 1
     for path in configfiles:
         print(str(path))
-        if pod_cnt == cutoff:
+        if pod_cnt == podcast_count:
             break
-        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
+
+        if backbone_only:
+            DT_Backbone(path, podcast_name, info=False)
+
+        else:
+            DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
         pod_cnt += 1
 
     return
+
+def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
+    """
+    Function to plot Discussion Trees using backbone data, rather than from scratch
+
+    transcript_df['stack_name']     = [None] * Num_Total_Utts
+    transcript_df['branch_num']     = [None] * Num_Total_Utts
+    transcript_df['position_X']     = [None] * Num_Total_Utts
+    transcript_df['position_Y']     = [None] * Num_Total_Utts
+    transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
+    transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
+    transcript_df['leaf_colour']        = [None] * Num_Total_Utts
+    transcript_df['new_topic']          = [False] * Num_Total_Utts
+    transcript_df['new_branch']      = [False] * Num_Total_Utts"""
+
+    #load relevant df
+    pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
+
+
+    colour = 'k'        # colour of tree structure
+    colour_label = 'k'  # colour of annotations
+
+    old_sent_coords = [0, 0]
+
+    # Instantiate figure
+    plt.figure()
+    plt.title('Discussion Tree: {}'.format(transcript_name))
+
+    for idx, row in pod_df.iterrows():
+        the_topic = row['stack_name']
+        branch_num = row['branch_num']
+        x = row['position_X']
+        y = row['position_Y']
+        new_topic = row['new_topic']
+        new_branch = row['new_branch']
+        leaf_colour = row['leaf_colour']
+
+
+        plt.plot(x, y, 'o', color=colour, ms=3, zorder=0)  # Plot node
+        if not new_branch:
+            # Plot: continuing on the same branch, but with a new position to mark a new set of topics
+            plt.plot([old_sent_coords[0], x], [old_sent_coords[1], y], '-', color=colour, linewidth=1, zorder=0)
+
+        else:
+            # Annotate last position with a leaf + branch number label
+
+            # Plot and annotate little orange dots indicating the number of branch which just ended
+            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=colour_leaves, zorder=100) #ms=size_leaves,
+            plt.rc('font', size=7)  # size_leaves
+            plt.annotate(branch_num-1, xy=(old_sent_coords[0], old_sent_coords[1]), color='k', zorder=101,
+                         weight='bold')
+            plt.rc('font', size=8)
+
+
+        if new_topic:
+            # Annotate
+            plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
+
+
+
+
+        old_sent_coords = [x, y]
+
+
+    # save
+    if save_fig:
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT3.png".format(podcast_name, transcript_name), dpi=600)
+
+    plt.show()
+
+    return
+
+
+
+
+
+
+
 
 
 ## Call....
@@ -3946,10 +3981,10 @@ def DT_Handler(podcast_name, cutoff=10, save_fig=False):
 #DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
 #DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
-#DT_Handler('heavy_topics', cutoff=13, save_fig=True) #'wall_street' #'5_star' (football one)
+#DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=True)
 
-DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/154/spotify_heavy_topics_our_first_66570.pkl', 'heavy_topics', info=True)
-
+DT_Third_Draft('heavy_topics', 'heavy_topics_fuckboys_and_44643', cutoff_sent=-1, save_fig=False, info=True)
+#DT_Handler('heavy_topics', podcast_count=10, save_fig=False) #'wall_street' #'5_star' (football one)
 
 ##
 def Interupption_Analysis(save_fig=False):
