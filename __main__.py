@@ -3469,29 +3469,6 @@ def DT_Backbone(path, podcast_name, info=False):
         old_current_topics = current_topics
         old_sent_coords = new_sent_coords
 
-    # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
-    conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
-    if os.path.exists(cncptnt_path):
-        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
-
-    else:
-        Create_ConceptNet_TSNE(podcast_name)
-        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
-
-
-    # Now collect and save the ConceptNet Numberbatch word embeddings for all the stack_labels in this particular episode
-
-
-    # Now assign word embedding position to utterances based on their topics
-    # (or no position if they dont contain a topical keyword)
-    for idx, row in transcript_df.iterrows():
-        if str(row['stack_name']) in words_found:
-            i = words_found.index(str(row['stack_name']))
-            transcript_df.loc[idx, 'word_embedding_X'] = reduced_vectors_X[i] # assign relevant embedding
-            transcript_df.loc[idx, 'word_embedding_Y'] = reduced_vectors_Y[i]  # assign relevant embedding
-        else:
-            continue
-
     # Create new hdf file for given podcast
     try:
         if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
@@ -3499,7 +3476,8 @@ def DT_Backbone(path, podcast_name, info=False):
     except OSError:
         pass
 
-    transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df', mode='w')
+    transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df', mode='w')
 
     if info:
         print('Saved DF to file')
@@ -3507,12 +3485,12 @@ def DT_Backbone(path, podcast_name, info=False):
 
     return
 
-def Create_ConceptNet_TSNE(podcast_name):
+def Create_ConceptNet_TSNE(podcast_name, configfiles):
     """"""
-    if info:
-        print('Accessing all episodes for the given show...')
+    # if info:
+    #     print('Accessing all episodes for the given show...')
 
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    # configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
     num_podcasts = len(configfiles)
     print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
 
@@ -3520,7 +3498,8 @@ def Create_ConceptNet_TSNE(podcast_name):
     all_topical_keywords = []
     for path in configfiles:
         print(str(path))
-        transcript_df = pd.read_hdf(str(path), key='df')
+        transcript_df = pd.read_pickle(str(path))
+        print(transcript_df.head().to_string())
         topics = list(transcript_df[transcript_df['new_topic'] == True].stack_name)
         all_topical_keywords.append(topics)
 
@@ -3528,10 +3507,36 @@ def Create_ConceptNet_TSNE(podcast_name):
 
     df = pd.DataFrame(columns=['Topics', 'X', 'Y'])
     df['Topics'] = all_topical_keywords
-    df['X']
+    df['X'] = reduced_vectors_X
+    df['Y'] = reduced_vectors_Y
+
+    df.to_hdf('Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name), key='df')
+
+    # Now collect and save the ConceptNet Numberbatch word embeddings for all the stack_labels in this particular episode
+    all_words = list(ConceptNet_TSNE_df['Topics'])
+    cnt = 0
+    for path in configfiles:
+        transcript_df = pd.read_pickle(str(path))
+
+        # Now assign word embedding position to utterances based on their topics
+        # (or no position if they dont contain a topical keyword)
+        for idx, row in transcript_df.iterrows():
+            if str(row['stack_name']) in all_words:
+                i = all_words.index(str(row['stack_name']))
+                transcript_df.loc[idx, 'word_embedding_X'] = list(ConceptNet_TSNE_df['X'])[i]  # assign relevant embedding
+                transcript_df.loc[idx, 'word_embedding_Y'] = list(ConceptNet_TSNE_df['Y'])[i]  # assign relevant embedding
+            else:
+                continue
+
+        # saving again, this time with the reduced word embeddings
+        transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                             key='df', mode='w')
 
 
+        print('Saved embeddings for file number', cnt, '/', num_podcasts, ' : ', str(path))
+        cnt += 1
 
+    return
 
 def get_ConceptNet(word_list, info=False):
 
@@ -3842,7 +3847,7 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
-def DT_Handler(podcast_name, podcast_count=10, backbone_only=True, save_fig=False):
+def DT_Handler(podcast_name, podcast_count=10, save_fig=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
@@ -3865,16 +3870,55 @@ def DT_Handler(podcast_name, podcast_count=10, backbone_only=True, save_fig=Fals
         if pod_cnt == podcast_count:
             break
 
-        if backbone_only:
-            DT_Backbone(path, podcast_name, info=False)
-
-        else:
-            DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
-
-            #TTTS(podcast_name, podcast_name, cutoff_sent=-1, save_fig=False, info=False)
+        DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=save_fig, info=False)
         pod_cnt += 1
 
     return
+
+
+def Info_Collection_Handler(podcast_name, save_fig=False):
+    """
+    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    """
+    # First, find all transcripts for episodes of the given podcast
+    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
+        "**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
+    print('\nNumber of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts), '\n\n')
+    # pprint(configfiles)
+    # order them by episode number?
+    # order them by number of speakers present?
+
+    # Make sure a folder is set up in which we can save the Info
+    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
+
+    # Next, collect backbone info
+    pod_cnt = 1
+    for path in configfiles:
+        print(str(path))
+        DT_Backbone(path, podcast_name, info=False)
+        pod_cnt += 1
+
+
+
+        # # Now, Create df of ConceptNet embeddings and save all the embeddings in the individual files...
+        # for path in configfiles:
+        #
+        # return
+
+    # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
+    conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
+
+    if os.path.exists(conceptnet_path):
+        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
+
+    else:
+        Create_ConceptNet_TSNE(podcast_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
+
+    return
+
+
 
 def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
     """
@@ -4120,7 +4164,7 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
 #DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
 #DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
-DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=True)
+DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
 
 #DT_Third_Draft('heavy_topics', 'heavy_topics_fuckboys_and_44643', cutoff_sent=-1, save_fig=False, info=True)
 
