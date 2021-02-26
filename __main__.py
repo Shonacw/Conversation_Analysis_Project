@@ -3529,300 +3529,6 @@ def Choose_Topics(new_topics, nlp):
 
     return the_topic
 
-def DT_Backbone(path, podcast_name, info=False):
-    """
-    Function which encapsulates the backbone of DT_Second_draft
-
-    """
-    # LOAD df containing Topic + Dialogue Act information...
-    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-    print('Collecting backbone info for: ', transcript_name)
-
-    transcript_df = pd.read_pickle(path)
-
-    # create new column we will fill
-    Num_Total_Utts = len(transcript_df)
-    transcript_df['stack_name'] = [None] * Num_Total_Utts
-    transcript_df['branch_num'] = [None] * Num_Total_Utts
-    transcript_df['position_X'] = [None] * Num_Total_Utts
-    transcript_df['position_Y'] = [None] * Num_Total_Utts
-    transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
-    transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
-    transcript_df['leaf_colour'] = [None] * Num_Total_Utts
-
-    transcript_df['new_topic'] = [False] * Num_Total_Utts
-    transcript_df['new_branch'] = [False] * Num_Total_Utts
-
-
-    # Define some dictionaries and counters we'll need...
-    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
-    (step_size_x, step_size_y) = (1, 0)
-    old_sent_coords, old_topic, old_current_topics = [0, 0], '', []
-    branch_number, topic_direction = 0, +1
-    topics_with_stacks = []
-    single_stacks_appended_to_last_counter = 0
-    first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
-
-    # Deal with leaf colours quartile-wise
-    Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
-    Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
-
-    nlp = spacy.load("en_core_web_sm")  ####
-
-    # Loop through Utterances in the dataframe...
-    for idx, row in transcript_df.iterrows():
-        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
-        colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
-        size_leaves = Colours_Dict[quartile][1]
-        colour = 'k'
-        no_topic = False
-
-        set_of_topics = row['topics']
-        current_topics = [list(x) for x in set_of_topics if x]  # All topics contained in this Utt
-
-        if idx < 20 and len(current_topics) == 0:  # Sometimes the first few Utterances have no topic
-            if info:
-                print('Skipped idx due to no topics')
-            continue
-
-        current_topics = [item for sublist in current_topics for item in sublist]
-        continued_topics = [x for x in current_topics if x == old_topic]  # Topics continued from previous Utt
-
-
-        if idx == Num_Total_Utts-1: # i.e. no 'next' topics
-            new_topic = current_topics
-
-        else:
-            next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
-            next_topics = [item for sublist in next_topics for item in sublist]
-
-            new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
-
-        continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
-
-        if info:
-            print('\nidx: ', idx)
-            print('current_topics', current_topics)
-            print('continued_topics', continued_topics)
-            print('new_topic', new_topic)
-            print('continued_topic', continued_topic)
-
-        if not continued_topic and len(new_topic) == 0:
-            if len(old_current_topics) == 0:
-                # ie if this is the FIRST line!
-                new_topic = current_topics.copy()
-            else:
-                # if this isn't the first line. Note Z
-                continued_topics = [x for x in current_topics if x in old_current_topics]
-                single_stacks_appended_to_last_counter += 1
-                continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
-                no_topic = True
-
-        if continued_topic:  # If continued on topics from last Utterance, just move up the y axis 1 step
-            change_in_coords = [0, 1]
-            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
-
-            if step_size_x < 0:  # Save the direction in which this branch is travelling
-                current_direction = -1
-            else:
-                current_direction = 1
-
-            if not no_topic:
-                the_topic = [topic for topic in continued_topics if topic in topics_with_stacks][0]
-                Dict_of_topics[the_topic] = new_sent_coords
-                Dict_of_topics_direction[the_topic] = current_direction
-
-            # not updating leaf colour as this is not the end of a stack (and hence doesn't have a leaf)
-            transcript_df.loc[idx, 'stack_name'] = the_topic
-            transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
-            transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-
-        elif not continued_topic:  # NOTE B
-            the_topic = None
-            for top in new_topic:
-                if top in topics_with_stacks:  # Dict_of_topics:
-                    X_pos, Y_pos = Dict_of_topics[top]
-                    topic_direction = Dict_of_topics_direction[top]
-                    the_topic = top
-                    break
-                else:
-                    continue
-
-            ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
-            if the_topic is None:
-                change_in_coords = [step_size_x, step_size_y]  # Shift horizontally and upwards
-                if idx == first_idx_with_a_topic:
-                    new_sent_coords = old_sent_coords
-                else:
-                    new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
-
-                the_topic = Choose_Topics(new_topic, nlp)
-
-                topics_with_stacks.append(the_topic)
-                Dict_of_topics[the_topic] = new_sent_coords
-                Dict_of_topics_counts[the_topic] = 1
-
-                if step_size_x < 0:  # Save the direction in which this branch is travelling
-                    current_direction = -1
-                else:
-                    current_direction = 1
-
-                Dict_of_topics_direction[the_topic] = current_direction
-
-                transcript_df.loc[idx, 'stack_name'] = the_topic
-                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
-                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'new_topic'] = True
-
-            ## Here we are starting a new branch at the position of the topic we've jumped back to
-            else:
-                branch_number += 1
-                step_size_y += 1
-
-                if topic_direction > 0:  # if the branch was moving positively last time, we want to go negative
-                    step_size_x = -1  # make it negative
-                    step_size_x -= 0.01 * branch_number  # increase increment
-                    topic_direction_updated = -1
-                elif topic_direction < 0:
-                    step_size_x = 1  # make it positive
-                    step_size_x += 0.01 * branch_number  # increase increment
-                    topic_direction_updated = 1
-
-                new_sent_coords = [X_pos, Y_pos]
-                Dict_of_topics[the_topic] = new_sent_coords
-                Dict_of_topics_direction[the_topic] = topic_direction_updated
-                Dict_of_topics_counts[the_topic] += 1
-
-                transcript_df.loc[idx-1, 'leaf_colour'] = colour_leaves
-
-                transcript_df.loc[idx, 'stack_name'] = the_topic
-                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
-                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
-                transcript_df.loc[idx, 'new_topic'] = True
-                transcript_df.loc[idx, 'new_branch'] = True
-                transcript_df.loc[idx, 'branch_num'] = branch_number
-
-        old_topic = the_topic
-        old_current_topics = current_topics
-        old_sent_coords = new_sent_coords
-
-    # Create new hdf file for given podcast
-    try:
-        if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
-            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
-    except OSError:
-        pass
-
-    transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
-                         key='df', mode='w')
-
-
-    print('Saved DF to file')
-    if info:
-        print(transcript_df.head(-200).to_string())
-
-    return
-
-def Create_ConceptNet_TSNE(podcast_name, configfiles):
-    """"""
-    # if info:
-    #     print('Accessing all episodes for the given show...')
-
-    # configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
-    num_podcasts = len(configfiles)
-    print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
-
-    # Collect all topic keywords from entire podcast show
-    all_topical_keywords = []
-    for path in configfiles:
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-        transcript_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
-        topics = list(transcript_df[transcript_df['new_topic'] == True].stack_name)
-        # # extract/ save all backbone info
-        # DT_Backbone(path, podcast_name, info=False)
-        all_topical_keywords.append(topics)
-
-    # Remove repeats
-    all_topical_keywords = list(dict.fromkeys([item for sublist in all_topical_keywords for item in sublist]))
-
-    # Now find ConceptNet embeddings and reduce using TSNE...
-    words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(all_topical_keywords)
-
-    # Save embeddings to one df
-    ConceptNet_TSNE_df = pd.DataFrame(columns=['Topics', 'X', 'Y'])
-    ConceptNet_TSNE_df['Topics'] = all_topical_keywords
-    ConceptNet_TSNE_df['X'] = reduced_vectors_X
-    ConceptNet_TSNE_df['Y'] = reduced_vectors_Y
-
-    # Make sure a folder is set up in which we can save the Info
-    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
-        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
-
-    ConceptNet_TSNE_df.to_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name), key='df')
-
-    # And save embeddings for all the stack_labels in each particular episode
-    all_words = list(ConceptNet_TSNE_df['Topics'])
-    cnt = 0
-    for path in configfiles:
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
-        transcript_df = pd.read_hdf(
-            'Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
-
-        # Now assign word embedding position to utterances based on their topics
-        # (or no position if they dont contain a topical keyword)
-        for idx, row in transcript_df.iterrows():
-            if str(row['stack_name']) in all_words:
-                i = all_words.index(str(row['stack_name']))
-                transcript_df.loc[idx, 'word_embedding_X'] = list(ConceptNet_TSNE_df['X'])[i]  # assign relevant embedding
-                transcript_df.loc[idx, 'word_embedding_Y'] = list(ConceptNet_TSNE_df['Y'])[i]  # assign relevant embedding
-            else:
-                continue
-
-        # saving again, this time with the reduced word embeddings
-        transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
-                             key='df', mode='w')
-
-
-        print('Saved embeddings for file number', cnt+1, '/', num_podcasts, ' : ', str(path))
-        cnt += 1
-
-    return
-
-def get_ConceptNet(word_list, info=False):
-
-    # load ConceptNet file into dataframe
-    ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
-
-    words_found, vectors, idxs_of_missing_words = [], [], []
-
-    # Search for words
-    for idx, word in enumerate(word_list):
-        try:
-            vectors.append(ConceptNet_df.loc[word].values)    # embeddings_dict[word])
-            words_found.append(word)
-        except:
-            idxs_of_missing_words.append(idx)
-            continue
-    if info:
-        print('Num words in word_list: ', len(word_list))
-        print('Num words with vectors: ', len(words_found))
-        print('len(vectors)', len(vectors))
-        print('Words not found:', [word for word in word_list if word not in words_found])
-
-        #now perform dimensionality reduction
-        print('Performing TSNE dimensionality reduction')
-    tsne = TSNE(n_components=2, random_state=0)
-    reduced_vectors = list(tsne.fit_transform([l.tolist() for l in vectors]) ) # Note B
-
-    # Now add back in placeholders for the missing words
-    for idx in idxs_of_missing_words:
-        reduced_vectors.insert(idx, [None, None])
-
-    reduced_vectors = np.array(reduced_vectors)
-    reduced_vectors_X, reduced_vectors_Y = reduced_vectors[:, 0], reduced_vectors[:, 1]
-
-    return words_found, reduced_vectors_X, reduced_vectors_Y
-
 
 
 
@@ -4096,6 +3802,308 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
+
+def DT_Backbone(path, podcast_name, info=False):
+    """
+    Function which encapsulates the backbone of DT_Second_draft
+
+    """
+    # LOAD df containing Topic + Dialogue Act information...
+    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+    print('Collecting backbone info for: ', transcript_name)
+
+    transcript_df = pd.read_pickle(path)
+
+    # create new column we will fill
+    Num_Total_Utts = len(transcript_df)
+    transcript_df['stack_name'] = [None] * Num_Total_Utts
+    transcript_df['branch_num'] = [None] * Num_Total_Utts
+    transcript_df['position_X'] = [None] * Num_Total_Utts
+    transcript_df['position_Y'] = [None] * Num_Total_Utts
+    transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
+    transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
+    transcript_df['leaf_colour'] = [None] * Num_Total_Utts
+
+    transcript_df['new_topic'] = [False] * Num_Total_Utts
+    transcript_df['new_branch'] = [False] * Num_Total_Utts
+
+
+    # Define some dictionaries and counters we'll need...
+    Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
+    (step_size_x, step_size_y) = (1, 3)
+
+    old_sent_coords, old_topic, old_current_topics = [0, 0], '', []
+    branch_number, topic_direction = 0, +1
+    topics_with_stacks = []
+    single_stacks_appended_to_last_counter = 0
+    first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
+
+    # Deal with leaf colours quartile-wise
+    Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
+    Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
+
+    nlp = spacy.load("en_core_web_sm")  ####
+
+    # Loop through Utterances in the dataframe...
+    for idx, row in transcript_df.iterrows():
+        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
+        colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
+        size_leaves = Colours_Dict[quartile][1]
+        colour = 'k'
+        no_topic = False
+
+        set_of_topics = row['topics']
+        current_topics = [list(x) for x in set_of_topics if x]  # All topics contained in this Utt
+
+        if idx < 20 and len(current_topics) == 0:  # Sometimes the first few Utterances have no topic
+            if info:
+                print('Skipped idx due to no topics')
+            continue
+
+        current_topics = [item for sublist in current_topics for item in sublist]
+        continued_topics = [x for x in current_topics if x == old_topic]  # Topics continued from previous Utt
+
+
+        if idx == Num_Total_Utts-1: # i.e. no 'next' topics
+            new_topic = current_topics
+
+        else:
+            next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
+            next_topics = [item for sublist in next_topics for item in sublist]
+
+            new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
+
+        continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+
+        if info:
+            print('\nidx: ', idx)
+            print('current_topics', current_topics)
+            print('continued_topics', continued_topics)
+            print('new_topic', new_topic)
+            print('continued_topic', continued_topic)
+
+        if not continued_topic and len(new_topic) == 0:
+            if len(old_current_topics) == 0:
+                # ie if this is the FIRST line!
+                new_topic = current_topics.copy()
+            else:
+                # if this isn't the first line. Note Z
+                continued_topics = [x for x in current_topics if x in old_current_topics]
+                single_stacks_appended_to_last_counter += 1
+                continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+                no_topic = True
+
+        if continued_topic:  # If continued on topics from last Utterance, just move up the y axis 1 step
+            change_in_coords = [0, 1]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            if step_size_x < 0:  # Save the direction in which this branch is travelling
+                current_direction = -1
+            else:
+                current_direction = 1
+
+            if not no_topic:
+                the_topic = [topic for topic in continued_topics if topic in topics_with_stacks][0]
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_direction[the_topic] = current_direction
+
+            # not updating leaf colour as this is not the end of a stack (and hence doesn't have a leaf)
+            transcript_df.loc[idx, 'stack_name'] = the_topic
+            transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+            transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+
+        elif not continued_topic:  # NOTE B
+            the_topic = None
+            for top in new_topic:
+                if top in topics_with_stacks:  # Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[top]
+                    topic_direction = Dict_of_topics_direction[top]
+                    the_topic = top
+                    break
+                else:
+                    continue
+
+            ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
+            if the_topic is None:
+                #Dict_of_topics_counts[the_topic] = 3 # instantiate it at 3
+                #step_size_y = Dict_of_topics_counts[the_topic]
+                change_in_coords = [step_size_x, step_size_y]  # Shift horizontally and upwards
+                if idx == first_idx_with_a_topic:
+                    new_sent_coords = old_sent_coords
+                else:
+                    new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+                the_topic = Choose_Topics(new_topic, nlp)
+
+                topics_with_stacks.append(the_topic)
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_counts[the_topic] = 1
+
+                if step_size_x < 0:  # Save the direction in which this branch is travelling
+                    current_direction = -1
+                else:
+                    current_direction = 1
+
+                Dict_of_topics_direction[the_topic] = current_direction
+
+                transcript_df.loc[idx, 'stack_name'] = the_topic
+                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+                transcript_df.loc[idx, 'new_topic'] = True
+
+            ## Here we are starting a new branch at the position of the topic we've jumped back to
+            else:
+                branch_number += 1
+
+                if topic_direction > 0:  # if the branch was moving positively last time, we want to go negative
+                    step_size_x = -1  # make it negative
+                    step_size_x -= 0.01 * branch_number  # increase increment
+                    topic_direction_updated = -1
+                elif topic_direction < 0:
+                    step_size_x = 1  # make it positive
+                    step_size_x += 0.01 * branch_number  # increase increment
+                    topic_direction_updated = 1
+
+                new_sent_coords = [X_pos, Y_pos]
+                Dict_of_topics[the_topic] = new_sent_coords
+                Dict_of_topics_direction[the_topic] = topic_direction_updated
+                Dict_of_topics_counts[the_topic] += 1
+                #step_size_y += 1
+
+                transcript_df.loc[idx-1, 'leaf_colour'] = colour_leaves
+
+                transcript_df.loc[idx, 'stack_name'] = the_topic
+                transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
+                transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
+                transcript_df.loc[idx, 'new_topic'] = True
+                transcript_df.loc[idx, 'new_branch'] = True
+                transcript_df.loc[idx, 'branch_num'] = branch_number
+
+        old_topic = the_topic
+        old_current_topics = current_topics
+        old_sent_coords = new_sent_coords
+
+    # Create new hdf file for given podcast
+    try:
+        if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+    except OSError:
+        pass
+
+    transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df', mode='w')
+
+
+    print('Saved DF to file')
+    if info:
+        print(transcript_df.head(-200).to_string())
+
+    return
+
+def Create_ConceptNet_TSNE(podcast_name, configfiles):
+    """"""
+    # if info:
+    #     print('Accessing all episodes for the given show...')
+
+    # configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    num_podcasts = len(configfiles)
+    print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
+
+    # Collect all topic keywords from entire podcast show
+    all_topical_keywords = []
+    for path in configfiles:
+        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        transcript_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
+        topics = list(transcript_df[transcript_df['new_topic'] == True].stack_name)
+        # # extract/ save all backbone info
+        # DT_Backbone(path, podcast_name, info=False)
+        all_topical_keywords.append(topics)
+
+    # Remove repeats
+    all_topical_keywords = list(dict.fromkeys([item for sublist in all_topical_keywords for item in sublist]))
+
+    # Now find ConceptNet embeddings and reduce using TSNE...
+    words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(all_topical_keywords)
+
+    # Save embeddings to one df
+    ConceptNet_TSNE_df = pd.DataFrame(columns=['Topics', 'X', 'Y'])
+    ConceptNet_TSNE_df['Topics'] = all_topical_keywords
+    ConceptNet_TSNE_df['X'] = reduced_vectors_X
+    ConceptNet_TSNE_df['Y'] = reduced_vectors_Y
+
+    # Make sure a folder is set up in which we can save the Info
+    if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
+        os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
+
+    ConceptNet_TSNE_df.to_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name), key='df')
+
+    # And save embeddings for all the stack_labels in each particular episode
+    all_words = list(ConceptNet_TSNE_df['Topics'])
+    cnt = 0
+    for path in configfiles:
+        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        transcript_df = pd.read_hdf(
+            'Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
+
+        # Now assign word embedding position to utterances based on their topics
+        # (or no position if they dont contain a topical keyword)
+        for idx, row in transcript_df.iterrows():
+            if str(row['stack_name']) in all_words:
+                i = all_words.index(str(row['stack_name']))
+                transcript_df.loc[idx, 'word_embedding_X'] = list(ConceptNet_TSNE_df['X'])[i]  # assign relevant embedding
+                transcript_df.loc[idx, 'word_embedding_Y'] = list(ConceptNet_TSNE_df['Y'])[i]  # assign relevant embedding
+            else:
+                continue
+
+        # saving again, this time with the reduced word embeddings
+        transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                             key='df', mode='w')
+
+
+        print('Saved embeddings for file number', cnt+1, '/', num_podcasts, ' : ', str(path))
+        cnt += 1
+
+    return
+
+def get_ConceptNet(word_list, info=False):
+
+    # load ConceptNet file into dataframe
+    ConceptNet_df = pd.read_hdf('ConceptNet/en_mini_conceptnet.h5', "data")
+
+    words_found, vectors, idxs_of_missing_words = [], [], []
+
+    # Search for words
+    for idx, word in enumerate(word_list):
+        try:
+            vectors.append(ConceptNet_df.loc[word].values)    # embeddings_dict[word])
+            words_found.append(word)
+        except:
+            idxs_of_missing_words.append(idx)
+            continue
+    if info:
+        print('Num words in word_list: ', len(word_list))
+        print('Num words with vectors: ', len(words_found))
+        print('len(vectors)', len(vectors))
+        print('Words not found:', [word for word in word_list if word not in words_found])
+
+        #now perform dimensionality reduction
+        print('Performing TSNE dimensionality reduction')
+    tsne = TSNE(n_components=2, random_state=0)
+    reduced_vectors = list(tsne.fit_transform([l.tolist() for l in vectors]) ) # Note B
+
+    # Now add back in placeholders for the missing words
+    for idx in idxs_of_missing_words:
+        reduced_vectors.insert(idx, [None, None])
+
+    reduced_vectors = np.array(reduced_vectors)
+    reduced_vectors_X, reduced_vectors_Y = reduced_vectors[:, 0], reduced_vectors[:, 1]
+
+    return words_found, reduced_vectors_X, reduced_vectors_Y
+
+
+
+
+
 def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
     """
     Function to plot Discussion Trees using backbone data, rather than from scratch
@@ -4122,14 +4130,9 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     # Calculate the height of each stack
     idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
     idx_of_new_branch_copy = idx_of_new_branch.copy()
-    print('len(new_branches)', len(new_branches))
-    print('idx_of_new_branch', idx_of_new_branch)
     idx_of_new_branch.insert(0, 0)
     idx_of_new_branch.insert(-1, len(pod_df))
-
     height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
-    print('height_of_stack', height_of_stack)
-    print('len(height_of_stack)', len(height_of_stack))
 
     # Calculate mean / median stack height (only going to label long ones)
     med = statistics.median(height_of_stack)
@@ -4152,8 +4155,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         new_topic = row['new_topic']
         new_branch = row['new_branch']
 
-        branch_length = height_of_stack[idx_of_new_branch_copy.index(idx)]
-
         plt.plot(x, y, 'o', color=colour, ms=3, zorder=0)  # Plot node
         if not new_branch:
             # Plot: continuing on the same branch, but with a new position to mark a new set of topics
@@ -4170,10 +4171,12 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             # plt.rc('font', size=8)
 
 
-        if new_topic and the_topic not in annotations and branch_length > mean:
-            # Annotate
-            plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
-            annotations.append(the_topic)
+        if new_topic and the_topic not in annotations:
+            branch_length = height_of_stack[idx_of_new_branch_copy.index(idx)]
+            if branch_length > mean:
+                # Annotate
+                plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
+                annotations.append(the_topic)
 
         old_sent_coords = [x, y]
 
@@ -4378,12 +4381,11 @@ def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
 
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
 
-DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=-1, save_fig=False, info=False)
+#DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=-1, save_fig=False, info=False)
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
-
-#Info_Collection_Handler('heavy_topics', save_fig=False)
-#DT_Handler('heavy_topics', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
+#Info_Collection_Handler('wall_street', save_fig=False)
+DT_Handler('wall_street', podcast_count=8, save_fig=True) #'wall_street' #'5_star' (football one)
 
 
 
