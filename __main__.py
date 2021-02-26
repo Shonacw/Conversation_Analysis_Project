@@ -4137,7 +4137,6 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     # Calculate mean / median stack height (only going to label long ones)
     med = statistics.median(height_of_stack)
     mean = statistics.mean(height_of_stack)
-    print('mean', mean)
 
     # Instantiate figure
     plt.figure()
@@ -4173,7 +4172,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
         if new_topic and the_topic not in annotations:
             branch_length = height_of_stack[idx_of_new_branch_copy.index(idx)]
-            if branch_length > mean:
+            if branch_length > med:
                 # Annotate
                 plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
                 annotations.append(the_topic)
@@ -4242,6 +4241,18 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                          key='df')
 
+    # find popularity of each key topic
+    Popularity = {}
+
+    for topic in pod_df[pod_df['new_topic']==True].stack_name:
+        try:
+            Popularity[topic] += 1
+        except:
+            Popularity[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
+    print('Popularity', Popularity)
+
+
+
     # Instantiate figure
     plt.figure()
     plt.title('TTTS: {}'.format(transcript_name))
@@ -4270,7 +4281,9 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
             continue
 
         plt.plot(x, y, 'o', color='lightpink')
-        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), textcoords="offset points", zorder=200)
+        plt.rc('font', size=Popularity[the_topic]+6)
+        weight = 'bold' if Popularity[the_topic] > 1 else 'normal'
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), weight= weight, textcoords="offset points", zorder=200)
 
     # Plot Quiver
     colour_for_segment = 'lightblue' # eventually change colour with richness etc or speakerwise
@@ -4296,7 +4309,139 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
         plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_TTTS.png".format(podcast_name, transcript_name), dpi=600)
 
     plt.show()
+    plt.rc('font', size=8) # resetting
+    return
 
+def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sent=-1, save_fig=False, info=False):
+    """Function to plot the Trajectory Through Topic Space Visualisation, using backbone df."""
+
+
+    # load relevant df
+    pod_df_1 = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name1),
+                         key='df')
+    pod_df_2 = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name2),
+                         key='df')
+    keyword_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name),
+                         key='df')
+    print(keyword_df.columns)
+
+    # Find popularity of each key topic in the two podcasts
+    pod_1_topics = list(pod_df_1[pod_df_1['new_topic']==True].stack_name)
+    Popularity_1 = {}
+    for topic in pod_1_topics:
+        try:
+            Popularity_1[topic] += 1
+        except:
+            Popularity_1[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
+    print('Popularity of podcast 1', Popularity_1)
+
+    Popularity_2 = {}
+    pod_2_topics = list(pod_df_2[pod_df_2['new_topic'] == True].stack_name)
+    for topic in pod_2_topics:
+        try:
+            Popularity_2[topic] += 1
+        except:
+            Popularity_2[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
+    print('Popularity of podcast 1', Popularity_2)
+
+    # Find the overall popularity
+    shared_topics = [topic for topic in list(pod_1_topics) if topic in list(pod_2_topics)]
+    shared_topics = list(dict.fromkeys([item for sublist in shared_topics for item in sublist])) #only unique ones
+
+    print('shared_topics', shared_topics)
+
+    # Normalise / to find the ones we want in black (all shared ones in black)
+
+
+
+    #Colour of shared topics = black
+    Colours = {}
+    for topic in pod_1_topics:
+        Colours[topic] = 'blue'
+    for topic in pod_2_topics:
+        Colours[topic] = 'purple'
+    for topic in shared_topics:
+        Colours[topic] = 'k'
+
+    print('Colours', Colours)
+
+
+    # Instantiate figure
+    plt.figure()
+    plt.title('TTTS: {0} & {1}'.format(transcript_name1,transcript_name2))
+
+    xs1, ys1 = list(pod_df_1[pod_df_1['new_topic']==True][0:cutoff_sent]['word_embedding_X']), list(pod_df_1[pod_df_1['new_topic']==True][0:cutoff_sent]['word_embedding_Y'])
+    xs1, ys1 = [x for x in xs1 if x], [y for y in ys1 if y] # remove Nones
+
+    xs2, ys2 = list(pod_df_2[pod_df_2['new_topic']==True][0:cutoff_sent]['word_embedding_X']), list(pod_df_2[pod_df_2['new_topic']==True][0:cutoff_sent]['word_embedding_Y'])
+    xs2, ys2 = [x for x in xs2 if x], [y for y in ys2 if y] # remove Nones
+
+    u1 = [i - j for i, j in zip(xs1[1:], xs1[:-1])]
+    v1 = [i - j for i, j in zip(ys1[1:], ys1[:-1])]
+
+    u2 = [i - j for i, j in zip(xs2[1:], xs2[:-1])]
+    v2 = [i - j for i, j in zip(ys2[1:], ys2[:-1])]
+
+    if len(xs1) > 50:
+        linewidth = 0.002
+    else:
+        linewidth = 0.004
+
+    # Plot background
+    for idx, row in keyword_df.iterrows():
+        the_topic = row['Topics']
+
+        #only want to plot ones relevant to these transcripts
+        try:
+            color = Colours[the_topic]
+        except:
+            continue
+
+        x = row['X']
+        y = row['Y']
+
+        if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
+            continue
+
+        plt.plot(x, y, 'o', color='lightpink')
+        plt.rc('font', size = 8) # Popularity[the_topic]+6)
+        weight = 'normal' #'bold' if Popularity[the_topic] > 1 else 'normal'
+        color = Colours[the_topic]
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), color=color, weight= weight, textcoords="offset points", zorder=200)
+
+    # Plot Quiver 1
+    colour_for_segment = 'lightblue' # eventually change colour with richness etc or speakerwise
+
+    plt.quiver(xs1[:-1], ys1[:-1], u1, v1, scale_units='xy',
+               angles='xy', width=linewidth, scale=1, color='lightskyblue', zorder=6)
+
+    colour_for_segment = 'lightpurple' # eventually change colour with richness etc or speakerwise
+
+    plt.quiver(xs2[:-1], ys2[:-1], u2, v2, scale_units='xy',
+               angles='xy', width=linewidth, scale=1, color='plum', zorder=6)
+
+    # plot special colours for the first and last point
+    plt.plot([xs1[0]], [ys1[0]], 'o', color='green', markersize=8, zorder=20)
+    plt.plot([xs1[-1]], [ys1[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    plt.plot([xs2[0]], [ys2[0]], 'o', color='green', markersize=8, zorder=20)
+    plt.plot([xs2[-1]], [ys2[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    # Legend
+    line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
+    line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+
+    plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
+
+    # save
+    if save_fig:
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_TTTS.png".format(podcast_name, transcript_name), dpi=600)
+
+    plt.show()
+    plt.rc('font', size=8) # resetting
     return
 
 ###iii
@@ -4385,9 +4530,9 @@ def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
 #Info_Collection_Handler('wall_street', save_fig=False)
-DT_Handler('wall_street', podcast_count=8, save_fig=True) #'wall_street' #'5_star' (football one)
+#DT_Handler('wall_street', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
 
-
+TTTS_Comparison('heavy_topics', 'heavy_topics_victorias_secr_32008', 'heavy_topics_vibrating_on_826') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827')
 
 
 
