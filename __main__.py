@@ -4109,6 +4109,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     transcript_df['leaf_colour']        = [None] * Num_Total_Utts
     transcript_df['new_topic']          = [False] * Num_Total_Utts
     transcript_df['new_branch']      = [False] * Num_Total_Utts"""
+    import statistics
 
     #load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
@@ -4117,6 +4118,23 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     old_sent_coords = [0, 0]
     annotations = []
+
+    # Calculate the height of each stack
+    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
+    idx_of_new_branch_copy = idx_of_new_branch.copy()
+    print('len(new_branches)', len(new_branches))
+    print('idx_of_new_branch', idx_of_new_branch)
+    idx_of_new_branch.insert(0, 0)
+    idx_of_new_branch.insert(-1, len(pod_df))
+
+    height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
+    print('height_of_stack', height_of_stack)
+    print('len(height_of_stack)', len(height_of_stack))
+
+    # Calculate mean / median stack height (only going to label long ones)
+    med = statistics.median(height_of_stack)
+    mean = statistics.mean(height_of_stack)
+    print('mean', mean)
 
     # Instantiate figure
     plt.figure()
@@ -4134,6 +4152,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         new_topic = row['new_topic']
         new_branch = row['new_branch']
 
+        branch_length = height_of_stack[idx_of_new_branch_copy.index(idx)]
 
         plt.plot(x, y, 'o', color=colour, ms=3, zorder=0)  # Plot node
         if not new_branch:
@@ -4151,7 +4170,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             # plt.rc('font', size=8)
 
 
-        if new_topic and the_topic not in annotations:
+        if new_topic and the_topic not in annotations and branch_length > mean:
             # Annotate
             plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
             annotations.append(the_topic)
@@ -4277,7 +4296,7 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
-##
+###iii
 def Info_Collection_Handler(podcast_name, save_fig=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
@@ -4359,12 +4378,12 @@ def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
 
 #DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
 
-#DT_Third_Draft('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=True)
+DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=-1, save_fig=False, info=False)
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
 
 
 #Info_Collection_Handler('heavy_topics', save_fig=False)
-DT_Handler('heavy_topics', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
+#DT_Handler('heavy_topics', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
 
 
 
