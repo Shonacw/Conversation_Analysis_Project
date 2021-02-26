@@ -3993,7 +3993,6 @@ def DT_Backbone(path, podcast_name, info=False):
     transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                          key='df', mode='w')
 
-
     print('Saved DF to file')
     if info:
         print(transcript_df.head(-200).to_string())
@@ -4241,7 +4240,8 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                          key='df')
 
-    # find popularity of each key topic
+    # find popularity of each key topic in terms of
+    #A) number of times the topic is linked back to
     Popularity = {}
 
     for topic in pod_df[pod_df['new_topic']==True].stack_name:
@@ -4251,7 +4251,18 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
             Popularity[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
     print('Popularity', Popularity)
 
+    #B) number of utterances spent on the topic
+    Topics_Utterances = dict(pod_df['stack_name'].value_counts())
 
+    lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
+    x, y = zip(*lists)
+    largest = y[-1]
+    len_quartiles = int(largest/4)
+    quartiles = [list(range(0, len_quartiles)), list(range(len_quartiles, 2*len_quartiles)), list(range(2*len_quartiles, 3*len_quartiles)), list(range(3*len_quartiles, largest+1))]
+
+    # for topic in pod_df[pod_df['new_topic']==True].stack_name:
+    #             pod_df
+    #     len(pod_df[pod_df['education'] == 'topic'])
 
     # Instantiate figure
     plt.figure()
@@ -4281,7 +4292,7 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
             continue
 
         plt.plot(x, y, 'o', color='lightpink')
-        plt.rc('font', size=Popularity[the_topic]+6)
+        plt.rc('font', size=7 + [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[the_topic] in sublist][0])
         weight = 'bold' if Popularity[the_topic] > 1 else 'normal'
         plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), weight= weight, textcoords="offset points", zorder=200)
 
@@ -4344,14 +4355,29 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
             Popularity_2[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
     print('Popularity of podcast 1', Popularity_2)
 
+    Topics_Utterances1 = dict(pod_df_1['stack_name'].value_counts())
+
+    lists1 = sorted(Topics_Utterances1.items(), key=lambda kv: kv[1])
+    x1, y1 = zip(*lists1)
+    largest1 = y1[-1]
+    len_quartiles1 = int(largest1/4)
+    quartiles1 = [list(range(0, len_quartiles1)), list(range(len_quartiles1, 2*len_quartiles1)), list(range(2*len_quartiles1, 3*len_quartiles1)), list(range(3*len_quartiles1, largest1+1))]
+
+    Topics_Utterances2 = dict(pod_df_2['stack_name'].value_counts())
+    lists2 = sorted(Topics_Utterances2.items(), key=lambda kv: kv[1])
+    x2, y2 = zip(*lists2)
+    largest2 = y2[-1]
+    len_quartiles2 = int(largest2/4)
+    quartiles2 = [list(range(0, len_quartiles2)), list(range(len_quartiles2, 2*len_quartiles2)), list(range(2*len_quartiles2, 3*len_quartiles2)), list(range(3*len_quartiles2, largest2+1))]
+
+
     # Find the overall popularity
     shared_topics = [topic for topic in list(pod_1_topics) if topic in list(pod_2_topics)]
-    shared_topics = list(dict.fromkeys([item for sublist in shared_topics for item in sublist])) #only unique ones
+    shared_topics = list(dict.fromkeys(shared_topics)) #only unique ones
 
     print('shared_topics', shared_topics)
 
     # Normalise / to find the ones we want in black (all shared ones in black)
-
 
 
     #Colour of shared topics = black
@@ -4362,9 +4388,6 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
         Colours[topic] = 'purple'
     for topic in shared_topics:
         Colours[topic] = 'k'
-
-    print('Colours', Colours)
-
 
     # Instantiate figure
     plt.figure()
@@ -4403,11 +4426,16 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
         if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
             continue
 
+        # determine which transcript this came from
+        quartiles = quartiles1 if the_topic in pod_1_topics else quartiles2
+        Topics_Utterances = Topics_Utterances1 if the_topic in pod_1_topics else Topics_Utterances2
+        size_to_add = 2 if the_topic in shared_topics else [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[the_topic] in sublist][0]
+
         plt.plot(x, y, 'o', color='lightpink')
-        plt.rc('font', size = 8) # Popularity[the_topic]+6)
-        weight = 'normal' #'bold' if Popularity[the_topic] > 1 else 'normal'
+        plt.rc('font', size = 7 + size_to_add)
+        weight = 'bold' if the_topic in shared_topics else 'normal'
         color = Colours[the_topic]
-        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), color=color, weight= weight, textcoords="offset points", zorder=200)
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), color=color, weight=weight, textcoords="offset points", zorder=200)
 
     # Plot Quiver 1
     colour_for_segment = 'lightblue' # eventually change colour with richness etc or speakerwise
@@ -4435,10 +4463,11 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
 
     # save
     if save_fig:
-        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
-            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/Combined'.format(podcast_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/Combined'.format(podcast_name))
 
-        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_TTTS.png".format(podcast_name, transcript_name), dpi=600)
+        plt.savefig("Spotify_Podcast_DataSet/{0}//{1}&{2}_Combined.png".format(podcast_name, transcript_name1,
+                                                                               transcript_name2), dpi=600)
 
     plt.show()
     plt.rc('font', size=8) # resetting
