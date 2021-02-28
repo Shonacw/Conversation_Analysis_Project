@@ -53,6 +53,7 @@ from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
+from matplotlib import cm
 
 from InferSent.models import InferSent
 import importlib
@@ -2576,16 +2577,22 @@ def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False)
                             'DA_Label': []}
 
     plt.figure()
-    plt.title('Detecting Changes in Topic')
+    plt.title('Simple Line with Topic Step : Jack Dorsey')
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics, most_recently_plotted = [], ''
-    for idx, row in file[1:cutoff_sent].iterrows():
+    first_topic_idx = int(file.index[file['topics'].astype(bool)].tolist()[0])
+    print('first_topic_idx', first_topic_idx)
+    print(file.iloc[first_topic_idx]['topics'])
+
+    for idx, row in file[0:cutoff_sent].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = speakers_map[old_speaker]
+
         if str(file.topics[old_idx]) == 'nan':
             old_idx = idx
             continue
+
         print('\nold_topics', old_topics)
         current_topics = list(row['topics'])
 
@@ -2597,18 +2604,21 @@ def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False)
 
         continued_topic = False if len(continued_topics)==0 else True #new_topic != current_topic else False
         print('continued_topic?', continued_topic)
+        new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
+        if old_sent_coords[0] == 0 and old_sent_coords[1] == 0:
+            plt.annotate(', '.join(new_topic), xy=(0, 1 + 0.2), color='k',
+                         zorder=100),  # textcoords="offset points" #weight=)
         if continued_topic:
             new_dir_x = 1 # 1 bc x direction is for continuing on convo on current topic
             change_in_coords = [step_size, 0]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
-            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-', color=colour)
+            #plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-', color=colour)
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3, zorder=100)  # plot node
 
         if not continued_topic:
             # print('\ntopic', row['topics'])
             # print('words', row['key_words'])
-            new_topic = [x for x in current_topics if x in list(file.topics[idx+1])]
             topic_linegraph_dict['Idx'].append(idx)
             topic_linegraph_dict['All_Current_Topics'].append(current_topics)
             topic_linegraph_dict['New_Topic'].append(new_topic)
@@ -2619,11 +2629,11 @@ def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False)
             change_in_coords = [0, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
-            plt.annotate(', '.join(new_topic), xy=(new_sent_coords[0]-15, new_sent_coords[1]+0.2), color='k',
+            plt.annotate(', '.join(new_topic), xy=(new_sent_coords[0]-15.5, new_sent_coords[1]+0.2), color='k',
                          zorder=100),  # textcoords="offset points" #weight=)
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour)  # plot line
+                     color=colour, linewidth=4)  # plot line
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3, zorder=100)  # plot node
 
         old_topics = new_topic
         old_sent_coords = new_sent_coords
@@ -2675,11 +2685,12 @@ def Simple_Line_Topics(cutoff_sent=200, Interviewee='elon musk', save_fig=False)
     legend_labels = []
     for i in range(len(list(speakers_map.keys()))):
         legend_handles.append(Line2D([0], [0], color=list(speakers_map.values())[i], lw=1))
-        legend_labels.append(list(speakers_map.keys())[i])
+        legend_labels.append([x.title() for x in list(speakers_map.keys())][i])
 
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
-    plt.legend(legend_handles, legend_labels)
+    plt.ylim(top = new_sent_coords[1]+1)
+    plt.legend(legend_handles, legend_labels, loc='upper left')
 
     if save_fig:
         plt.savefig("Saved_Images/{0}/Simple_Line_Topics.png".format(transcript_name), dpi=600)
@@ -3059,7 +3070,6 @@ def DT_Firt_Draft_Mess(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
     """"
     Shifting Line Topics 2 but new...
     """
-    from matplotlib import cm
     speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
     transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
     file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
@@ -3254,7 +3264,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
 
     # Instantiate figure
     plt.figure()
-    plt.title('Discussion Tree: Joe Rogan & {0}'.format(Interviewee.title()))
+    plt.title('Basic Discussion Tree: Joe Rogan & {0}'.format(Interviewee.title()))
 
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df[1:cutoff_sent].iterrows():
@@ -3456,6 +3466,7 @@ def DT_First_Draft(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
     # plt.xlabel('Only Statements in Utterance')
     # plt.ylabel('Question in Utterance')
     # plt.legend(legend_handles, legend_labels)
+    plt.ylim(top=110)
     if save_fig:
         plt.savefig("Saved_Images/{0}/Discussion_Tree1.png".format(transcript_name), dpi=600)
     plt.show()
@@ -3803,13 +3814,12 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
     return
 
 
-def DT_Backbone(path, podcast_name, info=False):
+def DT_Backbone(path, podcast_name, transcript_name, info=False):
     """
     Function which encapsulates the backbone of DT_Second_draft
 
     """
     # LOAD df containing Topic + Dialogue Act information...
-    transcript_name = str(path).split("/spotify_", 1)[1][:-4]
     print('Collecting backbone info for: ', transcript_name)
 
     transcript_df = pd.read_pickle(path)
@@ -3999,30 +4009,42 @@ def DT_Backbone(path, podcast_name, info=False):
 
     return
 
-def Create_ConceptNet_TSNE(podcast_name, configfiles):
+def Create_ConceptNet_TSNE(podcast_name, transcript_name, configfiles):
     """"""
     # if info:
     #     print('Accessing all episodes for the given show...')
 
-    # configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    #configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    # if not podcast_name == 'joe_rogan':
+    #     configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
+    #         "**/spotify_{}_*.pkl".format(podcast_name)))
+    # else:
+    #     configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/joe_rogan_*.pkl"))
+
     num_podcasts = len(configfiles)
     print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
 
     # Collect all topic keywords from entire podcast show
     all_topical_keywords = []
     for path in configfiles:
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        if podcast_name=='joe_rogan':
+            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
+        else:
+            transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+
         transcript_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
         topics = list(transcript_df[transcript_df['new_topic'] == True].stack_name)
+
         # # extract/ save all backbone info
-        # DT_Backbone(path, podcast_name, info=False)
         all_topical_keywords.append(topics)
 
+    print('all_topical_keywords', all_topical_keywords)
     # Remove repeats
     all_topical_keywords = list(dict.fromkeys([item for sublist in all_topical_keywords for item in sublist]))
 
     # Now find ConceptNet embeddings and reduce using TSNE...
     words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(all_topical_keywords)
+    print('reduced_vectors_X', reduced_vectors_X)
 
     # Save embeddings to one df
     ConceptNet_TSNE_df = pd.DataFrame(columns=['Topics', 'X', 'Y'])
@@ -4035,12 +4057,15 @@ def Create_ConceptNet_TSNE(podcast_name, configfiles):
         os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
 
     ConceptNet_TSNE_df.to_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name), key='df')
-
     # And save embeddings for all the stack_labels in each particular episode
     all_words = list(ConceptNet_TSNE_df['Topics'])
     cnt = 0
     for path in configfiles:
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        if podcast_name=='joe_rogan':
+            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
+        else:
+            transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+
         transcript_df = pd.read_hdf(
             'Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
 
@@ -4057,7 +4082,6 @@ def Create_ConceptNet_TSNE(podcast_name, configfiles):
         # saving again, this time with the reduced word embeddings
         transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                              key='df', mode='w')
-
 
         print('Saved embeddings for file number', cnt+1, '/', num_podcasts, ' : ', str(path))
         cnt += 1
@@ -4128,14 +4152,17 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     # Calculate the height of each stack
     idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
-    idx_of_new_branch_copy = idx_of_new_branch.copy()
     idx_of_new_branch.insert(0, 0)
     idx_of_new_branch.insert(-1, len(pod_df))
-    height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
+    #height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
+
+    Topics_Utterances = dict(pod_df['stack_name'].value_counts())
+    lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
+    words, usage = zip(*lists)
 
     # Calculate mean / median stack height (only going to label long ones)
-    med = statistics.median(height_of_stack)
-    mean = statistics.mean(height_of_stack)
+    med = statistics.median(usage)
+    mean = statistics.mean(usage)
 
     # Instantiate figure
     plt.figure()
@@ -4168,15 +4195,27 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
                          weight='bold')
             # plt.rc('font', size=8)
 
-
+        # x_change = -(x - old_sent_coords[0]) / 4
+        shift_posx = 0.25 if cutoff_sent < 500 else 1
+        shift_negx = 0.4 if cutoff_sent < 500 else 5
+        x_change = +shift_posx if (x - old_sent_coords[0]) < 0 else -shift_negx
         if new_topic and the_topic not in annotations:
-            branch_length = height_of_stack[idx_of_new_branch_copy.index(idx)]
-            if branch_length > med:
+            word_popularity = usage[words.index(the_topic)]
+            if word_popularity > (mean + 0.5*mean) or pod_df.iloc[idx+1]['new_branch']==True:
                 # Annotate
-                plt.annotate(the_topic, xy=(x + 0.3, y), color=colour_label, zorder=150, rotation=0)
+                plt.annotate(the_topic, xy=(x + x_change, y+3), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
                 annotations.append(the_topic)
 
         old_sent_coords = [x, y]
+
+    total_duration = pod_df.iloc[-1].timestamp
+    podcast_duration = pod_df.iloc[cutoff_sent].timestamp
+    total_utterances = len(pod_df)
+    num_utts = cutoff_sent
+    print('Total podcast_duration:', total_duration)
+    print('selected podcast duration', podcast_duration)
+    print('\nTotal number of utterances', total_utterances)
+    print('number_of_utterances selected:', num_utts)
 
     # save
     if save_fig:
@@ -4232,43 +4271,55 @@ def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fi
 
     return
 
-def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
-    """Function to plot the Trajectory Through Topic Space Visualisation, using backbone df."""
-
+def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=False):
+    """
+    Function to plot the Trajectory Through Topic Space Visualisation, using backbone df.
+    """
 
     # load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df')
+    keyword_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name),
                          key='df')
 
     # find popularity of each key topic in terms of
     #A) number of times the topic is linked back to
     Popularity = {}
 
-    for topic in pod_df[pod_df['new_topic']==True].stack_name:
+    for topic in pod_df[0:cutoff_sent][pod_df['new_topic']==True].stack_name:
         try:
             Popularity[topic] += 1
         except:
             Popularity[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
-    print('Popularity', Popularity)
+
 
     #B) number of utterances spent on the topic
     Topics_Utterances = dict(pod_df['stack_name'].value_counts())
-
     lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
     x, y = zip(*lists)
     largest = y[-1]
     len_quartiles = int(largest/4)
     quartiles = [list(range(0, len_quartiles)), list(range(len_quartiles, 2*len_quartiles)), list(range(2*len_quartiles, 3*len_quartiles)), list(range(3*len_quartiles, largest+1))]
 
-    # for topic in pod_df[pod_df['new_topic']==True].stack_name:
-    #             pod_df
-    #     len(pod_df[pod_df['education'] == 'topic'])
-
     # Instantiate figure
     plt.figure()
+    # plt.rcParams['axes.facecolor'] = 'mintcream'
     plt.title('TTTS: {}'.format(transcript_name))
 
-    xs, ys = list(pod_df[pod_df['new_topic']==True][0:cutoff_sent]['word_embedding_X']), list(pod_df[pod_df['new_topic']==True][0:cutoff_sent]['word_embedding_Y'])
+
+    # if heatmap:
+    #     a_list = []
+    #     for word, usage in zip(x, y): # x is the word, y is the usage
+    #         row = keyword_df[keyword_df['Topics']==word]
+    #         X, Y = row['X'].values, row['Y'].values
+    #         print(X, Y)
+    #         a_list.append([float(X), float(Y), usage])
+    #     print('a', a_list)
+    #     b = np.asarray(a_list)
+    #     plt.pcolor(b)
+
+
+    xs, ys = list(pod_df[:cutoff_sent][pod_df['new_topic']==True].word_embedding_X), list(pod_df[:cutoff_sent][pod_df['new_topic']==True].word_embedding_Y)
     xs, ys = [x for x in xs if x], [y for y in ys if y] # remove Nones
 
     u = [i - j for i, j in zip(xs[1:], xs[:-1])]
@@ -4280,7 +4331,7 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
         linewidth = 0.004
 
     # Plot background
-    for idx, row in pod_df[0:cutoff_sent].iterrows():
+    for idx, row in pod_df[:cutoff_sent][pod_df['new_topic']==True].iterrows():
         the_topic = row['stack_name']
 
         branch_num = row['branch_num']
@@ -4291,16 +4342,17 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=Fal
         if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
             continue
 
-        plt.plot(x, y, 'o', color='lightpink')
+        plt.plot(x, y, 'o', color='lightpink', zorder=8)
         plt.rc('font', size=7 + [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[the_topic] in sublist][0])
         weight = 'bold' if Popularity[the_topic] > 1 else 'normal'
-        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), weight= weight, textcoords="offset points", zorder=200)
+        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), weight=weight, textcoords="offset points", zorder=200)
 
     # Plot Quiver
-    colour_for_segment = 'lightblue' # eventually change colour with richness etc or speakerwise
+    n = len(xs)
+    colour_for_segment = cm.Blues(np.linspace(0.3, 0.8, n))  # colormap so it's easier to follow
 
     plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
-               angles='xy', width=linewidth, scale=1, color=colour_for_segment, zorder=6)
+               angles='xy', width=linewidth, scale=1, color=colour_for_segment, zorder=5)
 
     # plot special colours for the first and last point
     plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
@@ -4334,7 +4386,6 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
                          key='df')
     keyword_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name),
                          key='df')
-    print(keyword_df.columns)
 
     # Find popularity of each key topic in the two podcasts
     pod_1_topics = list(pod_df_1[pod_df_1['new_topic']==True].stack_name)
@@ -4344,7 +4395,6 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
             Popularity_1[topic] += 1
         except:
             Popularity_1[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
-    print('Popularity of podcast 1', Popularity_1)
 
     Popularity_2 = {}
     pod_2_topics = list(pod_df_2[pod_df_2['new_topic'] == True].stack_name)
@@ -4353,7 +4403,6 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
             Popularity_2[topic] += 1
         except:
             Popularity_2[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
-    print('Popularity of podcast 1', Popularity_2)
 
     Topics_Utterances1 = dict(pod_df_1['stack_name'].value_counts())
 
@@ -4374,8 +4423,6 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
     # Find the overall popularity
     shared_topics = [topic for topic in list(pod_1_topics) if topic in list(pod_2_topics)]
     shared_topics = list(dict.fromkeys(shared_topics)) #only unique ones
-
-    print('shared_topics', shared_topics)
 
     # Normalise / to find the ones we want in black (all shared ones in black)
 
@@ -4474,13 +4521,17 @@ def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sen
     return
 
 ###iii
-def Info_Collection_Handler(podcast_name, save_fig=False):
+def Info_Collection_Handler(podcast_name):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
     # First, find all transcripts for episodes of the given podcast
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
-        "**/spotify_{}_*.pkl".format(podcast_name)))
+    if not podcast_name == 'joe_rogan':
+        configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob(
+            "**/spotify_{}_*.pkl".format(podcast_name)))
+    else:
+        configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/joe_rogan_*.pkl"))
+
     num_podcasts = len(configfiles)
     print('\nNumber of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts), '\n\n')
     # pprint(configfiles)
@@ -4496,7 +4547,12 @@ def Info_Collection_Handler(podcast_name, save_fig=False):
     for path in configfiles:
         # print(str(path))
         print('\n', pod_cnt, '/', num_podcasts)
-        DT_Backbone(path, podcast_name, info=False)
+        if not podcast_name=='joe_rogan':
+            transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        else:
+            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
+
+        DT_Backbone(path, podcast_name, transcript_name, info=False)
         pod_cnt += 1
 
         # # Now, Create df of ConceptNet embeddings and save all the embeddings in the individual files...
@@ -4507,20 +4563,23 @@ def Info_Collection_Handler(podcast_name, save_fig=False):
     # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
     conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
 
-    if os.path.exists(conceptnet_path):
-        ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
-
-    else:
-        Create_ConceptNet_TSNE(podcast_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
+    if not os.path.exists(conceptnet_path):
+        #     ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
+        #
+        # else:
+        Create_ConceptNet_TSNE(podcast_name, transcript_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
 
     return
 
-def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
+def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, DT_only=False, save_fig=False, info=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
     # First, find all transcripts for episodes of the given podcast
-    configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    if not podcast_name=='joe_rogan':
+        configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
+    else:
+        configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/joe_rogan_*.pkl"))
     num_podcasts = len(configfiles)
 
     print('Number of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts))
@@ -4530,40 +4589,60 @@ def DT_Handler(podcast_name, podcast_count=10, save_fig=False, info=False):
     for path in configfiles:
         if pod_cnt == podcast_count:
             break
-        transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        if not podcast_name=='joe_rogan':
+            transcript_name = str(path).split("/spotify_", 1)[1][:-4]
+        else:
+            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
 
         print('\nEpisode:', transcript_name, '. Full path: ', str(path))
         print('Plotting DT...')
-        DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=save_fig, info=info)
+        if not TTTS_only:
+            DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig, info=info)
         print('Plotting TTTS...')
-        TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=save_fig, info=info)
+        if not DT_only:
+            TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig)
         pod_cnt += 1
 
     return
 
 ## Call....
 
-#Simple_Line_DA(cutoff_sent=200, Interviewee='jack dorsey', save_fig=True) #'jack dorsey' # 'elon musk'
-#Simple_Line_Topics(cutoff_sent=-1, Interviewee='jack dorsey', save_fig=False)
+#Simple_Line_DA(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' # 'elon musk'
+#Simple_Line_Topics(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False)
 
-#Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=True)
-#Shifting_Line_Topics_2(cutoff_sent=600, Interviewee='jack dorsey', save_fig=False)
-#DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=False)
+# Shifting_Line_Topics(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False)
+# Shifting_Line_Topics_2(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False)
+# DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=False, save_fig=False)
 
 #DT_First_Draft(cutoff_sent=200, Interviewee='jack dorsey', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
 #DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
-#DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', info=False)
+#DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
 
 #DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=-1, save_fig=False, info=False)
-#TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=-1, save_fig=False, info=False) #'heavy_topics_fuckboys_and_44643'
+#TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
-#Info_Collection_Handler('wall_street', save_fig=False)
-#DT_Handler('wall_street', podcast_count=5, save_fig=True) #'wall_street' #'5_star' (football one)
+#Info_Collection_Handler('joe_rogan')
+DT_Handler('joe_rogan', podcast_count=12, cutoff_sent=1000, save_fig=False, TTTS_only=False, DT_only=True) #'wall_street' #'5_star' (football one) #'confessions_of'
 
-TTTS_Comparison('heavy_topics', 'heavy_topics_victorias_secr_32008', 'heavy_topics_vibrating_on_826') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827')
+#TTTS_Comparison('heavy_topics', 'heavy_topics_being_a_71410', 'heavy_topics_create_the_54285') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827') # heavy_topics_i_killed_94201   being_a_71410
 
+def Looking_at_metadata():
+    DataFrame = pd.read_csv('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/metadata.csv')
+    short_shows = list(DataFrame[DataFrame['duration'] <30].show_name)
+    short_shows_tech = [x for x in short_shows if 'tech' in x]
+    short_shows_science = [x for x in short_shows if 'Neuroscience for Success ' in x]
 
+    # mask = DataFrame[['show_name']].apply(lambda x: x.contains('Neuroscience for Success')).any(1)
+    # neuro_df = df[mask]
+    neuro_df = DataFrame[DataFrame[['show_name']].stack().str.contains('confessions of', case=False, na=False).any(level=0)]
+    # print(short_shows_tech)
+    # print(short_shows_science)
+
+    print(neuro_df.head().to_string())
+    return
+
+#Looking_at_metadata()
 
 
 ##
