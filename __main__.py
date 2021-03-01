@@ -4166,8 +4166,8 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
 
     # Instantiate figure
     plt.figure()
-    plt.title('Discussion Tree: {}'.format(transcript_name))
-    plt.rc('font', size=7)
+    plt.title('Discussion Tree: {}'.format(transcript_name.title()), fontsize=13)
+    plt.rc('font', size=6)
     for idx, row in pod_df[0:cutoff_sent].iterrows():
         the_topic = row['stack_name']
 
@@ -4180,31 +4180,34 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         new_topic = row['new_topic']
         new_branch = row['new_branch']
 
-        plt.plot(x, y, 'o', color=colour, ms=3, zorder=0)  # Plot node
+        plt.plot(x, y, 'o', color=colour, ms=2, zorder=0)  # Plot node
         if not new_branch:
             # Plot: continuing on the same branch, but with a new position to mark a new set of topics
             plt.plot([old_sent_coords[0], x], [old_sent_coords[1], y], '-', color=colour, linewidth=1, zorder=0)
 
         else:
             # Annotate last position with a leaf + branch number label
-            leaf_colour = pod_df.iloc[idx-1]['leaf_colour']
+            leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
             # Plot and annotate little orange dots indicating the number of branch which just ended
-            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color=leaf_colour, zorder=100) #ms=size_leaves,
-            # plt.rc('font', size=7)  # size_leaves
-            plt.annotate(branch_num-1, xy=(old_sent_coords[0], old_sent_coords[1]), color='k', zorder=101,
-                         weight='bold')
-            # plt.rc('font', size=8)
+            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=5, color=leaf_colour, zorder=100) #ms=size_leaves,
+
+            # plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
+            #              weight='bold')
+
 
         # x_change = -(x - old_sent_coords[0]) / 4
-        shift_posx = 0.25 if cutoff_sent < 500 else 1
-        shift_negx = 0.4 if cutoff_sent < 500 else 5
-        x_change = +shift_posx if (x - old_sent_coords[0]) < 0 else -shift_negx
-        if new_topic and the_topic not in annotations:
-            word_popularity = usage[words.index(the_topic)]
-            if word_popularity > (mean + 0.5*mean) or pod_df.iloc[idx+1]['new_branch']==True:
-                # Annotate
-                plt.annotate(the_topic, xy=(x + x_change, y+3), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
-                annotations.append(the_topic)
+        shift_posx = 0.1 if cutoff_sent < 500 else 1
+        shift_negx = 0.1 if cutoff_sent < 500 else 5
+        x_change = 0.17 if (x - old_sent_coords[0]) < 0 else -0.38
+
+        # if new_topic and the_topic not in annotations:
+        #     word_popularity = usage[words.index(the_topic)]
+        #     if word_popularity > (mean+0.7*mean) or pod_df.iloc[idx+1]['new_branch']==True:
+        #         # Annotate
+        #         # plt.rc('font', size=8)  # size_leaves weight='bold'
+        #         # plt.annotate(the_topic, xy=(x + x_change, y+2), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
+        #         # annotations.append(the_topic)
+        #         # plt.rc('font', size=7)  # size_leaves
 
         old_sent_coords = [x, y]
 
@@ -4216,6 +4219,14 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     print('selected podcast duration', podcast_duration)
     print('\nTotal number of utterances', total_utterances)
     print('number_of_utterances selected:', num_utts)
+
+    #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
+    # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
+    #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
+    plt.rc('font', size=8)  # size_leaves weight='bold'
+    plt.annotate(f'Duration of Podcast: {podcast_duration}\nNumber of Utterances:   {total_utterances}', xy=(12, 100),
+                 bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=1'))
+
 
     # save
     if save_fig:
@@ -4287,14 +4298,22 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
     Popularity = {}
 
     for topic in pod_df[0:cutoff_sent][pod_df['new_topic']==True].stack_name:
-        try:
-            Popularity[topic] += 1
-        except:
-            Popularity[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
+        if topic in ['little_bit' , 'feel_like', 'even_though', 'would_like', 'you_know']: # to stop it being highlighted
+            Popularity[topic]=1
+        else:
+            try:
+                Popularity[topic] += 1
+            except:
+                Popularity[topic] = 1 # initiate w/ 2: if a new branch was made there that's the 2nd time it's mentioned
 
 
     #B) number of utterances spent on the topic
     Topics_Utterances = dict(pod_df['stack_name'].value_counts())
+    for topic in ['little_bit' , 'feel_like', 'even_though', 'would_like', 'you_know']: # to stop it being highlighted
+        try:
+            Topics_Utterances[topic] = 1
+        except:
+            pass
     lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
     x, y = zip(*lists)
     largest = y[-1]
@@ -4304,20 +4323,7 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
     # Instantiate figure
     plt.figure()
     # plt.rcParams['axes.facecolor'] = 'mintcream'
-    plt.title('TTTS: {}'.format(transcript_name))
-
-
-    # if heatmap:
-    #     a_list = []
-    #     for word, usage in zip(x, y): # x is the word, y is the usage
-    #         row = keyword_df[keyword_df['Topics']==word]
-    #         X, Y = row['X'].values, row['Y'].values
-    #         print(X, Y)
-    #         a_list.append([float(X), float(Y), usage])
-    #     print('a', a_list)
-    #     b = np.asarray(a_list)
-    #     plt.pcolor(b)
-
+    plt.title('a) Trajectory Through Topic Space', fontsize=13) # for {}'.format(transcript_name.title()), fontsize=13)
 
     xs, ys = list(pod_df[:cutoff_sent][pod_df['new_topic']==True].word_embedding_X), list(pod_df[:cutoff_sent][pod_df['new_topic']==True].word_embedding_Y)
     xs, ys = [x for x in xs if x], [y for y in ys if y] # remove Nones
@@ -4325,10 +4331,10 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
     u = [i - j for i, j in zip(xs[1:], xs[:-1])]
     v = [i - j for i, j in zip(ys[1:], ys[:-1])]
 
-    if len(xs) > 50:
-        linewidth = 0.002
-    else:
-        linewidth = 0.004
+    # if len(xs) > 50:
+    #     linewidth = 0.001
+    # else:
+    linewidth = 0.001
 
     # Plot background
     for idx, row in pod_df[:cutoff_sent][pod_df['new_topic']==True].iterrows():
@@ -4343,9 +4349,10 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
             continue
 
         plt.plot(x, y, 'o', color='lightpink', zorder=8)
-        plt.rc('font', size=7 + [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[the_topic] in sublist][0])
+        plt.rc('font', size=9 + [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[the_topic] in sublist][0])
         weight = 'bold' if Popularity[the_topic] > 1 else 'normal'
-        plt.annotate(the_topic, xy=(x, y), xytext=(-5, 0), weight=weight, textcoords="offset points", zorder=200)
+        addition = 1 if the_topic in ['hashtag', 'doxxing'] else 0
+        plt.annotate(the_topic, xy=(x, y+addition), xytext=(-5, 0), weight=weight, textcoords="offset points", zorder=200)
 
     # Plot Quiver
     n = len(xs)
@@ -4355,12 +4362,12 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
                angles='xy', width=linewidth, scale=1, color=colour_for_segment, zorder=5)
 
     # plot special colours for the first and last point
-    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
-    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=7, zorder=20)
+    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=7, zorder=20)
 
     # Legend
-    line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
-    line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+    line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=6, linestyle='none')
+    line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=6, linestyle='none')
 
     plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
 
@@ -4370,10 +4377,223 @@ def TTTS(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, heatmap=
             os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
 
         plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_TTTS.png".format(podcast_name, transcript_name), dpi=600)
-
+    plt.xlim(-16, 28)
     plt.show()
     plt.rc('font', size=8) # resetting
     return
+
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+def Animate_TTTS(podcast_name, transcript_name, cutoff_sent=-1):
+    """
+    Function to plot the Trajectory Through Topic Space Visualisation, using backbone df.
+    """
+
+    # load relevant df
+    pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                         key='df')
+    keyword_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name),
+                         key='df')
+
+
+    from matplotlib.animation import FuncAnimation
+    from matplotlib import rcParams
+
+    # First plot ALL topics covered in pink
+    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
+    idx_of_new_branch.insert(0, 0)
+    idx_of_new_branch.insert(-1, len(pod_df))
+    height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
+
+    fig, ax = plt.subplots()
+    ax.set_title('b) Trajectory Through Topic Space Gif', fontsize=13)
+
+    ##
+    Topics_Utterances = dict(pod_df['stack_name'].value_counts())
+    for topic in ['little_bit', 'feel_like', 'even_though', 'would_like',
+                  'you_know']:  # to stop it being highlighted
+        try:
+            Topics_Utterances[topic] = 1
+        except:
+            pass
+    lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
+    x, y = zip(*lists)
+    largest = y[-1]
+    len_quartiles = int(largest / 4)
+    quartiles = [list(range(0, len_quartiles)), list(range(len_quartiles, 2 * len_quartiles)),
+                 list(range(2 * len_quartiles, 3 * len_quartiles)), list(range(3 * len_quartiles, largest + 1))]
+
+    D = Topics_Utterances
+    max_count = max(D.values())
+    print('max count', max_count)
+    # Normalise counts
+    words_to_highlight_dict = {k: [v, v / max_count] for k, v in D.items()}
+    # Decide on font
+    fonts_dict = {10: [0, 0.2], 11: [0.2, 0.4], 12: [0.4, 0.6], 13: [0.6, 0.8], 14: [0.8, 10]}
+    fonts = []
+    for v_norm in np.array(list(words_to_highlight_dict.values()))[:, 1]:
+        for key, list_norms in fonts_dict.items():
+            if float(v_norm) >= float(list_norms[0]) and float(v_norm) <= float(list_norms[1]):
+                fonts.append(key)
+            else:
+                continue
+    for idx, key in enumerate(words_to_highlight_dict.keys()):
+        words_to_highlight_dict[key].append(fonts[idx])
+
+    print('words_to_highlight_dict', words_to_highlight_dict)
+
+    words = keyword_df['Topics']
+    Xs, Ys = keyword_df['X'].values, keyword_df['Y'].values
+
+    index_to_remove = [x for x in Xs if not x] ######3
+
+    plt.scatter(Xs, Ys, c='lightpink', zorder=0, alpha=0.4)
+
+    for label, x, y in zip(words, Xs, Ys):
+        if label not in list(pod_df[0:cutoff_sent][pod_df['new_topic']==True].stack_name):
+            continue
+
+        if not x or not y: #i.e. couldn't find an embedding for the given topic, then just ignore and move onto next
+            continue
+
+        quartile_0 = [idx for idx, sublist in enumerate(quartiles) if Topics_Utterances[label] in sublist][0]
+        if transcript_name =='kanye_west':
+            quartile = 3 if label in ['slavery', 'existence', 'america'] else quartile_0
+            if label == 'idea':
+                quartile = 0
+
+        elif transcript_name == 'jack_dorsey':
+                if label in ['bert', 'ai']:
+                    quartile = 3
+                    label = label.upper()
+                elif label in ['decisions', 'safety', 'precidency']:
+                    quartile = 2
+                else:
+                    quartile = quartile_0
+
+
+        if quartile==0:
+            plt.rc('font', size=8)
+            clr = 'darkgrey'
+            zord = 5
+            wght = 'normal'
+            xypos = (-5, 0)
+
+        elif quartile==1:
+            font = 10
+            plt.rc('font', size=font)
+            clr = 'k'
+            zord = 100
+            wght = 'normal'  #heavy'
+            xypos = (-5, 0)
+
+        elif quartile == 2:
+            font = 10
+            plt.rc('font', size=font)
+            clr = 'k'
+            zord = 100
+            wght = 'heavy'  # heavy'
+            xypos = (-8, -10)
+
+        elif quartile == 3:
+            font = 12
+            plt.rc('font', size=font)
+            clr = 'k'
+            zord = 100
+            wght = 'heavy'  # heavy'
+            xypos = (-15, -10) if label=='slavery' else (-8, -10)
+
+        plt.annotate(label, xy=(x, y), xytext=xypos, textcoords="offset points", color=clr, zorder=zord,weight=wght)
+
+    # Back to QUIVER part
+
+    xs, ys = list(pod_df[:cutoff_sent][pod_df['new_topic'] == True].word_embedding_X), list(
+        pod_df[:cutoff_sent][pod_df['new_topic'] == True].word_embedding_Y)
+    xs, ys = [x for x in xs if x], [y for y in ys if y]  # remove Nones
+
+    u = [i - j for i, j in zip(xs[1:], xs[:-1])]
+    v = [i - j for i, j in zip(ys[1:], ys[:-1])]
+
+    # To make sure labels are spread out well, going to mess around with xs and ys
+    xs_, ys_ = xs, ys
+    ppairs = [(i, j) for i, j in zip(xs_, ys_)]
+    repeats = list(set(map(tuple, ppairs)))
+    repeat_num = [0 for i in range(len(repeats))]
+    # plt.rc('font', size=8)  # putting font back to normal
+
+
+    # Make Quiver Line very thin if using a large number of segments
+
+    # line_wdth = 0.001
+
+    height_of_stack_sorted = height_of_stack.copy() # make a copy that we can rearrange
+    height_of_stack_sorted.sort()
+    groups = list(split(height_of_stack_sorted, 3))
+    colours = [(255 / 255, 255 / 255, 0), (255 / 255, 125 / 255, 0), (240 / 255, 0, 0)]
+    #colour_info_dict = {k: [v[index] for index in [0, -1]] for k, v in zip(colours, groups)}
+    idxs = [next(index for index, sublist in enumerate(groups) if number in sublist) for number in
+            height_of_stack]
+    colour_for_segment = [colours[i] for i in idxs]
+
+
+    plt.rc('font', size=10)  # putting font back to normal
+
+    # plt.quiver(xs[:-1], ys[:-1], u, v, scale_units='xy',
+    #            angles='xy', scale=1, color=colour_for_segment, width=line_wdth, zorder=6)
+
+    # -- Quiver -- #
+
+
+    #players = ax.quiver(positions[0][:, 0], positions[0][:, 1], np.cos(angles[0]), np.sin(angles[0]), scale=20)
+    #players = ax.quiver(xs[0], ys[0], u[0], v[0]) #, scale_units='xy', angles='xy', scale=1, color='k', width=line_wdth, zorder=6)
+
+
+    def animate(i):
+        if i==0:
+            ax.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+        #ax.cla()  # clear the previous image
+        print(colour_for_segment[i])
+        ax.plot(xs[i-2:i], ys[i-2:i], '->', color=colour_for_segment[i])#colour_for_segment[i])  # plot the line
+        # ax.set_xlim([x0, tfinal])  # fix the x axis
+        # ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])  # fix the y axis
+        if i== len(xs)-1:
+            ax.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    anim = FuncAnimation(fig, animate, frames=len(xs)-1, interval=2, repeat=False) #1000 ms delay
+
+    # configure full path for ImageMagick
+    rcParams['animation.convert_path'] = r'/Users/ShonaCW/Downloads/ImageMagick-7.0.10/bin/convert'
+
+    # # plot special colours for the first and last point
+    plt.plot([xs[0]], [ys[0]], 'o', color='green', markersize=8, zorder=20)
+    plt.plot([xs[-1]], [ys[-1]], 'o', color='red', markersize=8, zorder=20)
+
+    # anim.save("Animations/example.mp4", fps=1, dpi=150)
+    # save animation at 30 frames per second
+    anim.save(r'Animations/TTTS_{0}_{1}.gif'.format(transcript_name, cutoff_sent), writer='imagemagick', fps=5)
+    plt.close()
+
+
+    # line1 = Line2D(range(1), range(1), color="green", marker='o', markersize=7, linestyle='none')
+    # line2 = Line2D(range(1), range(1), color="red", marker='o', markersize=7, linestyle='none')
+    # if speakerwise_colouring:
+    #     line3 = Line2D([0], [0], color=speakerwise_colours[0], lw=1),
+    #     line4 = Line2D([0], [0], color=speakerwise_colours[1], lw=1),
+    #
+    #     plt.legend((line1, line2, line3, line4), ('Beginning of Conversation', 'End of Conversation',
+    #                                               names[0], names[1]), prop={'size': 7})
+    # else:
+    #     plt.legend((line1, line2), ('Beginning of Conversation', 'End of Conversation'))
+
+    # plt.title(' '.join(save_name.split('_')))
+    # if save_fig:
+    #     plt.savefig("Saved_Images/{0}/{1}.png".format(transcript_name, save_name), dpi=600)
+    # plt.show()
+
+    return
+
 
 def TTTS_Comparison(podcast_name, transcript_name1, transcript_name2, cutoff_sent=-1, save_fig=False, info=False):
     """Function to plot the Trajectory Through Topic Space Visualisation, using backbone df."""
@@ -4571,7 +4791,7 @@ def Info_Collection_Handler(podcast_name):
 
     return
 
-def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, DT_only=False, save_fig=False, info=False):
+def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, DT_only=False, Animate_only=False, save_fig=False, info=False):
     """
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
     """
@@ -4596,10 +4816,13 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 
         print('\nEpisode:', transcript_name, '. Full path: ', str(path))
         print('Plotting DT...')
-        if not TTTS_only:
+        if Animate_only:
+            Animate_TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent)
+
+        if not TTTS_only or not Animate_only:
             DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig, info=info)
         print('Plotting TTTS...')
-        if not DT_only:
+        if not DT_only or not Animate_only:
             TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig)
         pod_cnt += 1
 
@@ -4623,9 +4846,11 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
 #Info_Collection_Handler('joe_rogan')
-DT_Handler('joe_rogan', podcast_count=12, cutoff_sent=1000, save_fig=False, TTTS_only=False, DT_only=True) #'wall_street' #'5_star' (football one) #'confessions_of'
+#DT_Handler('joe_rogan', podcast_count=12, cutoff_sent=200, save_fig=False, TTTS_only=False, DT_only=False, Animate_only=True) #'wall_street' #'5_star' (football one) #'confessions_of'
+Animate_TTTS(podcast_name='joe_rogan', transcript_name='jack_dorsey', cutoff_sent=1000)
 
 #TTTS_Comparison('heavy_topics', 'heavy_topics_being_a_71410', 'heavy_topics_create_the_54285') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827') # heavy_topics_i_killed_94201   being_a_71410
+
 
 def Looking_at_metadata():
     DataFrame = pd.read_csv('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/metadata.csv')
