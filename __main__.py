@@ -4899,10 +4899,6 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
             #                  weight='bold')
 
             old_sent_coords_1 = [x_1, y_1]
-    ax = plt.gca()
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    plt.show()
 
 
     def timestamp_to_datetime(timestamp):
@@ -4981,6 +4977,21 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
     print('\nnumber_sents_w_cutoff:', number_cutoffs)
     print('intrps_joe_list:', number_cutoffs_joe)
     print('intrps_guest_list:', number_cutoffs_guest)
+
+    plt.rc('font', size=9)
+    plt.annotate(f'Duration (s)= {Duration_Time}, Duration (U)={Duration_Utts}, '
+                 f'\nFirst_Mention={First_Mention}, Last_Mention={Last_Mention}'
+                 f'\nRichness={Richness}, '
+                 f'\nInterupptions={number_cutoffs},\nLoopiness={Loopiness}, \nDepth={Depth}',
+                 xy=(stack_df[stack_df['new_topic']==True].iloc[0]['position_X'],
+                     stack_df[stack_df['new_topic']==True].iloc[0]['position_Y']), xytext=(-3, 3), textcoords='offset points', ha='center', va='bottom',
+                             bbox=dict(boxstyle='round,pad=0.2', fc='green', alpha=0.2),
+                             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='darkgreen'))
+
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    plt.show()
 
     bbb
 
