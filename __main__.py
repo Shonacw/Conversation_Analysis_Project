@@ -45,6 +45,7 @@ import tabulate
 import string
 import more_itertools as mit
 from matplotlib import cm
+from datetime import datetime
 
 import networkx as nx
 from wordcloud import WordCloud
@@ -4569,6 +4570,9 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
                 transcript_df.loc[idx, 'new_branch'] = True
                 transcript_df.loc[idx, 'branch_num'] = branch_number
 
+        if (transcript_df.iloc[idx]['new_topic'] == True) and (transcript_df.iloc[idx-1]['position_Y'] in [None, 'None']):
+            transcript_df.loc[idx, 'new_branch'] = True
+
         old_topic = the_topic
         old_current_topics = current_topics
         old_sent_coords = new_sent_coords
@@ -4618,13 +4622,11 @@ def Create_ConceptNet_TSNE(podcast_name, transcript_name, configfiles):
         # # extract/ save all backbone info
         all_topical_keywords.append(topics)
 
-    print('all_topical_keywords', all_topical_keywords)
     # Remove repeats
     all_topical_keywords = list(dict.fromkeys([item for sublist in all_topical_keywords for item in sublist]))
 
     # Now find ConceptNet embeddings and reduce using TSNE...
     words_found, reduced_vectors_X, reduced_vectors_Y = get_ConceptNet(all_topical_keywords)
-    print('reduced_vectors_X', reduced_vectors_X)
 
     # Save embeddings to one df
     ConceptNet_TSNE_df = pd.DataFrame(columns=['Topics', 'X', 'Y'])
@@ -4838,12 +4840,13 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
 
     #load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
-    print(pod_df.head(100).to_string())
+    print('pod_df.head():\n', pod_df.head(100).to_string())
     #pod_df[pod_df['']
 
+    name = transcript_name.split('_')[0]
 
     stack_df = pod_df[pod_df['stack_name']==stack_name]
-    print('\n', stack_df.to_string())
+    print('\nstack_df:\n', stack_df.to_string())
 
     # DT
     leaf_colour = 'yellowgreen'
@@ -4860,15 +4863,13 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
         # first annotate subject stack
 
         # first find the branch it was first mentioned on and plot
-        print('idx_stack', idx_stack)
 
         branch_number = row_stack['branch_num']
-        print('branch_number', branch_number)
 
         if not row_stack['new_branch']:
             starting_index = idx_stack-5
         else:
-            starting_index = idx_stack+1
+            starting_index = idx_stack
 
 
         idx_where_this_branch_finishes = pod_df[pod_df['branch_num'] == branch_number].index[-1]
@@ -4877,19 +4878,14 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
             idx_where_this_stack_finishes = pod_df[(pod_df['branch_num'] == branch_number) & (pod_df['stack_name'] == stack_name)].index[-1]
             idx_where_this_branch_finishes = idx_where_this_stack_finishes + 10
 
-        print('idx_where_this_branch_finished', idx_where_this_branch_finishes)
-        old_sent_coords_1 = [pod_df.iloc[starting_index-1]['position_X'], pod_df.iloc[starting_index-1]['position_Y']] # initiate]
-        print('old_sent_coords_1', old_sent_coords_1)
+        old_sent_coords_1 = [pod_df.iloc[starting_index]['position_X'], pod_df.iloc[starting_index]['position_Y']] # initiate]
         for idx_1, row_1 in pod_df[starting_index:idx_where_this_branch_finishes].iterrows():
             branch_num_1 = row_1['branch_num']
-            print('    branch_num_1', branch_num_1)
             x_1 = row_1['position_X']
             y_1 = row_1['position_Y']
-            print('     x_1', x_1)
-            print('     y_1', y_1)
             plt.plot(x_1, y_1, 'o', color='k', ms=2, zorder=0)  # Plot node
 
-            plt.plot([old_sent_coords_1[0], x_1], [old_sent_coords_1[1], y_1], '-', color='k', linewidth=1, zorder=0)
+            plt.plot([old_sent_coords_1[0], x_1], [old_sent_coords_1[1], y_1], '-', color='k', linewidth=3, zorder=0)
             if idx_1 == idx_where_this_branch_finishes -1:
                 # Annotate last position with a leaf + branch number label
                 leaf_colour = 'yellowgreen'  # pod_df.iloc[idx-1]['leaf_colour']
@@ -4903,34 +4899,93 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
             #                  weight='bold')
 
             old_sent_coords_1 = [x_1, y_1]
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
     plt.show()
+
+
+    def timestamp_to_datetime(timestamp):
+        return datetime.strptime(timestamp, "%H:%M:%S")
 
     # Now extract info about this stack
     # Total Duration (Utterances)
     Duration_Utts = len(stack_df)
+    print('\nDuration_Utts', Duration_Utts)
 
-    # Total Duration (time)
+    # Total Duration (time)from datetime import datetime
+    time_stacks = []
+    for branch in stack_df['branch_num'].unique():
+        branch_stack_df = stack_df[stack_df['branch_num']==branch]
+        first = branch_stack_df.iloc[0]['timestamp']
+        last = branch_stack_df.iloc[-1]['timestamp']
+        time_stacks.append((timestamp_to_datetime(last) - timestamp_to_datetime(first)).total_seconds())
+    Duration_Time = sum(time_stacks)
+    print('\nDuration_Time (sec)', Duration_Time)
 
 
     # Times Spoken
-    First_Mention = stack_df.iloc[0]['timestamp'][0]
-    Last_Mention = stack_df.iloc[-1]['timestamp'][0]
+    First_Mention = stack_df.iloc[0]['timestamp']
+    Last_Mention = stack_df.iloc[-1]['timestamp']
+    print('\nFirst_Mention', First_Mention)
+    print('Last_Mention', Last_Mention)
+
+    """    # Most_Active_Speaker (speaker who makes the most opinionated statements)
+    joe_df = stack_df[]
+    joe_op_sts_cnt = len(stack_df[stack_df['da_label'] =='Statement-opinion'])
+    CANNOT DO BC SPEAKERS ARE NOT LABELLED"""
+
+    # Depth
+    Statements = len(stack_df[stack_df.da_label.isin(['Statement-opinion'])]) # only use opinion ones? #, 'Statement-non-opinion']
+    Depth = round(Statements / Duration_Utts, 4)
+    print('\nDepth', Depth)
+    print('Statements', Statements)
+
+    # Questions
+    Questions = len(stack_df[stack_df['da_label'].isin(['Yes-No-Question', 'Wh-Question', 'Rhetorical-Questions'])])
+    Qs_perc = Questions / Duration_Utts
+    print('\nQuestions', Questions, Qs_perc)
+
+    # Loops (number of times the topic is linked-back to mentioned
+    Loopiness = len(stack_df['branch_num'].unique()) - 1 #as one of the times is when it's first brought up
+    print('\nLoopiness', Loopiness)
+
+    # Richness (number of keywords mentioned in all utts on topic)
+    # need to unpack the words here
+    column = stack_df['key_words'].values
+    set_of_topics = [x for x in column if x]
+    current_topics = [list(x) for x in set_of_topics if x]  # All topics contained in this Utt
+    current_topics = [item for sublist in current_topics for item in sublist]
+    Richness = len(current_topics)
+    print('\nRichness', Richness)
+    # stack_df['key_words']
 
 
+    # Snappyness Average Speaker-Turn Length
 
+    # Speaker Turns Number of Speaker-Turns
 
+    # Interupptions in each stack
+    number_sents_w_cutoff, intrps_joe_list, intrps_guest_list = [], [], []
+    for branch in stack_df['branch_num'].unique():
+        branch_stack_df = stack_df[stack_df['branch_num']==branch]
+        first_sentence = branch_stack_df.iloc[0]['utterance'][:-2]
+        last_sentence = branch_stack_df.iloc[-1]['utterance'][:-2]
+        sents_with_cutoff, intrps_joe,intrps_guest  = Interupption_Analysis_info(first_sentence, last_sentence, name)
+        number_sents_w_cutoff.append(len(sents_with_cutoff))
+        intrps_joe_list.append(len(intrps_joe))
+        intrps_guest_list.append(len(intrps_guest))
+    number_cutoffs = sum(number_sents_w_cutoff)
+    number_cutoffs_joe = sum(intrps_joe_list)
+    number_cutoffs_guest = sum(intrps_guest_list)
+    print('\nnumber_sents_w_cutoff:', number_cutoffs)
+    print('intrps_joe_list:', number_cutoffs_joe)
+    print('intrps_guest_list:', number_cutoffs_guest)
 
-
-
-
-    print('Duration', Duration)
-
-
-
+    bbb
 
     # else:
 
-    bb
     #plot the branches which lead off from this
 
 
@@ -5012,6 +5067,109 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
 
     return
 
+class Substitutable(str):
+  def __new__(cls, *args, **kwargs):
+    newobj = str.__new__(cls, *args, **kwargs)
+    newobj.sub = lambda fro,to: Substitutable(re.sub(fro, to, newobj))
+    return newobj
+
+def Interupption_Analysis_info(first_sentence, last_sentence, name):
+    """
+    Function to look at how often each speaker cuts off the other. Build a profile for each speaker when looking at this
+    vs how many Questions they ask/ topics they introduce/ time spoken
+    """
+    if name =='elon':
+        names = ['Joe', 'Rogan', 'Elon', 'Musk'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
+    else:
+        names = ['Joe', 'Rogan', 'Jack', 'Dorsey']
+    # print('\nfirst_sentence before', first_sentence)
+    first_sentence = Substitutable(first_sentence)
+    # first_sentence = first_sentence.sub(r"\s\’\s ", "’")
+    first_sentence = first_sentence.sub(r" ’ ", "’")
+    first_sentence = first_sentence.sub(r" ’", "’")
+    first_sentence = first_sentence.sub(r" '", "'")
+    first_sentence = first_sentence.sub(r" , ", ", ")
+    first_sentence = first_sentence.sub("do n't", "don't")
+    # print('first_sentence after', first_sentence)
+
+    last_sentence = Substitutable(last_sentence)
+    last_sentence = last_sentence.sub(r" ’ ", "’")
+    last_sentence = last_sentence.sub(r" ’", "’")
+    last_sentence = last_sentence.sub(r" '", "'")
+    last_sentence = last_sentence.sub(r" , ", ", ")
+    last_sentence = last_sentence.sub("do n't", "don't")
+    # print('last_sentence after', last_sentence)
+
+
+    with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
+        all_utts = f.read()
+
+    names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
+    sents = all_utts.split('\n')
+
+    try:
+        index_first_sent = [i for i, s in enumerate(sents) if first_sentence.lower() in s.lower()][0]
+        sent_1 = [s for i, s in enumerate(sents) if first_sentence.lower() in s.lower()]
+        # print('index_first_sent', index_first_sent)
+        # print('^ sent_1', sent_1)
+        index_last_sent = [i for i, s in enumerate(sents) if last_sentence.lower() in s.lower()][0]
+        sent_2 = [s for i, s in enumerate(sents) if last_sentence.lower() in s.lower()]
+        # print('index_last_sent', index_last_sent)
+        # print('^sent_2', sent_2)
+    except:
+        return [], [], []
+
+    sents = sents[index_first_sent:index_last_sent+1]
+    idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
+    sents_with_cutoff = [sent for idx, sent in enumerate(sents) if '...  ' in sent]
+    # print('sents_with_cutoff:', len(sents_with_cutoff))
+
+    # number of times speaker 123 was interrupted by 321
+    idxs_123 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '123']
+    # number of times speaker 123 was interrupted by 123
+    idxs_321 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '321']
+
+    # pprint(np.array(sents)[idxs_sents_with_cutoff])
+
+    return sents_with_cutoff, np.array(sents)[idxs_123], np.array(sents)[idxs_321]
+
+    # idxs = np.zeros(len(sents))
+    # colours = ['k' for i in idxs]
+    # for i in idxs_sents_with_cutoff:
+    #     idxs[i] = 1
+    #     colours[i] = names_dict[sents[i][:3]][1]
+    #
+    # plt.figure()
+    # xs = range(len(sents))
+    # for i in xs:
+    #     plt.plot([xs[i], xs[i]], [0, idxs[i]], '-', color=colours[i], lw=2)
+    #
+    # plt.xlabel('Sentence Number')
+    # plt.ylabel('Interruption')
+    # legend_elements = [Line2D([0], [0], color=list(names_dict.values())[0][1], lw=1, label=list(names_dict.values())[1][0]),
+    #                    Line2D([0], [0], color=list(names_dict.values())[1][1], lw=1, label=list(names_dict.values())[0][0])]
+    # plt.title('Speakers Interrupted - {0} interview'.format(' '.join(names[2:4])))
+    # plt.legend(handles=legend_elements)
+    # plt.ylim([0, 1.2])
+    # if save_fig:
+    #     plt.savefig("Saved_Images/{0}/Interruptions_{1}.png".format('_'.join([n.lower() for n in names]), names[2]), dpi=600)
+    # plt.show()
+    #
+    # # Info on interruptions
+    # mini_df = {'Speaker': [], 'Total #Interruptions': []}
+    #
+    # mini_df['Speaker'] = ['Joe Rogan', ' '.join(names[2:4])]
+    # mini_df['Total #Interruptions'] = [len(idxs_321), len(idxs_123)]
+    # # NOTE the above ^ 'len's are swapped around as we want to know how many times the speaker interrupted the other,
+    # # not how many times they themselves were interupptrd
+    #
+    # # Create df and save / print in xml
+    # mini_df = pd.DataFrame({k: pd.Series(l) for k, l in mini_df.items()})
+    #
+    # print(tabulate.tabulate(mini_df.values, mini_df.columns, tablefmt="pipe"))
+    # mini_df.to_hdf('Saved_dfs/joe_rogan_{}/interruptions_df.h5'.format('_'.join([n.lower() for n in names[2:4]])), key='df', mode='w')
+    #
+    # return
 
 def Word_Embedding_Layout(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, info=False):
     """
@@ -5617,9 +5775,9 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 # DT_First_Draft(cutoff_sent=300, Interviewee='elon musk', save_fig=False) #'jack dorsey' #'elon musk' #kanye west
 # DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
-#DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
+# DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
 
-DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
+DT_With_Info('joe_rogan', 'jack_dorsey', 'twitter', cutoff_sent=-1, save_fig=False, info=False)
 # DT_Third_Draft('joe_rogan', 'elon_musk', cutoff_sent=-1, save_fig=False, info=False)
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
