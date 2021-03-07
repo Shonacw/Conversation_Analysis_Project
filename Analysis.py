@@ -160,6 +160,73 @@ def Analyse(content, content_sentences, keyword_vectors_df, segments_info_df):
 
 
 # Analyse()
+from collections import Counter
+import scipy.ndimage as ndimage
+
+pod_df = pd.read_hdf('Spotify_Podcast_DataSet/heavy_topics/heavy_topics_i_killed_94201/transcript_df.h5', key='df')
+
+print('Length of episode (# Utts):', len(pod_df))
+print('Length of episode (time):', list(pod_df.timestamp)[-1])
+print('\n\n')
+print(pod_df.head().to_string())
+print('\n')
+print(pod_df['da_label'].describe())
+print('\n')
+print(Counter(list(pod_df['da_label'])))
+print('\n')
+print(pod_df.da_label[:20])
 
 
+# Plot usage over time
+das = ["Yes-No-Question", "Wh-Question"]
+#das = ["Yes-No-Question", "Yes answers"]
+# das = ["Conventional-opening", "Conventional-closing"]
+# das = ["Statement-opinion", "Statement-non-opinion", "Agree/Accept"]
+# das = ["Acknowledge (Backchannel)","Statement-opinion", "Statement-non-opinion"]
+# da = "Wh-Question"
+# da = "Conventional-closing"
+# da = "Conventional-opening"
+# %% CDF
 
+
+tdf = pod_df.copy()
+# plt.figure(figsize=(10, 8))
+# for da in das:
+#     total_count = tdf[tdf["da_label"] == da]["da_label"].count()
+#     da_df = tdf[tdf["da_label"] == da]
+#
+#     t = tdf["relative_time"]
+#
+#     da_df
+#
+#     counter = 0
+#     y = np.zeros(tdf.shape[0])
+#
+#     prev_i = 0
+#     for i, entry in da_df.iterrows():
+#         counter += 1
+#         cumulative_probability = counter / total_count
+#         y[prev_i: i + 1] = cumulative_probability
+#         prev_i = i + 1
+#     y[prev_i:] = 1
+#     plt.xlabel('Relative Time')
+#     plt.ylabel('')
+#     plt.plot(t, y, "", label=da)
+#
+# plt.legend()
+# plt.show()
+
+# %% #utterance length over time
+plt.figure(figsize=(10, 8))
+full_length_df = tdf[tdf["utterance_length"] != 0]
+#y = full_length_df["utterance_length"].values
+y = ndimage.gaussian_filter(full_length_df["utterance_length"].values, 15)
+
+plt.plot(
+    full_length_df["relative_time"].values,
+    y,
+    label=" ".join(tdf["speaker"].unique()),
+)
+
+plt.legend()
+plt.show()
