@@ -4393,6 +4393,11 @@ def DT_Second_Draft(path, podcast_name, cutoff_sent=-1, save_fig=False, info=Fal
 
     return
 
+class Substitutable(str):
+  def __new__(cls, *args, **kwargs):
+    newobj = str.__new__(cls, *args, **kwargs)
+    newobj.sub = lambda fro,to: Substitutable(re.sub(fro, to, newobj))
+    return newobj
 
 def DT_Backbone(path, podcast_name, transcript_name, info=False):
     """
@@ -4577,6 +4582,41 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
         old_current_topics = current_topics
         old_sent_coords = new_sent_coords
 
+    # # For Joe Rogan podcasts, access speaker tags
+    # if podcast_name == 'joe_rogan':
+    #     name = transcript_name.split('_')[0]
+    #     if name == 'elon':
+    #         names = ['Joe', 'Rogan', 'Elon', 'Musk'] #'Elon', 'Musk'] #'Jack', 'Dorsey']
+    #     else:
+    #         names = ['Joe', 'Rogan', 'Jack', 'Dorsey']
+    #
+    #     with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
+    #         all_utts = f.read()
+    #
+    #     names_dict = {'123': [' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
+    #     sents = all_utts.split('\n')
+    #
+    #     # print('\nfirst_sentence before', first_sentence)
+    #     for idx, row in transcript_df.iterrows():
+    #         sentence = row['utterance'][:-2]
+    #         sentence = Substitutable(sentence)
+    #
+    #         sentence = sentence.sub(r" ’ ", "’")
+    #         sentence = sentence.sub(r" ’", "’")
+    #         sentence = sentence.sub(r" '", "'")
+    #         sentence = sentence.sub(r" , ", ", ")
+    #         sentence = sentence.sub("do n't", "don't")
+    #
+    #         speaker_tag = [sent[:3] for sent in sents if sentence in sent][0] #(what about sentences like "yeah" for which there will be many?)
+
+
+
+
+
+
+
+
+
     # Create new hdf file for given podcast
     try:
         if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
@@ -4739,12 +4779,15 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     #height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
 
     Topics_Utterances = dict(pod_df['stack_name'].value_counts())
+    sorted_stack_counts = sorted(Topics_Utterances.items(), key=lambda kv: kv[1], reverse=True)
+    print(sorted_stack_counts)
     lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
     words, usage = zip(*lists)
 
     # Calculate mean / median stack height (only going to label long ones)
     med = statistics.median(usage)
     mean = statistics.mean(usage)
+    print('mean', mean)
 
     # Instantiate figure
     plt.figure()
@@ -4845,61 +4888,84 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
 
     name = transcript_name.split('_')[0]
 
-    stack_df = pod_df[pod_df['stack_name']==stack_name]
+    stack_df = pod_df[pod_df['stack_name'] == stack_name]
     print('\nstack_df:\n', stack_df.to_string())
 
     # DT
     leaf_colour = 'yellowgreen'
+    print('stack_name', stack_name)
     plt.figure()
-    plt.title('Zoomed DT{0}'.format(transcript_name.title()), fontsize=15)
-    plt.rc('font', size=12)
+    plt.title('Detailed Discussion Tree {0}'.format(transcript_name.title()), fontsize=15)
+    plt.rc('font', size=13)
+    if stack_name == 'ai':
+        stack_name_ann = stack_name.upper()
+        stack_x_shift = 0.4
+        stack_y_shift = 1
+    elif stack_name == 'twitter':
+        stack_name_ann = stack_name.title()
+        stack_x_shift = 0.5
+        stack_y_shift = 40
+    else:
+        stack_name_ann = stack_name.title()
+        stack_x_shift = 0.3
+        stack_y_shift = 1
 
-    plt.annotate(stack_name, xy=(stack_df[stack_df['new_topic']==True].iloc[0]['position_X'] - 0.2,
-                                 stack_df[stack_df['new_topic']==True].iloc[0]['position_Y'] + 3),
+    plt.annotate(stack_name_ann, xy=(stack_df[stack_df['new_topic']==True].iloc[0]['position_X'] - stack_x_shift,
+                                 stack_df[stack_df['new_topic']==True].iloc[0]['position_Y'] + stack_y_shift),
                                     color='k', zorder=150, rotation=90, weight='bold')
 
     # first, plot the relevant branches
     for idx_stack, row_stack in stack_df[stack_df['new_topic'] == True].iterrows():
-        # first annotate subject stack
-
         # first find the branch it was first mentioned on and plot
-
         branch_number = row_stack['branch_num']
-
+        # print('====BRANCH NUMBER:', row_stack['branch_num'])
+        # print('starting_index', idx_stack)
         if not row_stack['new_branch']:
-            starting_index = idx_stack-5
+            # print('not a new branch, must be the first one to mention it')
+            starting_index = idx_stack-6
         else:
             starting_index = idx_stack
-
-
+        # print('starting_index once fixed', starting_index)
         idx_where_this_branch_finishes = pod_df[pod_df['branch_num'] == branch_number].index[-1]
-        if idx_where_this_branch_finishes - idx_stack > 10:
-            # i.e. too long away.. find index of where it moves to next topic along this branch
-            idx_where_this_stack_finishes = pod_df[(pod_df['branch_num'] == branch_number) & (pod_df['stack_name'] == stack_name)].index[-1]
-            idx_where_this_branch_finishes = idx_where_this_stack_finishes + 10
+        # print('idx_where_this_branch_finishes first:', idx_where_this_branch_finishes)
+        idx_where_this_stack_finishes = \
+        pod_df[(pod_df['branch_num'] == branch_number) & (pod_df['stack_name'] == stack_name)].index[-1]
+        # print('idx_where_this_stack_finishes', idx_where_this_stack_finishes)
+
+        if idx_where_this_branch_finishes - idx_where_this_stack_finishes > 25:
+            # print('     idx_where_this_branch_finishes - idx_where_this_stack_finishes > 25', idx_where_this_branch_finishes - idx_where_this_stack_finishes)
+            # # i.e. too long away.. find index of where it moves to next topic along this branch
+            idx_where_this_branch_finishes = idx_where_this_stack_finishes + 20
+            # print('idx_where_this_branch_finishes updated', idx_where_this_branch_finishes)
 
         old_sent_coords_1 = [pod_df.iloc[starting_index]['position_X'], pod_df.iloc[starting_index]['position_Y']] # initiate]
+        old_branch_number = 300
+
         for idx_1, row_1 in pod_df[starting_index:idx_where_this_branch_finishes].iterrows():
             branch_num_1 = row_1['branch_num']
+
             x_1 = row_1['position_X']
             y_1 = row_1['position_Y']
-            plt.plot(x_1, y_1, 'o', color='k', ms=2, zorder=0)  # Plot node
+            plt.plot(x_1, y_1, 'o', color='k', ms=3, zorder=0)  # Plot node
 
-            plt.plot([old_sent_coords_1[0], x_1], [old_sent_coords_1[1], y_1], '-', color='k', linewidth=3, zorder=0)
-            if idx_1 == idx_where_this_branch_finishes -1:
+            if old_branch_number == branch_number:
+                plt.plot([old_sent_coords_1[0], x_1], [old_sent_coords_1[1], y_1], '-', color='k', linewidth=1, zorder=0)
+
+            if old_branch_number == branch_number and idx_1 == idx_where_this_stack_finishes + 7:
+                plt.rc('font', size=8)
                 # Annotate last position with a leaf + branch number label
                 leaf_colour = 'yellowgreen'  # pod_df.iloc[idx-1]['leaf_colour']
                 # Plot and annotate little orange dots indicating the number of branch which just ended
-                plt.plot(old_sent_coords_1[0], old_sent_coords_1[1], 'o', ms=5, color=leaf_colour,
+                plt.plot(x_1+ 0.13, y_1+3, 'o', ms=7, color=leaf_colour,
                          zorder=100)  # ms=size_leaves,
-                plt.annotate(branch_num_1 - 1, xy=(old_sent_coords_1[0] - 0.13, old_sent_coords_1[1] - 1), color='k',
+                plt.annotate(branch_num_1, xy=(x_1 + 0.13, y_1 + 3), color='k',
                              zorder=101,
                              weight='bold')
             # plt.annotate(branch_num_1 - 1, xy=(old_sent_coords_1[0] - 0.13, old_sent_coords_1[1] - 1), color='k', zorder=101,
             #                  weight='bold')
 
             old_sent_coords_1 = [x_1, y_1]
-
+            old_branch_number = branch_num_1
 
     def timestamp_to_datetime(timestamp):
         return datetime.strptime(timestamp, "%H:%M:%S")
@@ -4962,127 +5028,130 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
     # Speaker Turns Number of Speaker-Turns
 
     # Interupptions in each stack
-    number_sents_w_cutoff, intrps_joe_list, intrps_guest_list = [], [], []
+    number_sents_w_cutoff, intrps_joe_list, intrps_guest_list, speaker1, speaker2 = [], [], [], [], []
     for branch in stack_df['branch_num'].unique():
         branch_stack_df = stack_df[stack_df['branch_num']==branch]
         first_sentence = branch_stack_df.iloc[0]['utterance'][:-2]
         last_sentence = branch_stack_df.iloc[-1]['utterance'][:-2]
-        sents_with_cutoff, intrps_joe,intrps_guest  = Interupption_Analysis_info(first_sentence, last_sentence, name)
+        sents_with_cutoff, intrps_joe, intrps_guest, sents_speakers = Interupption_Analysis_info(first_sentence, last_sentence, name)
+        if not sents_speakers:
+            continue
         number_sents_w_cutoff.append(len(sents_with_cutoff))
         intrps_joe_list.append(len(intrps_joe))
         intrps_guest_list.append(len(intrps_guest))
+
+        # find dialogue acts for the sentences spoken by each speaker
+        for utterance_ in sents_speakers[0]:
+            # print('utterance', utterance_)
+            # print('found match:', stack_df[stack_df.utterance.astype(str).apply(lambda x: utterance_ in x)])
+            try:
+                DA = stack_df[stack_df.utterance.astype(str).apply(lambda x: utterance_ in x)].da_label.values[0]
+                speaker1.append(DA)
+            except:
+                # for utterances which are part of the same speaker-turn as ones in this branch/ stack, but aren't actually
+                # on the relevant topic
+                pass
+
+        for utterance_ in sents_speakers[1]:
+            # print('utterance', utterance_)
+            # print('found match:', stack_df[stack_df.utterance.astype(str).apply(lambda x: utterance_ in x)])
+            try:
+                DA = stack_df[stack_df.utterance.astype(str).apply(lambda x: utterance_ in x)].da_label.values[0]
+                speaker2.append(DA)
+            except:
+                # for utterances which are part of the same speaker-turn as ones in this branch/ stack, but aren't actually
+                # on the relevant topic
+                pass
+
     number_cutoffs = sum(number_sents_w_cutoff)
     number_cutoffs_joe = sum(intrps_joe_list)
     number_cutoffs_guest = sum(intrps_guest_list)
+    speaker1_op_statements_cnt = speaker1.count('Statement-opinion')
+    speaker1_Qs_cnt = speaker1.count('Wh-Question') + speaker1.count('Yes-No-Question')
+    speaker2_op_statements_cnt = speaker2.count('Statement-opinion')
+    speaker2_Qs_cnt = speaker2.count('Wh-Question') + speaker2.count('Yes-No-Question')
+    speaker1_stat_prct = int(speaker1_op_statements_cnt/(speaker1_op_statements_cnt+speaker2_op_statements_cnt)*100)
+    speaker2_stat_prct = int(speaker2_op_statements_cnt/(speaker1_op_statements_cnt+speaker2_op_statements_cnt)*100)
+
+    speaker1_Qs_prct = int(speaker1_Qs_cnt / (speaker1_Qs_cnt + speaker2_Qs_cnt) * 100) #int to round it to integer
+    speaker2_Qs_prct = int(speaker2_Qs_cnt / (speaker1_Qs_cnt + speaker2_Qs_cnt) * 100)
+
     print('\nnumber_sents_w_cutoff:', number_cutoffs)
     print('intrps_joe_list:', number_cutoffs_joe)
     print('intrps_guest_list:', number_cutoffs_guest)
+    print('speaker1 utterances counts', len(speaker1), speaker1_stat_prct, '%')
+    print('speaker2 utterances counts', len(speaker2), speaker2_stat_prct, '%')
+    print('speaker1', speaker1)
+    print('speaker2', speaker2)
+
+    primary_speaker = 'Joe Rogan' if speaker1_stat_prct > speaker2_stat_prct else ' '.join([x.title() for x in transcript_name.split('_')])
+    speaker_stats_prc = speaker1_stat_prct if speaker1_stat_prct > speaker2_stat_prct else speaker2_stat_prct
+
+    leading_speaker = 'Joe Rogan' if speaker1_Qs_prct > speaker2_Qs_prct else ' '.join([x.title() for x in transcript_name.split('_')])
+    speaker_Qs_prc = speaker1_Qs_prct if speaker1_Qs_prct > speaker2_Qs_prct else speaker2_Qs_prct
+
+    heights = stack_df['position_Y'].values
+    middle_height = statistics.median(heights)
+    lowest_height = heights[0]
+
+    # Some example cases I'll have prepared
+    if transcript_name == 'elon_musk':
+        if stack_name == 'neuron':
+            ann_x_pos = stack_df.iloc[0]['position_X'] - 0.3
+            ann_y_pos = middle_height
+            xy_pos = (-202, -30)
+        elif stack_name == 'child':
+            ann_x_pos = stack_df.iloc[0]['position_X'] - 0.33
+            ann_y_pos = 4
+            xy_pos = (-200, +60)
+            plt.gca().set_xlim(left=stack_df.iloc[0]['position_X'] - 5.5)
+
+        elif stack_name == 'ai':
+            ann_x_pos = stack_df.iloc[0]['position_X'] - (stack_x_shift +0.05)
+            ann_y_pos = 220
+            xy_pos = (-205, +40)
+            plt.gca().set_xlim(left=stack_df.iloc[0]['position_X'] - 6.2)
+
+        else:
+            ann_x_pos = stack_df.iloc[0]['position_X'] - 0.3
+            ann_y_pos = middle_height
+            xy_pos = (-202, -30)
+
+    else:
+        if stack_name == 'twitter':
+            ann_x_pos = stack_df.iloc[0]['position_X'] - (stack_x_shift + 0.05)
+            ann_y_pos = 71
+            xy_pos = (-210, +50)
+            plt.gca().set_xlim(left=stack_df.iloc[0]['position_X'] - 9)
+
+        else:
+            ann_x_pos = stack_df.iloc[0]['position_X'] - 0.3
+            ann_y_pos = middle_height
+            xy_pos = (-200, -30)
 
     plt.rc('font', size=9)
-    plt.annotate(f'Duration (s)= {Duration_Time}, Duration (U)={Duration_Utts}, '
-                 f'\nFirst_Mention={First_Mention}, Last_Mention={Last_Mention}'
-                 f'\nRichness={Richness}, '
-                 f'\nInterupptions={number_cutoffs},\nLoopiness={Loopiness}, \nDepth={Depth}',
-                 xy=(stack_df[stack_df['new_topic']==True].iloc[0]['position_X'],
-                     stack_df[stack_df['new_topic']==True].iloc[0]['position_Y']), xytext=(-3, 3), textcoords='offset points', ha='center', va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.2', fc='green', alpha=0.2),
-                             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='darkgreen'))
+    plt.annotate(r'$\bf{Topic}$:'+f'                    {stack_name_ann}\n'
+                    r'$\bf{Duration}$:'+f'              {round(Duration_Time/60, 2)}'+r' $\it{min}$,'+f' {Duration_Utts}'+r' $\it{Utts}$'+f'\n'
+                 r'$\bf{First}$ $\bf{Mention}$:'+f'      {First_Mention}\n'
+                 r'$\bf{Last}$ $\bf{Mention}$:'+f'       {Last_Mention}\n'
+                 r'$\bf{Primary}$ $\bf{Speaker}$:'+f' {primary_speaker}, ({speaker_stats_prc}%)\n'
+                 r'$\bf{Leading}$ $\bf{Speaker}$:'+f' {leading_speaker}, ({speaker_Qs_prc}%)\n'
+                 r'$\bf{Loops}$: '+f'  {Loopiness}   ' r'           $\bf{Richness}$:'+f'         {Richness}\n'
+                 r'$\bf{Depth}$:'+f' {int(Depth*100)}%'
+                 r'           $\bf{Interupptions}$:'+f' {number_cutoffs}\n',
+                 xy=(ann_x_pos, ann_y_pos), xytext=xy_pos, textcoords='offset points',
+                    ha='left', va='center',
+                 bbox=dict(boxstyle='roundtooth,pad=0.5,tooth_size=0.6', fc='greenyellow', alpha=0.2),
+                             arrowprops=dict(arrowstyle='-|>', connectionstyle='arc3,rad=0', color='darkgreen'))
 
+    # plt.xlim(stack_df.iloc[0]['position_X']-5, stack_df.iloc[0]['position_X']+1)
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    plt.show()
-
-    bbb
-
-    # else:
-
-    #plot the branches which lead off from this
-
-
-    colour = 'k'        # colour of tree structure
-    colour_label = 'k'  # colour of annotations
-
-    old_sent_coords = [0, 0]
-    annotations = []
-
-    # Calculate the height of each stack
-    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
-    idx_of_new_branch.insert(0, 0)
-    idx_of_new_branch.insert(-1, len(pod_df))
-    #height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
-
-    Topics_Utterances = dict(pod_df['stack_name'].value_counts())
-    lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
-    words, usage = zip(*lists)
-
-    # Calculate mean / median stack height (only going to label long ones)
-    med = statistics.median(usage)
-    mean = statistics.mean(usage)
-
-    # Instantiate figure
-    plt.figure()
-    plt.title('a) Discussion Tree: {0}'.format(transcript_name.title()), fontsize=15)
-    plt.rc('font', size=6)
-    for idx, row in pod_df[0:cutoff_sent].iterrows():
-        the_topic = row['stack_name']
-
-        if not the_topic:
-            continue
-
-        branch_num = row['branch_num']
-        x = row['position_X']
-        y = row['position_Y']
-        new_branch = row['new_branch']
-        plt.plot(x, y, 'o', color=colour, ms=2, zorder=0)  # Plot node
-        if not new_branch:
-            # Plot: continuing on the same branch, but with a new position to mark a new set of topics
-            plt.plot([old_sent_coords[0], x], [old_sent_coords[1], y], '-', color=colour, linewidth=1, zorder=0)
-        else:
-            # Annotate last position with a leaf + branch number label
-            leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
-            # Plot and annotate little orange dots indicating the number of branch which just ended
-            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=5, color=leaf_colour, zorder=100) #ms=size_leaves,
-            plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
-                         weight='bold')
-
-        old_sent_coords = [x, y]
-
-    total_duration = pod_df.iloc[-1].timestamp
-    podcast_duration = pod_df.iloc[cutoff_sent].timestamp
-    total_utterances = len(pod_df)
-    num_utts = cutoff_sent
-    print('Total podcast_duration:', total_duration)
-    print('selected podcast duration', podcast_duration)
-    print('\nTotal number of utterances', total_utterances)
-    print('number_of_utterances selected:', num_utts)
-
-    #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
-    # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
-    #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
-    plt.rc('font', size=11)  # size_leaves weight='bold'
-    plt.annotate(f'Podcast Duration: {podcast_duration}\nTotal Utterances:   {total_utterances}', xy=(10, 60),
-                 bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.4'))
-
-    ax = plt.gca()
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    # save
-    if save_fig:
-        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
-            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
-
-        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT3.png".format(podcast_name, transcript_name), dpi=600)
-
     plt.show()
 
     return
 
-class Substitutable(str):
-  def __new__(cls, *args, **kwargs):
-    newobj = str.__new__(cls, *args, **kwargs)
-    newobj.sub = lambda fro,to: Substitutable(re.sub(fro, to, newobj))
-    return newobj
 
 def Interupption_Analysis_info(first_sentence, last_sentence, name):
     """
@@ -5100,6 +5169,9 @@ def Interupption_Analysis_info(first_sentence, last_sentence, name):
     first_sentence = first_sentence.sub(r" ’", "’")
     first_sentence = first_sentence.sub(r" '", "'")
     first_sentence = first_sentence.sub(r" , ", ", ")
+    first_sentence = first_sentence.sub("…", "...")
+    first_sentence = first_sentence.sub("``", "\"")
+    first_sentence = first_sentence.sub(" ,''", ",\"")
     first_sentence = first_sentence.sub("do n't", "don't")
     # print('first_sentence after', first_sentence)
 
@@ -5108,15 +5180,22 @@ def Interupption_Analysis_info(first_sentence, last_sentence, name):
     last_sentence = last_sentence.sub(r" ’", "’")
     last_sentence = last_sentence.sub(r" '", "'")
     last_sentence = last_sentence.sub(r" , ", ", ")
-    last_sentence = last_sentence.sub("do n't", "don't")
+    last_sentence = last_sentence.sub("…", "...")
+    last_sentence = last_sentence.sub("`` ", "\"")
+    last_sentence = last_sentence.sub(" ,''", ",\"")
+    last_sentence = last_sentence.sub(r"do n't", "don't")
     # print('last_sentence after', last_sentence)
-
+    if last_sentence[0] =="\"":
+        last_sentence = last_sentence[1:]
 
     with open('txts/Joe_Rogan_{0}/all_utterances.txt'.format('_'.join(names[2:4])), 'r') as f:
         all_utts = f.read()
 
     names_dict = {'123':[' '.join(names[:2]), 'blue'], '321': [' '.join(names[2:4]), 'green']}
     sents = all_utts.split('\n')
+    # print('\nsents before selection', sents)
+    # print('first_sentence', first_sentence)
+    # print('last_sentence', last_sentence)
 
     try:
         index_first_sent = [i for i, s in enumerate(sents) if first_sentence.lower() in s.lower()][0]
@@ -5128,7 +5207,8 @@ def Interupption_Analysis_info(first_sentence, last_sentence, name):
         # print('index_last_sent', index_last_sent)
         # print('^sent_2', sent_2)
     except:
-        return [], [], []
+        print('couldnt find sentences ')
+        return [], [], [], []
 
     sents = sents[index_first_sent:index_last_sent+1]
     idxs_sents_with_cutoff = [idx for idx, sent in enumerate(sents) if '...  ' in sent]
@@ -5140,9 +5220,47 @@ def Interupption_Analysis_info(first_sentence, last_sentence, name):
     # number of times speaker 123 was interrupted by 123
     idxs_321 = [idx for idx in idxs_sents_with_cutoff if sents[idx][:3] == '321']
 
-    # pprint(np.array(sents)[idxs_sents_with_cutoff])
+    #number of times speaker 1 spoke
+    sents_123 = [sent[6:-3] for sent in sents if sent[:3] == '123'] #[6:]
+    sents_321 = [sent[6:-3] for sent in sents if sent[:3] == '321']
+    # print('sents_123', sents_123)
+    # print('sents_321', sents_321)
+    # transform back
+    sents_123_transformed, sents_321_transformed = [], []
+    for sent in sents_123:
+        sent = Substitutable(sent)
+        sent = sent.sub(r"’", "’ ")
+        sent = sent.sub(r"’", " ’")
+        sent = sent.sub(r"'", " '")
+        sent = sent.sub(r", ", " , ")
+        sent = sent.sub(r"\\.\\.\\.", "…")
+        sent = sent.sub(r"don't", "do n't")
+        utterances = sent.split('. ')
+        utterances = [x.split('? ') for x in utterances]
+        utterances = [item for sublist in utterances for item in sublist]
+        # print('utterances', utterances)
+        sents_123_transformed.append(utterances)
 
-    return sents_with_cutoff, np.array(sents)[idxs_123], np.array(sents)[idxs_321]
+    sents_123_transformed = [item for sublist in sents_123_transformed for item in sublist]
+
+    for sent in sents_321:
+        sent = Substitutable(sent)
+        sent = sent.sub(r"’", "’ ")
+        sent = sent.sub(r"’", " ’")
+        sent = sent.sub(r"'", " '")
+        sent = sent.sub(r", ", " , ")
+        sent = sent.sub(r"\\.\\.\\.", "…")
+        sent = sent.sub(r"don't", "do n't")
+        utterances = sent.split('. ')
+        utterances = [x.split('? ') for x in utterances]
+        utterances = [item for sublist in utterances for item in sublist]
+        # print('utterances', utterances)
+        sents_321_transformed.append(utterances)
+
+    sents_321_transformed = [item for sublist in sents_321_transformed for item in sublist]
+
+
+    return sents_with_cutoff, np.array(sents)[idxs_123], np.array(sents)[idxs_321], [sents_123_transformed, sents_321_transformed]
 
     # idxs = np.zeros(len(sents))
     # colours = ['k' for i in idxs]
@@ -5788,7 +5906,7 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 
 # DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
 
-DT_With_Info('joe_rogan', 'jack_dorsey', 'twitter', cutoff_sent=-1, save_fig=False, info=False)
+DT_With_Info('joe_rogan', 'elon_musk', 'ai', cutoff_sent=-1, save_fig=False, info=False)
 # DT_Third_Draft('joe_rogan', 'elon_musk', cutoff_sent=-1, save_fig=False, info=False)
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
