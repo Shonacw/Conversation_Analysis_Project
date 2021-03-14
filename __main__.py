@@ -3185,6 +3185,7 @@ def Shifting_Line_Topics_3(cutoff_sent=400, Interviewee='jack dorsey', save_fig=
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3',
                                 color='red'))
 
+
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
@@ -3536,7 +3537,7 @@ def Basic_DT_Structure(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
     old_topics, most_recently_plotted = [], ''
     Dict_of_topics, Dict_of_topics_counts = {}, {}
     plt.rc('font', size=12)
-
+    stack_number = 0
     for idx, row in file[1:cutoff_sent].iterrows():
         old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
         colour = 'k' #speakers_map[old_speaker]
@@ -3596,6 +3597,8 @@ def Basic_DT_Structure(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
                     Dict_of_topics[topic] = new_sent_coords
                     Dict_of_topics_counts[topic] = 1
 
+                stack_number +=1
+
                 # then plot…
                 plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
                 plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
@@ -3615,10 +3618,10 @@ def Basic_DT_Structure(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
                     current_topics.insert(0, 'state')
                     current_topics.insert(1, 'finance')
 
+                annotation = 'Topic_{}'.format(stack_number)
 
-
-                weight = 'bold' if current_topics[0] in ['people', 'brain', 'child', 'house'] else 'normal'
-                plt.annotate(', '.join(current_topics[:1]), xy=(new_sent_coords[0]+plus_x, new_sent_coords[1]+plus_y), color='k',
+                weight = 'bold' #if current_topics[0] in ['people', 'brain', 'child', 'house'] else 'normal'
+                plt.annotate(annotation, xy=(new_sent_coords[0]+plus_x, new_sent_coords[1]+plus_y), color='k',
                              zorder=100, rotation=90, weight=weight),  # textcoords="offset points" #weight
                 print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ', new_topic)
 
@@ -3626,7 +3629,7 @@ def Basic_DT_Structure(cutoff_sent=400, Interviewee='jack dorsey', save_fig=Fals
 
             else: # i.e. if we are jumping back to a previously mentioned topic
 
-                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=10)
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='yellowgreen', ms=10)
                 plt.rc('font', size=9)
                 plt.annotate(branch_number, xy=(old_sent_coords[0]-0.1, old_sent_coords[1]), color='darkred', zorder=100,
                              weight='bold')
@@ -6071,6 +6074,99 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 
     return
 
+def Basic_DT_Example():
+    x_examples = [[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,  1, 1],  [0, 0, 0, 0, 0, 0,  0,  0,  0,  -1, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -2, -2], [0,  0,   0,  0,  0,  0, 0.6, 0.6, 0.6, 1.2, 1.2, 1.2, 1.2, 1.2], [-1, -1, -1, -1, -1, -1, -0.5, -0.5, -0.5, -0.5]]
+    y_examples = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26], [13, 14, 15, 16, 17, 18, 19,  20,  21,  22,  23,  24,   25,  26], [19, 20, 21, 22, 23, 24,  25,   26,    27,  28]]
+    labels_x = [-0.15, 0.80, -0.93, -2.17, 0.4, 1.3, -0.4]
+    labels_y = [1,     6.5,    15,   20,    20,  22,  25]
+    plt.figure()
+    stack_number = 0
+    x_stacks = []
+    old_x, old_y = 256, 473
+    for sublist_x, sublist_y in zip(x_examples, y_examples):
+        # nodes_in_branch = len(sublist_x)
+        branch_number = x_examples.index(sublist_x) + 1
+        for x, y in zip(sublist_x, sublist_y):
+            first_node_in_branch = True if y == sublist_y[0] and x == sublist_x[0] else False
+            first_node_in_stack = True if y != old_y and x != old_x else False
+            last_node  = True if y == sublist_y[-1] and x == sublist_x[-1] else False
+            loop = False if x not in x_stacks else True
+
+            print(x, y, ', first_node_in_branch:', first_node_in_branch, 'first_node_in_stack', first_node_in_stack, 'last_node:', last_node, 'x_stacks', x_stacks, 'loop', loop)
+            plt.plot(x, y, 'o', color='k', ms=4, zorder=0)  # Plot node
+            if first_node_in_stack:
+                x_stacks.append(x)
+                if not loop:
+                    stack_number += 1
+                    print('stack_number', stack_number)
+                    print(labels_x, labels_y)
+                    plt.rc('font', size=10)
+                    plt.annotate('Topic {}'.format(stack_number), xy=(labels_x[stack_number-1], labels_y[stack_number-1]), color='k',
+                                 zorder=100, rotation=90, weight='bold')
+                    plt.rc('font', size=11)
+
+            if not first_node_in_branch:
+                # Plot: continuing on the same branch, but with a new position to mark a new set of topics
+                plt.plot([old_x, x], [old_y, y], '-', color='k', linewidth=3, zorder=0)
+
+            if last_node:
+                # Annotate last position with a leaf + branch number label
+                leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
+                # Plot and annotate little orange dots indicating the number of branch which just ended
+                plt.plot(x, y, 'o', ms=12, color=leaf_colour, zorder=100) #ms=size_leaves,
+                plt.rc('font', size=9)
+                plt.annotate(branch_number, xy=(x-0.05, y-0.5), color='k', zorder=101, weight='bold')
+                plt.rc('font', size=11)
+
+            old_x, old_y = x, y
+
+    plt.rc('font', size=11)
+    plt.annotate('Stack', xy=(1.20, 8.04), xytext=(1.6, 3), ha='center', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', color='red'))
+
+    plt.annotate('Node', xy=(0, 3), xytext=(0.8, 2), ha='center', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.0', color='red'))
+
+    plt.annotate('Leaf', xy=(1.122, 26.0), xytext=(0.7, 28), ha='center', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', color='red'))
+
+    plt.annotate('First branch begins', xy=(0, 0), xytext=(-1.3, 0.2),
+                 ha='center', va='bottom',
+                 bbox=dict(boxstyle='round,pad=0.2', fc='lightgrey', alpha=0.2),
+                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.0', color='grey'))
+
+    plt.annotate('First branch ends', xy=(0.997, 12.52), xytext=(1.4, 16),
+                 ha='center', va='bottom',
+                 bbox=dict(boxstyle='round,pad=0.2', fc='lightgrey', alpha=0.2),
+                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.0', color='grey'))
+
+    plt.annotate('Second branch begins...', xy=(0, 6), xytext=(-1.4, 7),
+                ha='center', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.2', fc='lightgrey', alpha=0.2),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.0', color='grey'))
+
+    plt.annotate('Branch', xy=(-1.2, 25), xytext=(-1.8, 28),
+                ha='center', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', color='red'))
+
+    # # #annotate a topic line
+    # plt.annotate('Topic Line', xy=(5.5, 198), xytext=(-55, 20),
+    #             textcoords='offset points', ha='center', va='bottom',
+    #             bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
+    #             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3',
+    #                             color='red'))
+
+    plt.xlim([-2.55, 2.2])
+    plt.ylim([-2, 31])
+    plt.title('Basic Discussion Tree Structure', fontsize=15)
+
+    plt.show()
+    return
+
 ## Call....
 
 # Simple_Line_DA(cutoff_speakerchange=100, Interviewee='elon musk', save_fig=False) #'jack dorsey' # 'elon musk'
@@ -6082,8 +6178,9 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 # Shifting_Line_Topics_4(cutoff_sent=400, Interviewee='elon musk', save_fig=False)
 # Shifting_Line_Topics_5(cutoff_sent=400, Interviewee='elon musk', save_fig=False)
 
-Basic_DT_Structure(cutoff_sent=400, Interviewee='elon musk', save_fig=False)      #
+# Basic_DT_Structure(cutoff_sent=300, Interviewee='elon musk', save_fig=False)      #
 
+Basic_DT_Example()
 
 # DT_Shifting_Line_Topics(Interviewee='elon musk', logscalex=False, save_fig=False)
 
@@ -6092,7 +6189,7 @@ Basic_DT_Structure(cutoff_sent=400, Interviewee='elon musk', save_fig=False)    
 
 # DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
 # DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
-# DT_Third_Draft('joe_rogan', 'jack_dorsey', cutoff_sent=400, save_fig=False, duration=False)
+# DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=300, save_fig=False, duration=False) #'joe_rogan', 'jack_dorsey
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
@@ -6101,7 +6198,6 @@ Basic_DT_Structure(cutoff_sent=400, Interviewee='elon musk', save_fig=False)    
 #Animate_TTTS(podcast_name='joe_rogan', transcript_name='jack_dorsey', cutoff_sent=1000)
 
 #TTTS_Comparison('heavy_topics', 'heavy_topics_being_a_71410', 'heavy_topics_create_the_54285') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827') # heavy_topics_i_killed_94201   being_a_71410
-
 
 def Looking_at_metadata():
     DataFrame = pd.read_csv('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/metadata.csv')
