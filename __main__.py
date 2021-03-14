@@ -3517,6 +3517,188 @@ def Shifting_Line_Topics_5(cutoff_sent=400, Interviewee='jack dorsey', save_fig=
     plt.show()
     return
 
+def Basic_DT_Structure(cutoff_sent=400, Interviewee='jack dorsey', save_fig=False):
+    """"Function """
+    speakers_map = {'joe rogan': 'purple', Interviewee: 'blue'}
+    transcript_name = "joe_rogan_{}".format('_'.join(list(speakers_map.keys())[1].split(' ')))
+    file = pd.read_pickle("processed_transcripts/{}.pkl".format(transcript_name))
+    print(file[:100].to_string())
+
+    step_size_x, step_size_y = 1, 1
+
+    topic_linegraph_dict = {'Idx': [], 'All_Current_Topics': [], 'New_Topic': [], 'Speaker': [], 'Sentence': [],
+                            'DA_Label': []}
+
+    plt.figure()
+    plt.title('Step 3', fontsize=15) #: {0}'.format(Interviewee.title())
+    old_sent_coords = [0, 0]
+    old_idx, branch_number = 0, 0
+    old_topics, most_recently_plotted = [], ''
+    Dict_of_topics, Dict_of_topics_counts = {}, {}
+    plt.rc('font', size=12)
+
+    for idx, row in file[1:cutoff_sent].iterrows():
+        old_speaker = file.speaker[old_idx]  # i.e. the speaker who said all utterances between old index and new index
+        colour = 'k' #speakers_map[old_speaker]
+        if str(file.topics[old_idx]) == 'nan':
+            old_idx = idx
+            continue
+
+        sign_change = +1 if branch_number%2==0 else -1
+        if branch_number == 3:
+            sign_change = +1
+        elif branch_number == 4:
+            sign_change = -1
+
+        current_topics = list(row['topics'])
+        continued_topics = [x for x in old_topics if x in current_topics]
+        continued_topic = False if len(continued_topics) == 0 else True
+
+        if continued_topic:
+
+            change_in_coords = [0, step_size_y]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3)  # plot node
+            plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                     color=colour)
+            print('continued_topics:', continued_topics, 'new_sent_coords', new_sent_coords)
+
+        if not continued_topic:
+            new_topic = [x for x in current_topics if x in list(file.topics[idx + 1])]
+            topic_linegraph_dict['Idx'].append(idx)
+            topic_linegraph_dict['All_Current_Topics'].append(current_topics)
+            topic_linegraph_dict['New_Topic'].append(new_topic)
+            topic_linegraph_dict['Speaker'].append(row['speaker'])
+            topic_linegraph_dict['Sentence'].append(row['utterance'])
+            topic_linegraph_dict['DA_Label'].append(row['da_label'])
+
+            change_in_coords = [step_size_x * sign_change, 0]
+            new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
+
+
+            ## NOW CHECK FOR RETURNS...
+            #print('new_topic', new_topic)
+            #print(Dict_of_topics)
+            # Check if topic has already been visited.
+            the_topic = None
+            for topic in new_topic:  # NOTE what if new_topic contains >1 topics which have been mentioned in DIFFERENT PLACES??... WHICH X TO GO TO?
+                if topic in Dict_of_topics:
+                    X_pos, Y_pos = Dict_of_topics[topic]
+                    the_topic = topic
+                else:
+                    continue
+
+
+            # check if X_pos has been assigned, if not, assign new position
+            if the_topic is None:
+                for topic in new_topic:  #  in case it contains multiple, but they all get this x position.
+                    Dict_of_topics[topic] = new_sent_coords
+                    Dict_of_topics_counts[topic] = 1
+
+                # then plot…
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+                         color=colour)  # plot line
+
+                plt.rc('font', size=10)
+                plus_x = -0.6 if sign_change > 0 else +0.2
+                plus_y = 6
+                if current_topics[0] == 'people':
+                    plus_y = 3
+                if current_topics[0] == 'chunk':
+                    plus_x += 0.1
+                if current_topics[0] == 'cyborg':
+                    plus_x = 0.1
+
+                if 'state' in current_topics:
+                    current_topics.insert(0, 'state')
+                    current_topics.insert(1, 'finance')
+
+
+
+                weight = 'bold' if current_topics[0] in ['people', 'brain', 'child', 'house'] else 'normal'
+                plt.annotate(', '.join(current_topics[:1]), xy=(new_sent_coords[0]+plus_x, new_sent_coords[1]+plus_y), color='k',
+                             zorder=100, rotation=90, weight=weight),  # textcoords="offset points" #weight
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ', new_topic)
+
+
+
+            else: # i.e. if we are jumping back to a previously mentioned topic
+
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', color='orange', ms=10)
+                plt.rc('font', size=9)
+                plt.annotate(branch_number, xy=(old_sent_coords[0]-0.1, old_sent_coords[1]), color='darkred', zorder=100,
+                             weight='bold')
+                plt.rc('font', size=11)
+
+                # New branch, and update step sizes
+                branch_number += 1
+
+                Dict_of_topics_counts[the_topic] += 1
+                if sign_change > 0:
+                    step_size_x += 0.5  # also adjust step size so don't return to other topics
+                else:
+                    step_size_x -= 0.5
+                #
+                # if the_topic =='people':
+                #     new_sent_coords = [-3.5, 106]
+                # elif the_topic == 'brain':
+                #     new_sent_coords = [-0.5, 151]
+                # elif the_topic == 'child':
+                #     new_sent_coords = [1, 14]
+
+                new_sent_coords = [X_pos, new_sent_coords[0]]  # keep y position but change x.
+
+                if the_topic == 'child':
+                    new_sent_coords = [1, 14]
+                elif the_topic == 'house' :
+                    new_sent_coords = [-6.5, 136]
+                elif the_topic =='people':
+                    new_sent_coords = [-3.5, 106]
+                elif the_topic == 'brain':
+                    new_sent_coords = [-0.5, 151]
+
+                plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=1)  # plot node
+                # plt.plot([X_pos, X_pos], [Y_pos, new_sent_coords[1]], '--', color='k', linewidth=1)  #  add dashed line between last one and this one
+
+                # plt.annotate(', '.join(current_topics), xy=(new_sent_coords[0], new_sent_coords[1]), color='k',
+                #              zorder=100),  # textcoords="offset points" #weight=
+                print('the_topic', the_topic, '. Current topics:', current_topics, '. New_topic: ',new_topic)
+
+                # if Dict_of_topics_counts[the_topic] == 2:
+                #     # Annotate the line
+                #     if the_topic=='brain':
+                #         plt.annotate(the_topic,
+                #                      xy=(Dict_of_topics[the_topic][0] - 0.7, Dict_of_topics[the_topic][1] + 35),
+                #                      color='k', zorder=100, rotation=90, weight='bold')
+                #     else:
+                #         plt.annotate(the_topic, xy=(Dict_of_topics[the_topic][0]-0.7, Dict_of_topics[the_topic][1]+25),
+                #                      color='k', zorder=100, rotation=90, weight='bold')
+
+            # plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
+            #          color=colour)  # plot line
+
+        old_topics = current_topics #new_topic
+        old_sent_coords = new_sent_coords
+        old_idx = idx
+
+    plt.rc('font', size=11)
+    plt.annotate('First {} Utterances'.format(cutoff_sent), xy=(-8, 12),
+                 bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.4'))
+
+    plt.ylim(top = 234)
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    print(' the final index of row', idx)
+    print('the final y position', new_sent_coords[1])
+
+    if save_fig:
+        plt.savefig("Saved_Images/{0}/Simpler_Shifting_Line_Topics.png".format(transcript_name), dpi=600)
+    plt.show()
+    return
+
 
 def DT_Shifting_Line_Topics(Interviewee='jack dorsey', logscalex=True, save_fig=False):
     """"
