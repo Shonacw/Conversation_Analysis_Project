@@ -5001,20 +5001,27 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             # Plot and annotate little orange dots indicating the number of branch which just ended
             plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=7, color=leaf_colour, zorder=100) #ms=size_leaves,
 
-            if not cutoff_sent ==-1:
+            if not cutoff_sent == -1:
                 plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
                              weight='bold')
 
         if labels:
             if new_topic and the_topic not in annotations:
-                x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.3
+                x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.5
+                y_change = 2
+                if the_topic == 'context':
+                    x_change = 0.2
+                elif the_topic == 'conversation':
+                    x_change = -0.5
+                elif the_topic == 'accounts':
+                    y_change = 10
                 word_popularity = usage[words.index(the_topic)]
-                if word_popularity > 1 or pod_df.iloc[idx+1]['new_branch']==True: # mean + 0.5*mean
+                if word_popularity > (mean) or pod_df.iloc[idx+1]['new_branch']==True or the_topic=='hashtag': # mean + 0.5*mean
                     # Annotate
-                    plt.rc('font', size=10)  # size_leaves weight='bold'
-                    plt.annotate(the_topic, xy=(x + x_change, y+3), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
+                    plt.rc('font', size=11)  # size_leaves weight='bold'
+                    plt.annotate(the_topic, xy=(x + x_change, y+y_change), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
                     annotations.append(the_topic)
-                    plt.rc('font', size=9)  # size_leaves
+                    plt.rc('font', size=11)  # size_leaves
 
         old_sent_coords = [x, y]
 
@@ -5022,7 +5029,7 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     podcast_duration = pod_df.iloc[cutoff_sent].timestamp
     total_utterances = len(pod_df)
     total_branches = pod_df.iloc[-1].branch_num
-    total_stacks = len(Counter(pod_df.stack_name.values ).keys())
+    total_stacks = len(Counter(pod_df.stack_name.values).keys())
     num_utts = cutoff_sent
     print('Total podcast_duration:', total_duration)
     print('selected podcast duration', podcast_duration)
@@ -5032,11 +5039,11 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
     # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
     #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
-    plt.rc('font', size=10)  # size_leaves weight='bold'
+    plt.rc('font', size=11)  # size_leaves weight='bold'
     if duration:
         plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      {total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
                      bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3')) #xy for elon musk: (10, 35) #xy for jack dorsey: (10, 35)
-
+    plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.8'))
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
@@ -6194,8 +6201,8 @@ def Basic_DT_Example():
 # DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 # DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
-# DT_With_Info('joe_rogan', 'jack_dorsey', 'twitter', cutoff_sent=-1, save_fig=False, info=False)
-DT_Third_Draft('joe_rogan', 'jack_dorsey', cutoff_sent=300, save_fig=False, duration=False, labels=True) #'joe_rogan', 'jack_dorsey
+DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
+# DT_Third_Draft('joe_rogan', 'elon_musk', cutoff_sent=-1, save_fig=False, duration=False, labels=True) #'joe_rogan', 'jack_dorsey
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
