@@ -4934,7 +4934,7 @@ def get_ConceptNet(word_list, info=False):
 
 
 
-def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False):
+def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False, labels=True):
     """
     Function to plot Discussion Trees using backbone data, rather than from scratch
 
@@ -4999,31 +4999,30 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
             # Annotate last position with a leaf + branch number label
             leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
             # Plot and annotate little orange dots indicating the number of branch which just ended
-            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=9, color=leaf_colour, zorder=100) #ms=size_leaves,
+            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=7, color=leaf_colour, zorder=100) #ms=size_leaves,
 
-            plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
-                         weight='bold')
+            if not cutoff_sent ==-1:
+                plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
+                             weight='bold')
 
-
-        # x_change = -(x - old_sent_coords[0]) / 4
-        shift_posx = 0.1 if cutoff_sent < 500 else 1
-        shift_negx = 0.1 if cutoff_sent < 500 else 1
-        x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.3
-
-        if new_topic and the_topic not in annotations:
-            word_popularity = usage[words.index(the_topic)]
-            if word_popularity > 1 or pod_df.iloc[idx+1]['new_branch']==True: # mean + 0.5*mean
-                # Annotate
-                plt.rc('font', size=10)  # size_leaves weight='bold'
-                plt.annotate(the_topic, xy=(x + x_change, y+3), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
-                annotations.append(the_topic)
-                plt.rc('font', size=9)  # size_leaves
+        if labels:
+            if new_topic and the_topic not in annotations:
+                x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.3
+                word_popularity = usage[words.index(the_topic)]
+                if word_popularity > 1 or pod_df.iloc[idx+1]['new_branch']==True: # mean + 0.5*mean
+                    # Annotate
+                    plt.rc('font', size=10)  # size_leaves weight='bold'
+                    plt.annotate(the_topic, xy=(x + x_change, y+3), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
+                    annotations.append(the_topic)
+                    plt.rc('font', size=9)  # size_leaves
 
         old_sent_coords = [x, y]
 
     total_duration = pod_df.iloc[-1].timestamp
     podcast_duration = pod_df.iloc[cutoff_sent].timestamp
     total_utterances = len(pod_df)
+    total_branches = pod_df.iloc[-1].branch_num
+    total_stacks = len(Counter(pod_df.stack_name.values ).keys())
     num_utts = cutoff_sent
     print('Total podcast_duration:', total_duration)
     print('selected podcast duration', podcast_duration)
@@ -5033,14 +5032,17 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
     # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
     #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
-    plt.rc('font', size=11)  # size_leaves weight='bold'
+    plt.rc('font', size=10)  # size_leaves weight='bold'
     if duration:
-        plt.annotate(f'Podcast Duration: {podcast_duration}\nTotal Utterances:   {total_utterances}', xy=(10, 60),
-                     bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.4'))
+        plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      {total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
+                     bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3')) #xy for elon musk: (10, 35) #xy for jack dorsey: (10, 35)
 
     ax = plt.gca()
-    # ax.axes.xaxis.set_visible(False)
+    ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
+    if cutoff_sent == -1:
+        plt.xlim([-14, 9.3])
+        plt.ylim([0, 351])
     # save
     if save_fig:
         if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
@@ -5114,15 +5116,12 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
         # print('starting_index once fixed', starting_index)
         idx_where_this_branch_finishes = pod_df[pod_df['branch_num'] == branch_number].index[-1]
         # print('idx_where_this_branch_finishes first:', idx_where_this_branch_finishes)
-        idx_where_this_stack_finishes = \
-        pod_df[(pod_df['branch_num'] == branch_number) & (pod_df['stack_name'] == stack_name)].index[-1]
+        idx_where_this_stack_finishes = pod_df[(pod_df['branch_num'] == branch_number) & (pod_df['stack_name'] == stack_name)].index[-1]
         # print('idx_where_this_stack_finishes', idx_where_this_stack_finishes)
 
-        if idx_where_this_branch_finishes - idx_where_this_stack_finishes > 25:
-            # print('     idx_where_this_branch_finishes - idx_where_this_stack_finishes > 25', idx_where_this_branch_finishes - idx_where_this_stack_finishes)
-            # # i.e. too long away.. find index of where it moves to next topic along this branch
-            idx_where_this_branch_finishes = idx_where_this_stack_finishes + 20
-            # print('idx_where_this_branch_finishes updated', idx_where_this_branch_finishes)
+        # if idx_where_this_branch_finishes - idx_where_this_stack_finishes > 25:
+        #     idx_where_this_branch_finishes = idx_where_this_stack_finishes + 20
+
 
         old_sent_coords_1 = [pod_df.iloc[starting_index]['position_X'], pod_df.iloc[starting_index]['position_Y']] # initiate]
         old_branch_number = 300
@@ -5137,16 +5136,17 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
             if old_branch_number == branch_number:
                 plt.plot([old_sent_coords_1[0], x_1], [old_sent_coords_1[1], y_1], '-', color='k', linewidth=1, zorder=0)
 
-            # if old_branch_number == branch_number and idx_1 == idx_where_this_stack_finishes + 7:
-            #     plt.rc('font', size=8)
-            #     # Annotate last position with a leaf + branch number label
-            #     leaf_colour = 'yellowgreen'  # pod_df.iloc[idx-1]['leaf_colour']
-            #     # Plot and annotate little orange dots indicating the number of branch which just ended
-            #     plt.plot(x_1+ 0.13, y_1+3, 'o', ms=7, color=leaf_colour,
-            #              zorder=100)  # ms=size_leaves,
-            #     plt.annotate(branch_num_1, xy=(x_1 + 0.13, y_1 + 3), color='k',
-            #                  zorder=101,
-            #                  weight='bold')
+            if old_branch_number == branch_number and idx_1 == idx_where_this_branch_finishes-1:
+                plt.rc('font', size=8)
+                # Annotate last position with a leaf + branch number label
+                leaf_colour = 'yellowgreen'  # pod_df.iloc[idx-1]['leaf_colour']
+                # Plot and annotate little orange dots indicating the number of branch which just ended
+                x_shift = 0.08 if branch_num_1>9 else 0.04
+
+                plt.plot(x_1+ 0.13, y_1+3, 'o', ms=10, color=leaf_colour, zorder=90)  # ms=size_leaves,
+                plt.annotate(branch_num_1, xy=(x_1 - x_shift, y_1), color='k',
+                             zorder=91,
+                             weight='bold')
 
             old_sent_coords_1 = [x_1, y_1]
             old_branch_number = branch_num_1
@@ -5162,10 +5162,11 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
     # Total Duration (time)from datetime import datetime
     time_stacks = []
     for branch in stack_df['branch_num'].unique():
-        branch_stack_df = stack_df[stack_df['branch_num']==branch]
+        branch_stack_df = stack_df[stack_df['branch_num'] == branch]
         first = branch_stack_df.iloc[0]['timestamp']
         last = branch_stack_df.iloc[-1]['timestamp']
         time_stacks.append((timestamp_to_datetime(last) - timestamp_to_datetime(first)).total_seconds())
+        print('NUMBER OF SECONDS: ', time_stacks)
     Duration_Time = sum(time_stacks)
     print('\nDuration_Time (sec)', Duration_Time)
 
@@ -5183,7 +5184,7 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
     joe_op_sts_cnt = len(stack_df[stack_df['da_label'] =='Statement-opinion'])
     CANNOT DO BC SPEAKERS ARE NOT LABELLED"""
 
-    # Depth
+    # Depth : Percentage of statements on topic which were opinionated (depth of discussion)
     Statements = len(stack_df[stack_df.da_label.isin(['Statement-opinion'])]) # only use opinion ones? #, 'Statement-non-opinion']
     Depth = round(Statements / Duration_Utts, 4)
     print('\nDepth', Depth)
@@ -5194,7 +5195,7 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
     Qs_perc = Questions / Duration_Utts
     print('\nQuestions', Questions, Qs_perc)
 
-    # Loops (number of times the topic is linked-back to mentioned
+    # Branches (Number of times the conversation loops back to the topic)
     Loopiness = len(stack_df['branch_num'].unique()) - 1 #as one of the times is when it's first brought up
     print('\nLoopiness', Loopiness)
 
@@ -5307,7 +5308,7 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
         if stack_name == 'twitter':
             ann_x_pos = stack_df.iloc[0]['position_X'] - (stack_x_shift + 0.05)
             ann_y_pos = 71
-            xy_pos = (-210, +50)
+            xy_pos = (-215, +50)
             plt.gca().set_xlim(left=stack_df.iloc[0]['position_X'] - 9)
 
         else:
@@ -5317,18 +5318,20 @@ def DT_With_Info(podcast_name, transcript_name, stack_name, cutoff_sent=-1, save
 
     plt.rc('font', size=9)
     plt.annotate(r'$\bf{Topic}$:'+f'                    {stack_name_ann}\n'
-                    r'$\bf{Duration}$:'+f'              {round(Duration_Time/60, 2)}'+r' $\it{min}$,'+f' {Duration_Utts}'+r' $\it{Utts}$'+f'\n'
-                 r'$\bf{First}$ $\bf{Mention}$:'+f'      {First_Mention}, (branch {First_Mention_Branch})\n'
-                 r'$\bf{Last}$ $\bf{Mention}$:'+f'       {Last_Mention}, (branch {Last_Mention_Branch})\n'
+                 r'$\bf{Utterances}$:'+f'           {Duration_Utts}\n' #+r' $\it{Utts}$'+f'\n'
+                 r'$\bf{First}$ $\bf{Mention}$:'+f'      {First_Mention}, (Branch {First_Mention_Branch})\n'
+                 r'$\bf{Last}$ $\bf{Mention}$:'+f'       {Last_Mention}, (Branch {Last_Mention_Branch})\n'
                  r'$\bf{Primary}$ $\bf{Speaker}$:'+f' {primary_speaker}, ({speaker_stats_prc}%)\n'
-                 r'$\bf{Leading}$ $\bf{Speaker}$:'+f' {leading_speaker}, ({speaker_Qs_prc}%)\n'
-                 r'$\bf{Loops}$: '+f'  {Loopiness}   ' r'           $\bf{Richness}$:'+f'         {Richness}\n'
+                 r'$\bf{Leading}$ $\bf{Speaker}$:'+f' {leading_speaker},   ({speaker_Qs_prc}%)\n'
+                 r'$\bf{Loops}$: '+f'  {Loopiness}   ' r'          $\bf{Richness}$:'+f'         {Richness}\n'
                  r'$\bf{Depth}$:'+f' {int(Depth*100)}%'
-                 r'           $\bf{Interupptions}$:'+f' {number_cutoffs}\n',
+                 r'            $\bf{Interupptions}$:'+f'  {number_cutoffs}',
                  xy=(ann_x_pos, ann_y_pos), xytext=xy_pos, textcoords='offset points',
                     ha='left', va='center',
-                 bbox=dict(boxstyle='roundtooth,pad=0.7,tooth_size=0.6', fc='greenyellow', alpha=0.2),
+                 bbox=dict(boxstyle='roundtooth,pad=0.6,tooth_size=0.6', fc='greenyellow', alpha=0.2),
                              arrowprops=dict(arrowstyle='-|>', connectionstyle='arc3,rad=0', color='darkgreen'))
+
+    #{round(Duration_Time/60, 2)}'+r' $\it{min}$,'+f' {Duration_Utts}'+r' $\it{Utts}$'+f'\n'
 
     # plt.xlim(stack_df.iloc[0]['position_X']-5, stack_df.iloc[0]['position_X']+1)
     ax = plt.gca()
@@ -6148,7 +6151,7 @@ def Basic_DT_Example():
                 bbox=dict(boxstyle='round,pad=0.2', fc='lightgrey', alpha=0.2),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.0', color='grey'))
 
-    plt.annotate('Branch', xy=(-1.2, 25), xytext=(-1.8, 28),
+    plt.annotate('Branch', xy=(-0.96, 26), xytext=(-1.8, 28),
                 ha='center', va='bottom',
                 bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', color='red'))
@@ -6159,10 +6162,13 @@ def Basic_DT_Example():
     #             bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.2),
     #             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3',
     #                             color='red'))
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
 
     plt.xlim([-2.55, 2.2])
     plt.ylim([-2, 31])
-    plt.title('Basic Discussion Tree Structure', fontsize=15)
+    plt.title('Discussion Tree Structure', fontsize=15)
 
     plt.show()
     return
@@ -6180,7 +6186,7 @@ def Basic_DT_Example():
 
 # Basic_DT_Structure(cutoff_sent=300, Interviewee='elon musk', save_fig=False)      #
 
-Basic_DT_Example()
+# Basic_DT_Example()
 
 # DT_Shifting_Line_Topics(Interviewee='elon musk', logscalex=False, save_fig=False)
 
@@ -6188,8 +6194,8 @@ Basic_DT_Example()
 # DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 # DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
-# DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
-# DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=300, save_fig=False, duration=False) #'joe_rogan', 'jack_dorsey
+# DT_With_Info('joe_rogan', 'jack_dorsey', 'twitter', cutoff_sent=-1, save_fig=False, info=False)
+DT_Third_Draft('joe_rogan', 'jack_dorsey', cutoff_sent=300, save_fig=False, duration=False, labels=True) #'joe_rogan', 'jack_dorsey
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
