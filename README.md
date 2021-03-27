@@ -49,15 +49,15 @@ As output graphics from two podcast transcripts are structured according to the 
 
 The Discussion Trees for nine episodes from the ‘Heavy Topics’ podcast, available on Spotify, are given below to illustrate how they can be used as visual fingerprints for episodes of a given podcast.
 
-<img src = "Screenshots/DTs_as_fingerprints.png" width ="400" />
+<img src = "Screenshots/DTs_as_fingerprints.png" width ="300" />
 
 Discussion Trees for the interviews of a) Jack Dorsey and b) Elon Musk by Joe Rogan on the Joe Rogan podcast. These interviews are both roughly two hours long and contain 1744, and 1705 utterances respectively. We omit stack labels for the sake of visual clarity, but provide preliminary information about the trees in the boxed annotations.
 
-<img src = "Screenshots/DTs_as_fingerprints.png" width ="900" />
+<img src = "Screenshots/Full_Trees.png" width ="600" />
 
 Below on the left Discussion Tree of the first 350 utterances in the Joe Rogan interview of Jack Dorsey, with only the most popular topics – in terms of usage throughout the whole transcript – annotated on their respective stacks, and branch numbers annotated on the green leaves. The conversation seems to be focusing on the over-arching topic of \textit{Twitter}, so we investigate further by plotting a Detailed Discussion Tree for the topic, given on the right.
 
-<img src = "Screenshots/First_350_Jack_Trimmed.png" width ="400" /> <img src = "Screenshots/First_350_Jack_Trimmed.png" width ="400" />
+<img src = "Screenshots/First_350_Jack_Trimmed.png" width ="300" /> <img src = "Screenshots/First_350_Jack_Trimmed.png" width ="300" />
 
 Detailed Discussion Tree for the topic *Twitter*, spoken about during the Joe Rogan interview of Jack Dorsey. All branches of conversation originating on this topic are plotted, as well as details given in the green label. The definitions of all given features of conversation are defined in the following Table. As the entire podcast lasted only 01:54:43 we observe this topic truly was spoken about throughout the interview.
 
