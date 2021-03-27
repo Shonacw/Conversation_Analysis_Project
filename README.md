@@ -41,26 +41,20 @@ Segmentation methods used:
 
 
 # Discussion Trees: Visualising Conversation Structure and Topic Evolution
-This part of the project investigates how one can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. The output graphic will act as a visual snapshot of the conversation, providing a viewer with insight into the extent to which different topics were discussed. The goal is to make key themes and points discussed immediately accessible, highlighting which discussion points need to be built out and which have yet to be explored all at just a glance.
+This part of the project investigates how one can best visualise the evolution of ideas and nature/flow of conversation from a given podcast transcript. We introduce Discussion Trees: graphics designed to offer a birds-eye-view of conversation transcripts in a way which aims to uncover high-level trends in human communication patterns. Discussion Trees also provide easily-accessible insights into the topical content of a transcript: Which topics lead to which other topics? How quickly do topics diverge? Which topics are repeatedly looped back to? etc.
 
-We introduce Discussion Trees: graphics designed to offer a birds-eye-view of conversation transcripts in a way which aims to uncover high-level trends in human communication patterns. Discussion Trees also provide easily-accessible insights into the topical content of a transcript: Which topics lead to which other topics? How quickly do topics diverge? Which topics are repeatedly looped back to? etc.
-
-As output graphics from two podcast transcripts are structured according to the same set of rules, they can be directly visually compared and in doing so highlight differences in conversation structure and topical evolution. When applied to podcast transcripts, we propose Discussion Tree as a method of podcast hosts gaining insight into their unique interview styles, as a way to evaluate why one episode found more success than another, and also as means of transcript data navigation. 
-
-The Discussion Trees for nine episodes from the ‘Heavy Topics’ podcast, available on Spotify, are given below to illustrate how they can be used as visual fingerprints for episodes of a given podcast.
-
-<img src = "Screenshots/DTs_as_fingerprints.png" width ="600" />
-
-Discussion Trees for the interviews of a) Jack Dorsey and b) Elon Musk by Joe Rogan on the Joe Rogan podcast. These interviews are both roughly two hours long and contain 1744, and 1705 utterances respectively. We omit stack labels for the sake of visual clarity, but provide preliminary information about the trees in the boxed annotations.
+As output graphics from two podcast transcripts are structured according to the same set of rules, they can be directly visually compared and in doing so highlight differences in conversation structure and topical evolution. When applied to podcast transcripts, we propose Discussion Tree as a method of podcast hosts gaining insight into their unique interview styles, as a way to evaluate why one episode found more success than another, and also as means of transcript data navigation. Discussion Trees for the interviews of a) Jack Dorsey and b) Elon Musk by Joe Rogan on the Joe Rogan podcast. These interviews are both roughly two hours long and contain 1744, and 1705 utterances respectively. We omit stack labels for the sake of visual clarity, but provide preliminary information about the trees in the boxed annotations.
 
 <img src = "Screenshots/Full_Trees.png" width ="600" />
 
-Below on the left Discussion Tree of the first 350 utterances in the Joe Rogan interview of Jack Dorsey, with only the most popular topics – in terms of usage throughout the whole transcript – annotated on their respective stacks, and branch numbers annotated on the green leaves. The conversation seems to be focusing on the over-arching topic of \textit{Twitter}, so we investigate further by plotting a Detailed Discussion Tree for the topic, given on the right.
+Below on the left Discussion Tree of the first 350 utterances in the Joe Rogan interview of Jack Dorsey, with only the most popular topics – in terms of usage throughout the whole transcript – annotated on their respective stacks, and branch numbers annotated on the green leaves. The conversation seems to be focusing on the over-arching topic of \textit{Twitter}, so we investigate further by plotting a Detailed Discussion Tree for the topic, given on the right. All branches of conversation originating on this topic are plotted, as well as details given in the green label.
 
 <img src = "Screenshots/First_350_Jack_Trimmed.png" width ="300" /> <img src = "Screenshots/Twitter_Jack_Trimmed.png" width ="300" />
 
-Detailed Discussion Tree for the topic *Twitter*, spoken about during the Joe Rogan interview of Jack Dorsey. All branches of conversation originating on this topic are plotted, as well as details given in the green label. The definitions of all given features of conversation are defined in the following Table. As the entire podcast lasted only 01:54:43 we observe this topic truly was spoken about throughout the interview.
 
+Finally, the Discussion Trees for nine episodes from the ‘Heavy Topics’ podcast, available on Spotify, are given below to illustrate how they can be used as visual fingerprints for episodes of a given podcast.
+
+<img src = "Screenshots/DTs_as_fingerprints.png" width ="400" />
 
 
 
