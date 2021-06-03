@@ -2495,7 +2495,7 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
     print(file[:100].to_string())
 
     plt.figure()
-    plt.title('Questioning Dialogue Act Steps: {}'.format(Interviewee.title()))
+    plt.title('Questioning Dialogue Act Steps: {}'.format(Interviewee.title()), fontsize=15)
     old_sent_coords = [0, 0]
     old_idx = 0
     old_topics = []
@@ -2522,7 +2522,7 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
 
         if not tag_change:
             new_dir_x = 1 # 1 bc x direction is for continuing on convo #old_dir_x  # 1 if moving along x, 0 if moving along y
-            change_in_coords = [step_size, 0] if new_dir_x else [0, step_size]
+            change_in_coords = [step_size, 0] if new_dir_x else [1, step_size]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
             try:
                 current_topics = list(row['topics'])
@@ -2532,7 +2532,7 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
 
             plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3, zorder=100) #plot node
             plt.plot([old_sent_coords[0], new_sent_coords[0]],[old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour, linewidth=3)# plot line
+                     color='k', linewidth=6)# plot line
 
         if tag_change:
             print('\ntopic', row['topics'])
@@ -2566,7 +2566,7 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
                 new_topic.insert(0, 'state')
                 new_topic.insert(1, 'finance')
 
-            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=3, zorder=100)  # plot node
+            plt.plot(new_sent_coords[0], new_sent_coords[1], 'o', color='k', ms=4, zorder=100)  # plot node
             # plot topic
             # plt.annotate(', '.join(new_topic[:1]), xy=(new_sent_coords[0]-10, new_sent_coords[1]+0.1), color='k', zorder=100) # textcoords="offset points" #weight=)
             # plot dialogue act
@@ -2581,14 +2581,14 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
                 da_label = '(D) Y/N'
 
             try:
-                annotation = [da_label,':',new_topic[0]]
-                plt.annotate(''.join(annotation), xy=(new_sent_coords[0]+1, new_sent_coords[1] - 0.7), color='k',
+                annotation = [new_topic[0]] #[da_label,':',new_topic[0]]
+                plt.annotate(''.join(annotation), xy=(new_sent_coords[0]+1, new_sent_coords[1] - 1), color='k',
                              zorder=100)  # textcoords="offset points" #weight=)
-            except IndexError:
-                plt.annotate(da_label, xy=(new_sent_coords[0]+1, new_sent_coords[1]-0.7), color='k', zorder=100) # textcoords="offset points" #weight=)
+            except IndexError: #da_label
+                plt.annotate('requirement', xy=(new_sent_coords[0]+1, new_sent_coords[1]-1), color='k', zorder=100) # textcoords="offset points" #weight=)
 
             plt.plot([old_sent_coords[0], new_sent_coords[0]], [old_sent_coords[1], new_sent_coords[1]], '-',
-                     color=colour, linewidth=3)  # plot line
+                     color=colour, linewidth=6, zorder=0)  # plot line
 
         old_sent_coords = new_sent_coords
         old_idx = idx
@@ -2624,7 +2624,7 @@ def Simple_Line_DA(cutoff_speakerchange=200, Interviewee='elon musk', save_fig=F
     plt.xlim(0, 105)
     ax = plt.gca()
     # ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
+    # ax.axes.yaxis.set_visible(False)
 
     if save_fig:
         plt.savefig("Saved_Images/{0}/Simple_Line_DA.png".format(transcript_name), dpi=600)
@@ -4932,9 +4932,7 @@ def get_ConceptNet(word_list, info=False):
 
 
 
-
-
-def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False, labels=True):
+def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False, labels=False):
     """
     Function to plot Discussion Trees using backbone data, rather than from scratch
 
@@ -4973,6 +4971,8 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     med = statistics.median(usage)
     mean = statistics.mean(usage)
     print('mean', mean)
+
+    filenames = []
 
     # Instantiate figure
     plt.figure()
@@ -5043,11 +5043,12 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
     if duration:
         plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      {total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
                      bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3')) #xy for elon musk: (10, 35) #xy for jack dorsey: (10, 35)
-    plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.8'))
+
+        plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.8'))
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
-    if cutoff_sent == -1:
+    if cutoff_sent == -1 and podcast_name=='joe_rogan':
         plt.xlim([-14, 9.3])
         plt.ylim([0, 351])
     # save
@@ -5055,7 +5056,183 @@ def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False
         if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
             os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
 
-        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT3.png".format(podcast_name, transcript_name), dpi=600)
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT3_16th.png".format(podcast_name, transcript_name), dpi=600)
+
+    plt.show()
+
+    return
+
+def GIF_DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False, labels=False):
+    """
+    Function to plot Discussion Trees using backbone data, rather than from scratch
+
+    transcript_df['stack_name']     = [None] * Num_Total_Utts
+    transcript_df['branch_num']     = [None] * Num_Total_Utts
+    transcript_df['position_X']     = [None] * Num_Total_Utts
+    transcript_df['position_Y']     = [None] * Num_Total_Utts
+    transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
+    transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
+    transcript_df['leaf_colour']        = [None] * Num_Total_Utts
+    transcript_df['new_topic']          = [False] * Num_Total_Utts
+    transcript_df['new_branch']      = [False] * Num_Total_Utts"""
+    import statistics
+    import imageio
+    from celluloid import Camera
+    import ffmpeg
+    from matplotlib import animation
+
+    #load relevant df
+    pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
+    colour = 'k'        # colour of tree structure
+    colour_label = 'k'  # colour of annotations
+
+    old_sent_coords = [0, 0]
+    annotations = []
+
+    # Calculate the height of each stack
+    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
+    idx_of_new_branch.insert(0, 0)
+    idx_of_new_branch.insert(-1, len(pod_df))
+    #height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
+
+    Topics_Utterances = dict(pod_df['stack_name'].value_counts())
+    sorted_stack_counts = sorted(Topics_Utterances.items(), key=lambda kv: kv[1], reverse=True)
+    print(sorted_stack_counts)
+    lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
+    words, usage = zip(*lists)
+
+    # Calculate mean / median stack height (only going to label long ones)
+    med = statistics.median(usage)
+    mean = statistics.mean(usage)
+    print('mean', mean)
+
+    filenames = []
+
+    # Instantiate figure
+    plt.figure()
+    plt.title('Discussion Tree: {0}'.format(transcript_name.title()), fontsize=15)
+    plt.rc('font', size=6)
+
+    fig = plt.figure()
+    camera = Camera(fig)
+    if cutoff_sent == -1:
+        cutoff_sent = len(pod_df)
+    print('cutoff_sent', cutoff_sent)
+    for i in range(cutoff_sent):
+        old_sent_coords = [0, 0]
+        for idx, row in pod_df[0:i].iterrows():
+            the_topic = row['stack_name']
+
+            if not the_topic:
+                continue
+
+            branch_num = row['branch_num']
+            x = row['position_X']
+            y = row['position_Y']
+            new_topic = row['new_topic']
+            new_branch = row['new_branch']
+
+            plt.plot(x, y, 'o', color=colour, ms=2, zorder=0)  # Plot node
+            if not new_branch:
+                # Plot: continuing on the same branch, but with a new position to mark a new set of topics
+                plt.plot([old_sent_coords[0], x], [old_sent_coords[1], y], '-', color=colour, linewidth=1, zorder=0)
+
+            elif new_branch and branch_num != 0:
+                # Annotate last position with a leaf + branch number label
+                leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
+                # Plot and annotate little orange dots indicating the number of branch which just ended
+                plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=7, color=leaf_colour, zorder=100) #ms=size_leaves,
+
+                if not cutoff_sent == -1:
+                    plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
+                                 weight='bold')
+
+            if labels:
+                if new_topic and the_topic not in annotations:
+                    x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.5
+                    y_change = 2
+                    if the_topic == 'context':
+                        x_change = 0.2
+                    elif the_topic == 'conversation':
+                        x_change = -0.5
+                    elif the_topic == 'accounts':
+                        y_change = 10
+                    word_popularity = usage[words.index(the_topic)]
+                    if word_popularity > (mean) or pod_df.iloc[idx+1]['new_branch']==True or the_topic=='hashtag': # mean + 0.5*mean
+                        # Annotate
+                        plt.rc('font', size=11)  # size_leaves weight='bold'
+                        plt.annotate(the_topic, xy=(x + x_change, y+y_change), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
+                        annotations.append(the_topic)
+                        plt.rc('font', size=11)  # size_leaves
+
+            old_sent_coords = [x, y]
+        # # create file name and append it to a list
+        # filename = f'/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Viva/GIF/{idx}.png'
+        # filenames.append(filename)
+        #
+        # # save frame
+        # plt.savefig(filename)
+        # plt.close()
+        ax = plt.gca()
+        ax.axes.xaxis.set_visible(False)
+        ax.axes.yaxis.set_visible(False)
+        camera.snap()
+
+    animation = camera.animate()
+    # animation.save("in.mp4") #/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Viva/DT_{}.gif'.format(transcript_name))
+
+    # plt.show()
+    animation.save('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Viva/DT_{}.gif'.format(transcript_name), writer='imagemagick', fps=5)
+    # plt.close()
+    # codeBASH = "ffmpeg -i in.mp4 -filter_complex 'fps=10,scale=320:-1:flags=lanczos,split [o1] [o2];[o1] palettegen [p]; [o2] fifo [o3];[o3] [p] paletteuse' out.gif"
+    #
+    # os.system(codeBASH)
+    # os.remove("in.mp4")
+    # print("saved as gif and cleaned up")
+    # plt.show()
+
+    # # build gif
+    # with imageio.get_writer('/Users/ShonaCW/Desktop/Imperial/YEAR 4/MSci Project/Viva/DT_{}.gif'.format(transcript_name), mode='I') as writer:
+    #     for filename in filenames:
+    #         image = imageio.imread(filename)
+    #         writer.append_data(image)
+    #
+    # # Remove files
+    # for filename in set(filenames):
+    #     os.remove(filename)
+
+    total_duration = pod_df.iloc[-1].timestamp
+    podcast_duration = pod_df.iloc[cutoff_sent].timestamp
+    total_utterances = len(pod_df)
+    total_branches = pod_df.iloc[-1].branch_num
+    total_stacks = len(Counter(pod_df.stack_name.values).keys())
+    num_utts = cutoff_sent
+    print('Total podcast_duration:', total_duration)
+    print('selected podcast duration', podcast_duration)
+    print('\nTotal number of utterances', total_utterances)
+    print('number_of_utterances selected:', num_utts)
+
+    #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
+    # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
+    #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
+    plt.rc('font', size=11)  # size_leaves weight='bold'
+    if duration:
+        plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      {total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
+                     bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3')) #xy for elon musk: (10, 35) #xy for jack dorsey: (10, 35)
+
+        plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.8'))
+    ax = plt.gca()
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    if cutoff_sent == -1 and podcast_name=='joe_rogan':
+        plt.xlim([-14, 9.3])
+        plt.ylim([0, 351])
+    # save
+    if save_fig:
+        if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
+            os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))
+
+        plt.savefig("Spotify_Podcast_DataSet/{0}/{1}/{1}_DT3_16th.png".format(podcast_name, transcript_name), dpi=600)
 
     plt.show()
 
@@ -6070,15 +6247,22 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
         else:
             transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
 
+        # check if we have the transcript_df
+        try:
+            pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
+                             key='df')
+        except:
+            continue
+
         print('\nEpisode:', transcript_name, '. Full path: ', str(path))
         print('Plotting DT...')
         if Animate_only:
             Animate_TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent)
 
         if not TTTS_only or not Animate_only:
-            DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig, duration=False)
+            DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig, duration=False, labels=False)
         print('Plotting TTTS...')
-        if not DT_only or not Animate_only:
+        if TTTS_only: #not DT_only or not Animate_only:
             TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig)
         pod_cnt += 1
 
@@ -6201,13 +6385,14 @@ def Basic_DT_Example():
 # DT_Second_Draft('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', cutoff_sent=-1, save_fig=False, info=False)
 
 # DT_Backbone('/Users/ShonaCW/Downloads/processed_transcripts (2)/186/spotify_heavy_topics_fuckboys_and_44643.pkl', 'heavy_topics', 'fuckboys_and', info=False)
-DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
-# DT_Third_Draft('joe_rogan', 'elon_musk', cutoff_sent=-1, save_fig=False, duration=False, labels=True) #'joe_rogan', 'jack_dorsey
+# DT_With_Info('joe_rogan', 'elon_musk', 'covid', cutoff_sent=-1, save_fig=False, info=False)
+# DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=-1, save_fig=False, duration=True, labels=True) #'joe_rogan', 'jack_dorsey
+GIF_DT_Third_Draft('heavy_topics', 'heavy_topics_being_a_71410', cutoff_sent=190, save_fig=False, duration=False, labels=True)
 
 #TTTS('heavy_topics', 'heavy_topics_i_killed_94201', cutoff_sent=100, save_fig=False, heatmap=False) #'heavy_topics_fuckboys_and_44643'
 
-# Info_Collection_Handler('joe_rogan')
-#DT_Handler('joe_rogan', podcast_count=12, cutoff_sent=200, save_fig=False, TTTS_only=False, DT_only=False, Animate_only=True) #'wall_street' #'5_star' (football one) #'confessions_of'
+# Info_Collection_Handler('5_star')
+# DT_Handler('heavy_topics', podcast_count=50, cutoff_sent=-1, save_fig=True, TTTS_only=False, DT_only=True, Animate_only=False) #'wall_street' #'5_star' (football one) #'confessions_of'
 #Animate_TTTS(podcast_name='joe_rogan', transcript_name='jack_dorsey', cutoff_sent=1000)
 
 #TTTS_Comparison('heavy_topics', 'heavy_topics_being_a_71410', 'heavy_topics_create_the_54285') #wall_street_e2_madrid_34282', 'wall_street_e7_germany_65827') # heavy_topics_i_killed_94201   being_a_71410
