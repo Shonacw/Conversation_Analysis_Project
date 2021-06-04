@@ -1354,15 +1354,17 @@ def Animate(segments_info_df_1, keyword_vectors_df, transcript_name, save_name, 
 
 def DT_Backbone(path, podcast_name, transcript_name, info=False):
     """
-    Function which takes a given transcript and ...
-
+    Function which takes a given transcript and determines the position of the node for each utterance in
+    Discussion-Tree (DT) space. All gathered information is saved to the 'transcript_df' dataframe in the
+    relevant folder.
     """
-    # LOAD df containing Topic + Dialogue Act information...
+
+    # Load df containing topic and Dialogue Act information...
     print('Collecting backbone info for: ', transcript_name)
 
     transcript_df = pd.read_pickle(path)
 
-    # create new column we will fill
+    # Prepare new dataframe columns
     Num_Total_Utts = len(transcript_df)
     transcript_df['stack_name'] = [None] * Num_Total_Utts
     transcript_df['branch_num'] = [None] * Num_Total_Utts
@@ -1371,7 +1373,6 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
     transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
     transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
     transcript_df['leaf_colour'] = [None] * Num_Total_Utts
-
     transcript_df['new_topic'] = [False] * Num_Total_Utts
     transcript_df['new_branch'] = [False] * Num_Total_Utts
 
@@ -1379,10 +1380,9 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
     # Define some dictionaries and counters we'll need...
     Dict_of_topics, Dict_of_topics_counts, Dict_of_topics_direction = {}, {}, {}
     (step_size_x, step_size_y) = (1, 3)
-
     old_sent_coords, old_topic, old_current_topics = [0, 0], '', []
     branch_number, topic_direction = 0, +1
-    topics_with_stacks = []
+    topics_with_stacks = []                                                 # Will store all labels of stacks in convo
     single_stacks_appended_to_last_counter = 0
     first_idx_with_a_topic = int(transcript_df.index[transcript_df['topics'].astype(bool)].tolist()[0])
 
@@ -1390,39 +1390,39 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
     Quartiles = [i for i in split_segs(range(Num_Total_Utts), 4)]
     Colours_Dict = {0: ['palegreen', 5], 1: ['lawngreen', 4], 2: ['forestgreen', 4], 3: ['darkgreen', 4]}
 
-    nlp = spacy.load("en_core_web_sm")  ####
+    # Load language model
+    nlp = spacy.load("en_core_web_sm")
 
     # Loop through Utterances in the dataframe...
     for idx, row in transcript_df.iterrows():
-        transcript_df.loc[idx, 'branch_num'] = branch_number
-        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)
-        colour_leaves = Colours_Dict[quartile][0]  # cm.YlOrRd(branch_number/20)   # Added so later branches are lighter
-        size_leaves = Colours_Dict[quartile][1]
-        colour = 'k'
+        transcript_df.loc[idx, 'branch_num'] = branch_number                # Fill branch number
+        quartile = next(i for i, v in enumerate(Quartiles) if idx in v)     # Find which quartile of the convo we are in
+        colour_leaves = Colours_Dict[quartile][0]                           # Colour leaves according to the quartile
         no_topic = False
 
+        # Obtain list of current active topics
         set_of_topics = row['topics']
-        current_topics = [list(x) for x in set_of_topics if x]  # All topics contained in this Utt
+        current_topics = [list(x) for x in set_of_topics if x]              # All topics contained in this Utt
 
-        if idx < 20 and len(current_topics) == 0:  # Sometimes the first few Utterances have no topic
+        if idx < 20 and len(current_topics) == 0:                     # Sometimes the first few Utterances have no topic
             if info:
                 print('Skipped idx due to no topics')
             continue
 
-        current_topics = [item for sublist in current_topics for item in sublist]
-        continued_topics = [x for x in current_topics if x == old_topic]  # Topics continued from previous Utt
+        current_topics = [item for sublist in current_topics for item in sublist]   # Expand list of lists into 1 list
+        continued_topics = [x for x in current_topics if x == old_topic]            # Topics continued from previous Utt
 
-
-        if idx == Num_Total_Utts-1: # i.e. no 'next' topics
+        # Obtain list of active topics in the next utterance
+        if idx == Num_Total_Utts - 1:                                               # Deal with case of final utterance
             new_topic = current_topics
 
         else:
             next_topics = [list(x) for x in transcript_df.topics[idx + 1] if x]
             next_topics = [item for sublist in next_topics for item in sublist]
 
-            new_topic = [x for x in current_topics if x in next_topics]  # NOTE C
+            new_topic = [x for x in current_topics if x in next_topics]             # NOTE C
 
-        continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
+        continued_topic = False if len(continued_topics) == 0 else True             # False if no topics were continued
 
         if info:
             print('\nidx: ', idx)
@@ -1431,22 +1431,23 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
             print('new_topic', new_topic)
             print('continued_topic', continued_topic)
 
+        # Deal with case where no topics have been continued, and no NEW topics are being discusses
         if not continued_topic and len(new_topic) == 0:
-            if len(old_current_topics) == 0:
-                # ie if this is the FIRST line!
+            if len(old_current_topics) == 0:             # If this is the FIRST utterance
                 new_topic = current_topics.copy()
-            else:
-                # if this isn't the first line. Note Z
-                continued_topics = [x for x in current_topics if x in old_current_topics]
+            else:                                        # If this is not the first utterance
+                continued_topics = [x for x in current_topics if x in old_current_topics] # look for ANY matching topics
+
+                # Document the fact no new topics were started
                 single_stacks_appended_to_last_counter += 1
                 continued_topic = False if len(continued_topics) == 0 else True  # False if no topics were continued on
                 no_topic = True
 
-        if continued_topic:  # If continued on topics from last Utterance, just move up the y axis 1 step
+        elif continued_topic:             # If continued on topics from last Utterance, just move up the y axis 1 step
             change_in_coords = [0, 1]
             new_sent_coords = list(map(add, old_sent_coords, change_in_coords))
 
-            if step_size_x < 0:  # Save the direction in which this branch is travelling
+            if step_size_x < 0:           # Store direction in which this branch is travelling
                 current_direction = -1
             else:
                 current_direction = 1
@@ -1456,15 +1457,18 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
                 Dict_of_topics[the_topic] = new_sent_coords
                 Dict_of_topics_direction[the_topic] = current_direction
 
-            # not updating leaf colour as this is not the end of a stack (and hence doesn't have a leaf)
+            # Not updating leaf colour as this is not the end of a stack (and hence doesn't have a leaf)
             transcript_df.loc[idx, 'stack_name'] = the_topic
             transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
             transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
 
-        elif not continued_topic:  # NOTE B
+        # If we are not simply just shifting upwards due to a continued topic...
+        elif not continued_topic:                                         # NOTE B
+
+            # Check whether any of the new topics already have stacks, and if so, store their positions
             the_topic = None
             for top in new_topic:
-                if top in topics_with_stacks:  # Dict_of_topics:
+                if top in topics_with_stacks:                             # Dict_of_topics
                     X_pos, Y_pos = Dict_of_topics[top]
                     topic_direction = Dict_of_topics_direction[top]
                     the_topic = top
@@ -1472,11 +1476,9 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
                 else:
                     continue
 
-            ## Here we just want to shift the branch horizontally and start a new stack, as it's a whole new topic
+            ## If no familiar topics were found, simply shift the branch horizontally and start a new stack
             if the_topic is None:
-                #Dict_of_topics_counts[the_topic] = 3 # instantiate it at 3
-                #step_size_y = Dict_of_topics_counts[the_topic]
-                change_in_coords = [step_size_x, step_size_y]  # Shift horizontally and upwards
+                change_in_coords = [step_size_x, step_size_y]             # Shift horizontally and upwards
                 if idx == first_idx_with_a_topic:
                     new_sent_coords = old_sent_coords
                 else:
@@ -1488,19 +1490,19 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
                 Dict_of_topics[the_topic] = new_sent_coords
                 Dict_of_topics_counts[the_topic] = 1
 
-                if step_size_x < 0:  # Save the direction in which this branch is travelling
+                if step_size_x < 0:                 # Save the direction in which this branch is travelling
                     current_direction = -1
                 else:
                     current_direction = 1
 
                 Dict_of_topics_direction[the_topic] = current_direction
 
-                transcript_df.loc[idx, 'stack_name'] = the_topic
+                transcript_df.loc[idx, 'stack_name'] = the_topic      # Save DT-space coordinate for this utterance
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
                 transcript_df.loc[idx, 'new_topic'] = True
 
-            ## Here we are starting a new branch at the position of the topic we've jumped back to
+            ## If we have instead returned to a familiar topic, we jump back to it's stack and grow from there
             else:
                 branch_number += 1
 
@@ -1519,8 +1521,8 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
                 Dict_of_topics_counts[the_topic] += 1
                 #step_size_y += 1
 
+                # Store DT-space coordinate for this utterance
                 transcript_df.loc[idx-1, 'leaf_colour'] = colour_leaves
-
                 transcript_df.loc[idx, 'stack_name'] = the_topic
                 transcript_df.loc[idx, 'position_X'] = new_sent_coords[0]
                 transcript_df.loc[idx, 'position_Y'] = new_sent_coords[1]
@@ -1543,6 +1545,7 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
     except OSError:
         pass
 
+    # Save dataframe
     transcript_df.to_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                          key='df', mode='w')
 
