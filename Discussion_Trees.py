@@ -1,11 +1,4 @@
-import torch
 from sklearn.manifold import TSNE
-from gensim.models import KeyedVectors
-import tensorflow_hub as hub
-from sklearn.cluster import DBSCAN
-from sklearn.decomposition import PCA
-from gensim.models import Phrases #Phraser
-from gensim.models import FastText as ft
 import fasttext
 import fasttext.util
 import pprint
@@ -29,55 +22,22 @@ import operator
 from functools import reduce
 import numpy as np
 import pandas as pd
-import sys
-import unicodedata
+import statistics
 from collections import defaultdict
-from pprint import pprint
-from matplotlib.lines import Line2D
 from operator import add
-import tabulate
-import string
-import more_itertools as mit
-from matplotlib import cm
-from datetime import datetime
 
-import networkx as nx
-from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
+from matplotlib.lines import Line2D
 from matplotlib import cm
-
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-## Functions for pre-processing...
-# def Process_Transcript(text, names, Info=False):
-#     """
-#     Function to remove names of speakers / times of Utterances from transcript, returning all spoken utterances as a
-#     single string.
-#     """
-#     if Info:
-#         print('Text format before preprocessing:\n', text[:300])
-#
-#     # Remove speaker names
-#     for name in names:
-#         text = re.sub(name, "", text)
-#     # Get rid of the time marks
-#     content_1 = re.sub('[0-9]{2}:[0-9]{2}:[0-9]{2}', " ", text)  # \w+\s\w+;
-#     # Strip new-lines
-#     content_2 = re.sub('\n', " ", content_1)
-#     # Strip white spaces
-#     content_2.strip()
-#
-#     if Info:
-#         print('\nText format after preprocessing:\n', content_2)
-#
-#     return content_2
-
+## Functions for NLP pre-processing...
 
 def Extract_Names(transcript_name):
     """
