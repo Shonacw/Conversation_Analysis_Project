@@ -4796,12 +4796,6 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
 
 
 
-
-
-
-
-
-
     # Create new hdf file for given podcast
     try:
         if not os.path.exists('Spotify_Podcast_DataSet_/{0}/{1}'.format(podcast_name, transcript_name)):
