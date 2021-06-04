@@ -18,18 +18,51 @@ class BiRNN_CRF_Model:
     def __init__(self, embedding_matrix, n_tags, rnn_type):
         self.embedding_matrix = embedding_matrix
         self.n_tags = n_tags                                    # Number of Dialogue Acts
-        self.rnn = LSTM if rnn_type == "lstm" else GRU          # Choice of cell structure
+        self.rnn = LSTM if rnn_type == "lstm" else GRU          # Choice of RNN cell structure
 
     def get_model(self):
         return get_BiRNN_CRF_model(self.embedding_matrix, self.n_tags, self.rnn)
 
+
+def get_embedding_matrix(word2id, force_rebuild=False):
+    """
+    Function to load the word vectors for words in each utterance
+
+    word2id:        List of words, from tokenizer.word_index
+    force_rebuild:  Set to False when not changing total vocabulary
+
+    """
+    fpath = "../helper_files/embedding_matrix.pkl"
+
+    # If we are not forcing a rebuild, check if matrix already exists...
+    if not force_rebuild and os.path.exists(fpath):
+        with open(fpath, "rb") as f:
+            matrix = pickle.load(f)
+
+    # Otherwise, build matrix...
+    else:
+        # glv_vector = load_pretrained_glove(path)      # GloVe Embeddings
+        glv_vector = load_pretrained_conceptnet()       # ConceptNet Numberbatch embeddings
+        dim = config.data["embedding_dim"]              # Dimensions of embeddings (300)
+        matrix = np.zeros((len(word2id) + 1, dim))
+
+        for word, label in word2id.items():             # Obtain embeddings for words in corpus
+            try:
+                matrix[label] = glv_vector[word]
+            except KeyError:
+                continue
+
+        with open(fpath, "wb") as matrix_file:
+            pickle.dump(matrix, matrix_file)
+
+    return matrix
 
 
 def get_BiRNN_CRF_model(embedding_matrix, n_tags, rnn, verbose=False):
     """
     Function which instantiates the Bi-directional RNN CRF model.
 
-    embedding_matrix:
+    embedding_matrix:   The pretrained embeddings
     n_tags:             The number of possible Dialogue Acts in the given corpus
     rnn:                Option to specify whether LSTM or GRU cells will be used
     verbose:            True to print info
