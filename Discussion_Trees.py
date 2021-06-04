@@ -1555,9 +1555,11 @@ def DT_Backbone(path, podcast_name, transcript_name, info=False):
 
     return
 
+
 def Info_Collection_Handler(podcast_name):
     """
-    Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+    This function will accesses all transcripts we have from the given podcast series, and creates the 'transcript_df'
+    dataframe with all information needed to plot the Discussion Tree of the podcast.
     """
     # First, find all transcripts for episodes of the given podcast
     if not podcast_name == 'joe_rogan':
@@ -1566,50 +1568,53 @@ def Info_Collection_Handler(podcast_name):
     else:
         configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/joe_rogan_*.pkl"))
 
+    # Print how many transcripts we have for the given podcast series
     num_podcasts = len(configfiles)
     print('\nNumber of "{0}" podcasts found: {1}'.format(podcast_name, num_podcasts), '\n\n')
-    # pprint(configfiles)
-    # order them by episode number?
-    # order them by number of speakers present?
 
     # Make sure a folder is set up in which we can save the Info
     if not os.path.exists('Spotify_Podcast_DataSet/{0}'.format(podcast_name)):
         os.makedirs('Spotify_Podcast_DataSet/{0}'.format(podcast_name))
 
-    # Next, collect backbone info
+    # Next, collect DT-backbone information
     pod_cnt = 1
     for path in configfiles:
-        # print(str(path))
+        # Print the number of podcast we are currently processing
         print('\n', pod_cnt, '/', num_podcasts)
-        if not podcast_name=='joe_rogan':
+
+        if not podcast_name == 'joe_rogan':
             transcript_name = str(path).split("/spotify_", 1)[1][:-4]
         else:
-            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
+            transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4] # Joe Rogan podcasts have different title format
 
         DT_Backbone(path, podcast_name, transcript_name, info=False)
         pod_cnt += 1
-
-        # # Now, Create df of ConceptNet embeddings and save all the embeddings in the individual files...
-        # for path in configfiles:
-        #
-        # return
 
     # Check if the podcast-show has its ConceptNet Numberbatch word embedding file saved...
     conceptnet_path = 'Spotify_Podcast_DataSet_/{0}/ConceptNet_Numberbatch_TSNE.h5'.format(podcast_name)
 
     if not os.path.exists(conceptnet_path):
-        #     ConceptNet_TSNE_df = pd.read_hdf(conceptnet_path, key='df')
-        #
-        # else:
-        Create_ConceptNet_TSNE(podcast_name, transcript_name, configfiles)                        #created df explicitly for the topical word embeddings + Fills in the word embedding part of all transcripts
+        # Creates unique df for the topical word embeddings + fills in the word embedding part of all transcripts
+        Create_ConceptNet_TSNE(podcast_name, transcript_name, configfiles)
 
     return
 
-def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, DT_only=False, Animate_only=False, save_fig=False, info=False):
+
+def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1,
+               TTTS_only=False, DT_only=False, Animate_only=False, save_fig=False, info=False):
     """
+    Plots Discussion Tree for the podcast using data collected in DT_Backbone function (stored in transcript_df).
     Will automatically stop creating DTs once it's created them for 10 episodes (for now).
+
+    podcast_name:   Title of podcast series we would like to plot Discussion Trees for
+    podcast_count:  Number of episodes we would like to plot Discussion Trees for
+    cutoff_sent:    Max number of utterances to plot
+    TTTS_only:      True if only want to plot Trajectory Through Topic Space
+    DT_only:        True if only want to plot Discussion Tree
+    Animate_only:   True if only want to plot 2D TTTS Animation
+
     """
-    # First, find all transcripts for episodes of the given podcast
+    # First, find all transcripts of the given podcast
     if not podcast_name=='joe_rogan':
         configfiles = list(Path("/Users/ShonaCW/Downloads/processed_transcripts (2)/").rglob("**/spotify_{}_*.pkl".format(podcast_name)))
     else:
@@ -1621,14 +1626,14 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
     # Next, build Discussion Trees for each episode
     pod_cnt = 0
     for path in configfiles:
-        if pod_cnt == podcast_count:
+        if pod_cnt == podcast_count:        # Break if already plotted max number of DTs
             break
-        if not podcast_name=='joe_rogan':
+        if not podcast_name=='joe_rogan':   # Joe Rogan podcasts had different titles
             transcript_name = str(path).split("/spotify_", 1)[1][:-4]
         else:
             transcript_name = str(path).split("/joe_rogan_", 1)[1][:-4]
 
-        # check if we have the transcript_df
+        # Check if we have the transcript_df
         try:
             pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name),
                              key='df')
@@ -1636,15 +1641,19 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
             continue
 
         print('\nEpisode:', transcript_name, '. Full path: ', str(path))
-        print('Plotting DT...')
+
         if Animate_only:
+            print('Plotting TTTS Animation...')
             Animate_TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent)
 
         if not TTTS_only or not Animate_only:
             DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig, duration=False, labels=False)
-        print('Plotting TTTS...')
-        if TTTS_only: #not DT_only or not Animate_only:
+
+        if TTTS_only:
+            print('Plotting TTTS...')
             TTTS(podcast_name, transcript_name, cutoff_sent=cutoff_sent, save_fig=save_fig)
+
+        # Update counter
         pod_cnt += 1
 
     return
@@ -1653,131 +1662,113 @@ def DT_Handler(podcast_name, podcast_count=10, cutoff_sent=-1, TTTS_only=False, 
 
 
 
-
-
-
-
-
 def DT_Third_Draft(podcast_name, transcript_name, cutoff_sent=-1, save_fig=False, duration=False, labels=False):
     """
-    Function to plot Discussion Trees using backbone data, rather than from scratch
+    Function to plot Discussion Trees using backbone data.
 
-    transcript_df['stack_name']     = [None] * Num_Total_Utts
-    transcript_df['branch_num']     = [None] * Num_Total_Utts
-    transcript_df['position_X']     = [None] * Num_Total_Utts
-    transcript_df['position_Y']     = [None] * Num_Total_Utts
-    transcript_df['word_embedding_X'] = [None] * Num_Total_Utts
-    transcript_df['word_embedding_Y'] = [None] * Num_Total_Utts
-    transcript_df['leaf_colour']        = [None] * Num_Total_Utts
-    transcript_df['new_topic']          = [False] * Num_Total_Utts
-    transcript_df['new_branch']      = [False] * Num_Total_Utts"""
-    import statistics
+    cutoff_sent:    Max number of utterances to plot
+    """
 
-    #load relevant df
+    # Load relevant df
     pod_df = pd.read_hdf('Spotify_Podcast_DataSet/{0}/{1}/transcript_df.h5'.format(podcast_name, transcript_name), key='df')
     colour = 'k'        # colour of tree structure
     colour_label = 'k'  # colour of annotations
 
+    # Instantiate
     old_sent_coords = [0, 0]
     annotations = []
-
-    # Calculate the height of each stack
-    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
-    idx_of_new_branch.insert(0, 0)
-    idx_of_new_branch.insert(-1, len(pod_df))
-    #height_of_stack = [idx_of_new_branch[i+1] - idx_of_new_branch[i] for i in range(len(idx_of_new_branch)-1)]
-
     Topics_Utterances = dict(pod_df['stack_name'].value_counts())
     sorted_stack_counts = sorted(Topics_Utterances.items(), key=lambda kv: kv[1], reverse=True)
     print(sorted_stack_counts)
     lists = sorted(Topics_Utterances.items(), key=lambda kv: kv[1])
     words, usage = zip(*lists)
 
-    # Calculate mean / median stack height (only going to label long ones)
-    med = statistics.median(usage)
-    mean = statistics.mean(usage)
-    print('mean', mean)
+    # Calculate the height of each stack
+    idx_of_new_branch = list(pod_df[pod_df['new_topic'] == True].index)
+    idx_of_new_branch.insert(0, 0)
+    idx_of_new_branch.insert(-1, len(pod_df))
 
-    filenames = []
+    # Calculate mean stack height, as only going to label longest ones
+    mean = statistics.mean(usage)
 
     # Instantiate figure
     plt.figure()
     plt.title('Discussion Tree: {0}'.format(transcript_name.title()), fontsize=15)
     plt.rc('font', size=6)
+
+    # Loop through utterances and plot nodes according to backbone data
     for idx, row in pod_df[0:cutoff_sent].iterrows():
+        # Access information from the transcript backbone dataframe
         the_topic = row['stack_name']
-
-        if not the_topic:
-            continue
-
         branch_num = row['branch_num']
         x = row['position_X']
         y = row['position_Y']
         new_topic = row['new_topic']
         new_branch = row['new_branch']
 
-        plt.plot(x, y, 'o', color=colour, ms=2, zorder=0)  # Plot node
+        plt.plot(x, y, 'o', color=colour, ms=2, zorder=0)  # Plot node for utterance
+
         if not new_branch:
             # Plot: continuing on the same branch, but with a new position to mark a new set of topics
             plt.plot([old_sent_coords[0], x], [old_sent_coords[1], y], '-', color=colour, linewidth=1, zorder=0)
 
         elif new_branch and branch_num != 0:
             # Annotate last position with a leaf + branch number label
-            leaf_colour = 'yellowgreen' #pod_df.iloc[idx-1]['leaf_colour']
+            leaf_colour = 'yellowgreen'
             # Plot and annotate little orange dots indicating the number of branch which just ended
-            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=7, color=leaf_colour, zorder=100) #ms=size_leaves,
+            plt.plot(old_sent_coords[0], old_sent_coords[1], 'o', ms=7, color=leaf_colour, zorder=100)
 
             if not cutoff_sent == -1:
                 plt.annotate(branch_num-1, xy=(old_sent_coords[0]-0.13, old_sent_coords[1]-1), color='k', zorder=101,
                              weight='bold')
 
+        # Add topic annotations
         if labels:
             if new_topic and the_topic not in annotations:
                 x_change = 0.2 if (x - old_sent_coords[0]) < 0 else -0.5
                 y_change = 2
-                if the_topic == 'context':
-                    x_change = 0.2
-                elif the_topic == 'conversation':
-                    x_change = -0.5
-                elif the_topic == 'accounts':
-                    y_change = 10
                 word_popularity = usage[words.index(the_topic)]
-                if word_popularity > (mean) or pod_df.iloc[idx+1]['new_branch']==True or the_topic=='hashtag': # mean + 0.5*mean
-                    # Annotate
-                    plt.rc('font', size=11)  # size_leaves weight='bold'
-                    plt.annotate(the_topic, xy=(x + x_change, y+y_change), color=colour_label, zorder=150, rotation=90, weight='bold') ###UNHASH
+
+                if word_popularity > (mean) or pod_df.iloc[idx+1]['new_branch']==True or the_topic=='hashtag':
+                    plt.rc('font', size=11)
+                    plt.annotate(the_topic, xy=(x + x_change, y+y_change), color=colour_label, zorder=150,
+                                 rotation=90, weight='bold')
                     annotations.append(the_topic)
-                    plt.rc('font', size=11)  # size_leaves
+                    plt.rc('font', size=11)
 
         old_sent_coords = [x, y]
 
-    total_duration = pod_df.iloc[-1].timestamp
+    total_duration   = pod_df.iloc[-1].timestamp
     podcast_duration = pod_df.iloc[cutoff_sent].timestamp
     total_utterances = len(pod_df)
-    total_branches = pod_df.iloc[-1].branch_num
-    total_stacks = len(Counter(pod_df.stack_name.values).keys())
-    num_utts = cutoff_sent
-    print('Total podcast_duration:', total_duration)
-    print('selected podcast duration', podcast_duration)
-    print('\nTotal number of utterances', total_utterances)
-    print('number_of_utterances selected:', num_utts)
+    total_branches   = pod_df.iloc[-1].branch_num
+    total_stacks     = len(Counter(pod_df.stack_name.values).keys())
+    num_utts         = cutoff_sent
 
-    #plt.annotate('Something', xy=(10, 50), xytext=(12, -12), va='top', xycoords = 'axes fraction', textcoords = 'offset points')
-    # plt.text(5, 50, 'Random Noise', style='italic', fontsize=9,
-    #         bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
-    plt.rc('font', size=11)  # size_leaves weight='bold'
+    if info:
+        print('Total podcast_duration:', total_duration)
+        print('selected podcast duration', podcast_duration)
+        print('\nTotal number of utterances', total_utterances)
+        print('number_of_utterances selected:', num_utts)
+
+
+    # Add podcast-level annotations
+    plt.rc('font', size=11)
     if duration:
-        plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      {total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
-                     bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3')) #xy for elon musk: (10, 35) #xy for jack dorsey: (10, 35)
+        plt.annotate(f'Podcast Duration: {podcast_duration}\nUtterances:   {total_utterances}\nBranches:      '
+                     f'{total_branches}\nStacks:          {total_stacks}', xy=(-13.5, 140),
+                     bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.3'))
 
-        plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black', boxstyle='round, pad=0.8'))
+        plt.annotate(f'First {cutoff_sent} Utterances', xy=(-5.8, 20), bbox=dict(facecolor='none', edgecolor='black',
+                                                                                 boxstyle='round, pad=0.8'))
     ax = plt.gca()
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     if cutoff_sent == -1 and podcast_name=='joe_rogan':
         plt.xlim([-14, 9.3])
         plt.ylim([0, 351])
-    # save
+
+    # Save Discussion Tree fig
     if save_fig:
         if not os.path.exists('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name)):
             os.makedirs('Spotify_Podcast_DataSet/{0}/{1}'.format(podcast_name, transcript_name))

@@ -25,7 +25,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1f2728ae-e4c2-4130-8567-6de383f74bd0" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Discussion_Trees.py" beforeDir="false" afterPath="$PROJECT_DIR$/Discussion_Trees.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -276,14 +275,7 @@
       <workItem from="1616004192650" duration="2426000" />
       <workItem from="1616188283840" duration="5840000" />
       <workItem from="1622714985988" duration="613000" />
-      <workItem from="1622717285458" duration="11395000" />
-    </task>
-    <task id="LOCAL-00151" summary="Working on DT Handler for Spotify Podcasts">
-      <created>1612544139288</created>
-      <option name="number" value="00151" />
-      <option name="presentableId" value="LOCAL-00151" />
-      <option name="project" value="LOCAL" />
-      <updated>1612544139289</updated>
+      <workItem from="1622717285458" duration="12762000" />
     </task>
     <task id="LOCAL-00152" summary="Working on DT Handler for Spotify Podcasts">
       <created>1612545372388</created>
@@ -621,7 +613,14 @@
       <option name="project" value="LOCAL" />
       <updated>1622810658126</updated>
     </task>
-    <option name="localTasksCounter" value="200" />
+    <task id="LOCAL-00200" summary="-">
+      <created>1622814327881</created>
+      <option name="number" value="00200" />
+      <option name="presentableId" value="LOCAL-00200" />
+      <option name="project" value="LOCAL" />
+      <updated>1622814327881</updated>
+    </task>
+    <option name="localTasksCounter" value="201" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -672,12 +671,12 @@
     <option name="LAST_COMMIT_MESSAGE" value="-" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="45" y="29" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1622810657896">
+    <state x="45" y="29" width="1150" height="777" key="CommitChangelistDialog2" timestamp="1622814327695">
       <screen x="0" y="25" width="1440" height="812" />
     </state>
     <state x="45" y="27" width="1150" height="777" key="CommitChangelistDialog2/0.23.1440.820@0.23.1440.820" timestamp="1615764917029" />
     <state x="45" y="27" key="CommitChangelistDialog2/0.23.1440.821@0.23.1440.821" timestamp="1614595843622" />
-    <state x="45" y="29" key="CommitChangelistDialog2/0.25.1440.812/1440.25.1920.1055@0.25.1440.812" timestamp="1622810657896" />
+    <state x="45" y="29" key="CommitChangelistDialog2/0.25.1440.812/1440.25.1920.1055@0.25.1440.812" timestamp="1622814327695" />
     <state width="1374" height="138" key="GridCell.Tab.0.bottom" timestamp="1616500602634">
       <screen x="0" y="23" width="1440" height="820" />
     </state>
